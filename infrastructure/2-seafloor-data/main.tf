@@ -10,7 +10,7 @@ resource "aws_s3_bucket" "raw_data" {
   #checkov:skip=CKV_AWS_144: "Ensure that S3 bucket has cross-region replication enabled"
   #checkov:skip=CKV2_AWS_61: "Ensure that an S3 bucket has a lifecycle configuration"
   #checkov:skip=CKV2_AWS_62: "Ensure S3 buckets should have event notifications enabled"
-  bucket        = "dtis-ofop-seafloor-${data.aws_caller_identity.current.account_id}-raw-${var.environment}"
+  bucket        = "dtis-ofop-${data.aws_caller_identity.current.account_id}-raw-${var.environment}"
   tags          = local.tags
   force_destroy = true
 }

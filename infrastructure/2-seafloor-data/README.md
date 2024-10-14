@@ -13,7 +13,7 @@ export NIWA_ENVIRONMENT=testing
 export TF_VAR_environment=${NIWA_ENVIRONMENT}
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-terraform init -backend-config="bucket=niwa-seafloor-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-seafloor/${NIWA_ENVIRONMENT}/${NIWA_ENVIRONMENT}.tfstate"
+terraform init -backend-config="bucket=niwa-dtis-ofop-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${NIWA_ENVIRONMENT}/${NIWA_ENVIRONMENT}.tfstate"
 
 terraform plan -out=plan.tfplan
 terraform apply plan.tfplan
@@ -29,7 +29,7 @@ export NIWA_ENVIRONMENT=testing
 export TF_VAR_environment=${NIWA_ENVIRONMENT}
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-terraform init -backend-config="bucket=niwa-seafloor-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-seafloor/${NIWA_ENVIRONMENT}/${NIWA_ENVIRONMENT}.tfstate"
+terraform init -backend-config="bucket=niwa-dtis-ofop-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${NIWA_ENVIRONMENT}/${NIWA_ENVIRONMENT}.tfstate"
 
 terraform plan -destroy -out=plan.tfplan
 terraform apply plan.tfplan
