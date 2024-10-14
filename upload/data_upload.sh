@@ -21,14 +21,31 @@ videos_dir="videos"
 success_file="success.txt"
 error_file="error.txt"
 sync_output_file="sync_logs.txt"
- 
-# S3 bucket details
-bucket_name="dtis-ofop-851725470721-raw-testing"
-region="ap-southeast-2"
- 
-# Lambda function URL
-lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
- 
+
+if [ -z "${NIWA_ENVIRONMENT}" ]; then
+  echo "Variable NIWA_ENVIRONMENT was not set. Please set it to either testing or production"
+  exit 1
+else
+  if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
+    # S3 bucket details
+    bucket_name="dtis-ofop-851725470721-raw-testing"
+    region="ap-southeast-2"
+
+    # Lambda function URL
+    lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
+  elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
+    # S3 bucket details
+    bucket_name="TODO"
+    region="ap-southeast-2"
+
+    # Lambda function URL
+    lambda_function_url=https://TODO.lambda-url.us-east-1.on.aws/
+  else
+    echo "Variable NIWA_ENVIRONMENT was not set to a supported value. Please set it to either testing or production"
+    exit 1
+  fi
+fi
+
 # Regex patterns based on naming conventions
 image_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.jpeg$"
 ofop_posi_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
@@ -44,7 +61,7 @@ echo "File Upload Error Report - $(date)" > "$error_file"
 echo "----------------------------" >> "$error_file"
 echo "File Sync Report - $(date)" > "$sync_output_file"
 echo "----------------------------" >> "$sync_output_file"
- 
+
 # Function to verify if the S3 bucket is accessible
 verify_s3_bucket() {
     if aws s3api head-bucket --bucket "$bucket_name" >/dev/null 2>&1; then
@@ -88,12 +105,12 @@ upload_to_s3() {
     fi
 }
 
- 
+
 # Function to check files against a pattern and their actual type (Images)
 check_image_files() {
     local dir=$1
     echo "Checking $dir for image files..."
- 
+
     for file in "$dir"/*; do
         if [[ ! $(basename "$file") =~ $image_pattern ]]; then
             echo "File does not match image naming convention: $(basename "$file")" >> "$error_file"
@@ -108,12 +125,12 @@ check_image_files() {
         fi
     done
 }
- 
+
 # Function to check files against a pattern and their actual type (Videos)
 check_video_files() {
     local dir=$1
     echo "Checking $dir for video files..."
- 
+
     for file in "$dir"/*; do
         if [[ ! $(basename "$file") =~ $video_pattern ]]; then
             echo "File does not match video naming convention: $(basename "$file")" >> "$error_file"
@@ -128,7 +145,7 @@ check_video_files() {
         fi
     done
 }
- 
+
 # Function to check ofop text files against specific patterns and upload valid files to S3
 check_ofop_files() {
     local dir=$1
@@ -148,14 +165,14 @@ check_ofop_files() {
         fi
     done
 }
- 
+
 # Trigger Lambda function via Lambda Function URL
 trigger_lambda_function() {
     echo "Triggering Lambda function via URL..."
-   
+
     # Make a POST request to the Lambda function URL
     response=$(curl -s -w "%{http_code}" -o /dev/null -X POST "$lambda_function_url")
- 
+
     if [ "$response" == "200" ]; then
         echo "Lambda function triggered successfully." >> "$success_file"
     else
@@ -165,30 +182,30 @@ trigger_lambda_function() {
 
 # Verify the S3 bucket
 verify_s3_bucket
- 
+
 # Check Images directory for naming convention and file type
 if [ -d "$images_dir" ]; then
     check_image_files "$images_dir"
 else
     echo "$images_dir does not exist." >> "$error_file"
 fi
- 
+
 # Check ofop directory for text file patterns and upload valid files
 if [ -d "$ofop_dir" ]; then
     check_ofop_files "$ofop_dir"
 else
     echo "$ofop_dir does not exist." >> "$error_file"
 fi
- 
+
 # Check Videos directory for naming convention and file type
 if [ -d "$videos_dir" ]; then
     check_video_files "$videos_dir"
 else
     echo "$videos_dir does not exist." >> "$error_file"
 fi
- 
+
 # Final notification after upload completion
 echo "File check and upload completed."
- 
+
 # Trigger the Lambda function after upload completes
 # trigger_lambda_function
