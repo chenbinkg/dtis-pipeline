@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+checkov_image_name="bridgecrew/checkov:3.2.74"
+
+command="$1"
+set +u
+case "${command}" in
+  checkov)
+      docker run --rm -v $PWD:/tmp/niwa $checkov_image_name --directory /tmp/niwa/infrastructure
+      ;;
+  checkov_i)
+      # interactive
+      docker run --rm --entrypoint=/bin/bash -v $PWD:/tmp/niwa -ti $checkov_image_name -c /bin/bash
+      ;;
+  *)
+      echo "Invalid command: '${command}'"
+      exit 1
+      ;;
+esac
+set +e

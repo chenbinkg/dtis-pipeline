@@ -1,0 +1,13 @@
+**/.vs/*
+**/*.pem
+**/*.private
+**/*.zip
+**/*.ppk
+*.code-workspace
+git-commit-ref.txt
+.terraform/
+.terraform*
+*.tfplan
+*.tfstate*
+tf_output*
+*id_rsa*
