@@ -14,6 +14,9 @@ case "${command}" in
       # interactive
       docker run --rm --entrypoint=/bin/bash -v $PWD:/tmp/niwa -ti $checkov_image_name -c /bin/bash
       ;;
+  shellcheck)
+      docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck /tmp/niwa/upload/data_upload.sh"
+      ;;
   *)
       echo "Invalid command: '${command}'"
       exit 1
