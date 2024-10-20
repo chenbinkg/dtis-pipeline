@@ -17,6 +17,9 @@ case "${command}" in
   shellcheck)
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck /tmp/niwa/upload/data_upload.sh"
       ;;
+  bats)
+      docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa bats/bats:1.11.0 -c "cd /tmp/niwa/upload/test/bats/ && bats ./*"
+      ;;
   *)
       echo "Invalid command: '${command}'"
       exit 1

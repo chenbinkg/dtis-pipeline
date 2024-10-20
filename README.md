@@ -26,6 +26,21 @@ sudo apt install shellcheck
 shellcheck ./upload/data_upload.sh
 ```
 * running the Docker command directly - copy the command from the `tasks` script
+
+### Unit testing with bats-core
+
+[Bats-core](https://github.com/bats-core/bats-core) is a CLI tool, a unit tests framework to verify that the UNIX programs you write behave as expected.
+
+
+Run it using Docker:
 ```
-docker run -ti --rm -v $PWD:/tmp/niwa --entrypoint=/bin/sh koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck /tmp/niwa/upload/data_upload.sh"
+./tasks bats
 ```
+
+Alternative ways to run it:
+* running it without Docker. First install Bats using [these instructions](https://bats-core.readthedocs.io/en/stable/installation.html), then run this:
+```
+bats ./upload/test/bats/*
+```
+
+* running the Docker command directly - copy the command from the `tasks` script
