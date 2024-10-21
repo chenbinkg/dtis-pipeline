@@ -1,0 +1,11 @@
+# Based on: https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Docker.gitlab-ci.yml
+
+
+shellcheck:
+  # Use the official docker image.
+  image: docker:cli
+  stage: test
+  services:
+    - docker:dind
+  script:
+    - ./tasks shellcheck
