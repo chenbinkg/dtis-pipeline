@@ -2,6 +2,8 @@
 
 
 shellcheck:
+  tags:
+    - docker
   # Use the official docker image.
   image: docker:cli
   stage: test
