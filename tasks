@@ -18,6 +18,11 @@ case "${command}" in
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck /tmp/niwa/upload/data_upload.sh"
       ;;
   bats)
+      # remove the log files first
+      rm -f ./upload/test/bats/error.txt
+      rm -f ./upload/test/bats/success.txt
+      rm -f ./upload/test/bats/sync_logs.txt
+
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa bats/bats:1.11.0 -c "cd /tmp/niwa/upload/test/bats/ && bats ./*"
       ;;
   *)

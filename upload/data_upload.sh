@@ -4,7 +4,12 @@
 shopt -s nocasematch
 
 # Directory paths
-images_dir="images"
+if [ -z "${NIWA_IMAGES_DIR}" ]; then
+  # NIWA_IMAGES_DIR not set, so let's set it explicitly
+  images_dir="images"
+else
+  images_dir="${NIWA_IMAGES_DIR}"
+fi
 ofop_dir="ofop"
 videos_dir="videos"
 success_file="success.txt"
@@ -106,7 +111,8 @@ check_image_files() {
                 echo "File is not a valid JPEG: $(basename "$file") (Detected type: $file_type)" >> "$error_file"
             else
                 echo "Uploading valid image file to S3: $(basename "$file")"
-                upload_to_s3 "$file"
+                # TODO move the below line out of this function
+                # upload_to_s3 "$file"
             fi
         fi
     done
@@ -166,6 +172,18 @@ trigger_lambda_function() {
     fi
 }
 
+# cleanup the contents of the log files
+> "${error_file}"
+> "${success_file}"
+> "${sync_output_file}"
+
+# Check Images directory for naming convention and file type
+if [ -d "$images_dir" ]; then
+    check_image_files "$images_dir"
+else
+    echo "Images directory: $images_dir does not exist." >> "$error_file"
+fi
+
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   echo "Exit, because dry run is set"
   exit 0
@@ -192,13 +210,6 @@ aws configure set s3.addressing_style virtual
 
 # Verify the S3 bucket
 verify_s3_bucket
-
-# Check Images directory for naming convention and file type
-if [ -d "$images_dir" ]; then
-    check_image_files "$images_dir"
-else
-    echo "$images_dir does not exist." >> "$error_file"
-fi
 
 # Check ofop directory for text file patterns and upload valid files
 if [ -d "$ofop_dir" ]; then
