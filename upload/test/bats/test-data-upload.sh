@@ -14,8 +14,7 @@ setup() {
 
 @test "run data_upload with NIWA_ENVIRONMENT exits with success and log file shows no images dir" {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && ../../data_upload.sh"
-	assert_output "Exit, because dry run is set"
-	assert_equal "$status" 0
+	assert_equal "$status" 1
 
   run bash -c "cat error.txt"
 	assert_output "Images directory: images does not exist."

@@ -182,6 +182,7 @@ if [ -d "$images_dir" ]; then
     check_image_files "$images_dir"
 else
     echo "Images directory: $images_dir does not exist." >> "$error_file"
+    exit 1
 fi
 
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
