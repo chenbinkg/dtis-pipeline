@@ -163,7 +163,11 @@ def parse_data_line(line, source_key, video_start_time, video_events):
         mediaoffset = current_time - video_start_time
 
     if "photo" in observation.lower():
-        il = f'/images/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}_{observation}.jpg'
+        try:
+            il = f'/images/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit("_prot.", 1)[0]}_{observation.rsplit("photo", 1)[1]}.jpg'
+        except:
+            il = f'/images/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}_{observation}.jpg'
+        
         media = il
         mediatype = "photo"
     elif (
@@ -171,7 +175,11 @@ def parse_data_line(line, source_key, video_start_time, video_events):
         or "video stopped" in observation.lower()
         or "stop video" in observation.lower()
     ):
-        vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}.m2t'
+        try:
+            vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit("_prot.", 1)[0]}.m2t'
+        except:
+            vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}.m2t'
+        
         media = vl
         mediatype = "video"
 
