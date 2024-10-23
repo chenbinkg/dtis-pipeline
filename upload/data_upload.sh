@@ -1,26 +1,25 @@
-#!/bin/bash
-
-# Set AWS configurations in the script (for S3 specifically)
-aws configure set region ap-southeast-2
-aws configure set output json
-aws configure set s3.max_concurrent_requests 20
-aws configure set s3.max_queue_size 10000
-aws configure set s3.multipart_threshold 64MB
-aws configure set s3.multipart_chunksize 16MB
-aws configure set s3.max_bandwidth 200MB/s
-aws configure set s3.use_accelerate_endpoint false
-aws configure set s3.addressing_style virtual
+#/usr/bin/env bash
 
 # Enable case-insensitive pattern matching
 shopt -s nocasematch
 
 # Directory paths
-images_dir="images"
+if [ -z "${NIWA_IMAGES_DIR}" ]; then
+  # NIWA_IMAGES_DIR not set, so let's set it explicitly
+  images_dir="images"
+else
+  images_dir="${NIWA_IMAGES_DIR}"
+fi
 ofop_dir="ofop"
 videos_dir="videos"
 success_file="success.txt"
 error_file="error.txt"
 sync_output_file="sync_logs.txt"
+
+if [ -z "${NIWA_DRY_RUN}" ]; then
+  # dry run not set, so let's set it explicitly to false
+  NIWA_DRY_RUN="false"
+fi
 
 if [ -z "${NIWA_ENVIRONMENT}" ]; then
   echo "Variable NIWA_ENVIRONMENT was not set. Please set it to either testing or production"
@@ -53,14 +52,6 @@ ofop_prot_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
 ofop_obser_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
 ofop_prot_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_prot\.txt$"
 video_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.m2t[s]?$"
-
-# Initialize the success and error files
-echo "File Upload Success Report - $(date)" > "$success_file"
-echo "----------------------------" >> "$success_file"
-echo "File Upload Error Report - $(date)" > "$error_file"
-echo "----------------------------" >> "$error_file"
-echo "File Sync Report - $(date)" > "$sync_output_file"
-echo "----------------------------" >> "$sync_output_file"
 
 # Function to verify if the S3 bucket is accessible
 verify_s3_bucket() {
@@ -120,7 +111,8 @@ check_image_files() {
                 echo "File is not a valid JPEG: $(basename "$file") (Detected type: $file_type)" >> "$error_file"
             else
                 echo "Uploading valid image file to S3: $(basename "$file")"
-                upload_to_s3 "$file"
+                # TODO move the below line out of this function
+                # upload_to_s3 "$file"
             fi
         fi
     done
@@ -180,15 +172,45 @@ trigger_lambda_function() {
     fi
 }
 
-# Verify the S3 bucket
-verify_s3_bucket
+# cleanup the contents of the log files
+> "${error_file}"
+> "${success_file}"
+> "${sync_output_file}"
 
 # Check Images directory for naming convention and file type
 if [ -d "$images_dir" ]; then
     check_image_files "$images_dir"
 else
-    echo "$images_dir does not exist." >> "$error_file"
+    echo "Images directory: $images_dir does not exist." >> "$error_file"
+    exit 1
 fi
+
+if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
+  echo "Exit, because dry run is set"
+  exit 0
+fi
+
+# Initialize the success and error files
+echo "File Upload Success Report - $(date)" > "$success_file"
+echo "----------------------------" >> "$success_file"
+echo "File Upload Error Report - $(date)" > "$error_file"
+echo "----------------------------" >> "$error_file"
+echo "File Sync Report - $(date)" > "$sync_output_file"
+echo "----------------------------" >> "$sync_output_file"
+
+# Set AWS configurations in the script (for S3 specifically)
+aws configure set region ap-southeast-2
+aws configure set output json
+aws configure set s3.max_concurrent_requests 20
+aws configure set s3.max_queue_size 10000
+aws configure set s3.multipart_threshold 64MB
+aws configure set s3.multipart_chunksize 16MB
+aws configure set s3.max_bandwidth 200MB/s
+aws configure set s3.use_accelerate_endpoint false
+aws configure set s3.addressing_style virtual
+
+# Verify the S3 bucket
+verify_s3_bucket
 
 # Check ofop directory for text file patterns and upload valid files
 if [ -d "$ofop_dir" ]; then
