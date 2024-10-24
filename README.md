@@ -1,6 +1,6 @@
 # NIWA data seafloor
 
-To manage data operations (data upload, data processing) for the seafloor data.
+To manage data operations (data upload, data processing) for the seafloor DTIS data.
 
 ## Git repository structure
 
