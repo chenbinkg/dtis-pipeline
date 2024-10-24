@@ -1,6 +1,6 @@
-# NIWA data seafloor
+# NIWA Ocean Floor DTIS Data Platform
 
-To manage data operations (data upload, data processing) for the ocean sea DTIS data.
+To manage data operations (data upload, data processing) for the ocean floor DTIS data platform.
 
 ## Git repository structure
 
