@@ -175,6 +175,7 @@ def parse_data_line(line, source_key, video_start_time, video_events):
         or "video stopped" in observation.lower()
         or "stop video" in observation.lower()
     ):
+        # construct a link to the video file which will also be uploaded
         try:
             vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit("_prot.", 1)[0]}.m2t'
         except:
@@ -183,8 +184,8 @@ def parse_data_line(line, source_key, video_start_time, video_events):
         media = vl
         mediatype = "video"
 
-        # construct a link to the video file which will also be uploaded
-        vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}.m2t'
+        # # construct a link to the video file which will also be uploaded
+        # vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}.m2t'
         # print(vl)
         if os.path.exists(vl):
             media = vl
