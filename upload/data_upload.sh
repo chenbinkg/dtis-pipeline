@@ -1,7 +1,11 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 # Enable case-insensitive pattern matching
 shopt -s nocasematch
+
+##############################################
+# Section: setting the variables
+##############################################
 
 # Directory paths
 if [ -z "${NIWA_IMAGES_DIR}" ]; then
@@ -15,6 +19,7 @@ videos_dir="videos"
 success_file="success.txt"
 error_file="error.txt"
 sync_output_file="sync_logs.txt"
+aws_region="ap-southeast-2"
 
 if [ -z "${NIWA_DRY_RUN}" ]; then
   # dry run not set, so let's set it explicitly to false
@@ -28,14 +33,12 @@ else
   if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
     # S3 bucket details
     bucket_name="dtis-ofop-851725470721-raw-testing"
-    region="ap-southeast-2"
 
     # Lambda function URL
     lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
   elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
     # S3 bucket details
-    bucket_name="TODO"
-    region="ap-southeast-2"
+    bucket_name="dtis-ofop-851725470721-raw-testing"
 
     # Lambda function URL
     lambda_function_url=https://TODO.lambda-url.us-east-1.on.aws/
@@ -52,6 +55,10 @@ ofop_prot_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
 ofop_obser_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
 ofop_prot_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_prot\.txt$"
 video_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.m2t[s]?$"
+
+##############################################
+# Section: functions
+##############################################
 
 # Function to verify if the S3 bucket is accessible
 verify_s3_bucket() {
@@ -100,7 +107,7 @@ upload_to_s3() {
 # Function to check files against a pattern and their actual type (Images)
 check_image_files() {
     local dir=$1
-    echo "Checking $dir for image files..."
+    echo "Checking ${dir} for image files..."
 
     for file in "$dir"/*; do
         if [[ ! $(basename "$file") =~ $image_pattern ]]; then
@@ -199,7 +206,7 @@ echo "File Sync Report - $(date)" > "$sync_output_file"
 echo "----------------------------" >> "$sync_output_file"
 
 # Set AWS configurations in the script (for S3 specifically)
-aws configure set region ap-southeast-2
+aws configure set region "${aws_region}"
 aws configure set output json
 aws configure set s3.max_concurrent_requests 20
 aws configure set s3.max_queue_size 10000
@@ -212,7 +219,7 @@ aws configure set s3.addressing_style virtual
 # Verify the S3 bucket
 verify_s3_bucket
 
-# Check ofop directory for text file patterns and upload valid files
+# Check ofop directory for text file patterns
 if [ -d "$ofop_dir" ]; then
     check_ofop_files "$ofop_dir"
 else
