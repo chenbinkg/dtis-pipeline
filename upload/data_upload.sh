@@ -48,8 +48,18 @@ else
   fi
 fi
 
-# Regex patterns based on naming conventions
-image_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.jpeg$"
+##############################################
+# Subsection: Regex patterns based on naming conventions
+##############################################
+# e.g. TAN1802_160_DTIS__004.jpeg
+image_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.jpeg$"
+# e.g. TAN1802_160_DTIS__004.jpg
+image_pattern2="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.jpg$"
+# e.g. TAN1802_Stn_160_004.jpeg
+image_pattern3="^[A-Z]{3}[0-9]{4}_Stn_[0-9]{3,}_[0-9]{3}\.jpeg$"
+# e.g. TAN1802_Stn_160_004.jpg
+image_pattern4="^[A-Z]{3}[0-9]{4}_Stn_[0-9]{3,}_[0-9]{3}\.jpg$"
+
 ofop_posi_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
 ofop_prot_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
 ofop_obser_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
@@ -109,19 +119,25 @@ check_image_files() {
     local dir=$1
     echo "Checking ${dir} for image files..."
 
-    for file in "$dir"/*; do
-        if [[ ! $(basename "$file") =~ $image_pattern ]]; then
-            echo "File does not match image naming convention: $(basename "$file")" >> "$error_file"
+    # Find all the files, in the images directory, with the selected
+    # file extensions.
+    # Write the file names into an bash array.
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.jpg' -o -name '*.jpeg')
+
+    for file in "${files_with_matching_extension[@]}"; do
+      file_name=$(basename "$file")
+        if [[ ! "${file_name}" =~ ${image_pattern1} ]] && [[ ! "${file_name}" =~ ${image_pattern2} ]] && [[ ! "${file_name}" =~ ${image_pattern3} ]] && [[ ! "${file_name}" =~ ${image_pattern4} ]]; then
+            echo "File does not match image naming convention: ${file}" | tee -a "$error_file"
         else
             file_type=$(file --mime-type -b "$file")
             if [[ "$file_type" != "image/jpeg" ]]; then
-                echo "File is not a valid JPEG: $(basename "$file") (Detected type: $file_type)" >> "$error_file"
-            else
-                echo "Uploading valid image file to S3: $(basename "$file")"
-                # TODO move the below line out of this function
-                # upload_to_s3 "$file"
-            fi
-        fi
+                echo "File is not a valid JPEG: $(basename "$file") (Detected type: $file_type)" | tee -a "$error_file"
+          else
+              echo "Uploading valid image file to S3: $(basename "$file")"
+              # TODO move the below line out of this function
+              # upload_to_s3 "$file"
+          fi
+      fi
     done
 }
 
@@ -179,16 +195,38 @@ trigger_lambda_function() {
     fi
 }
 
-# cleanup the contents of the log files
-> "${error_file}"
-> "${success_file}"
-> "${sync_output_file}"
+##############################################
+# Section: the actual run
+##############################################
+
+##############################################
+# SubSection: Initialize the log files
+##############################################
+# 1. Cleanup the contents of the log files (truncate them)
+true > "${error_file}"
+true > "${success_file}"
+true > "${sync_output_file}"
+
+# 2. Write informative headers to the log files
+echo "File Upload Success Report - $(date)" > "$success_file"
+echo "----------------------------" >> "$success_file"
+echo "File Upload Error Report - $(date)" > "$error_file"
+echo "----------------------------" >> "$error_file"
+echo "File Sync Report - $(date)" > "$sync_output_file"
+echo "----------------------------" >> "$sync_output_file"
+echo "Environment Name: ${NIWA_ENVIRONMENT}" >> "$sync_output_file"
+echo "S3 Bucket Name: ${bucket_name}" >> "$sync_output_file"
+echo "Region: ${aws_region}" >> "$sync_output_file"
+
+##############################################
+# SubSection: Verify the local files with dtis data
+##############################################
 
 # Check Images directory for naming convention and file type
 if [ -d "$images_dir" ]; then
     check_image_files "$images_dir"
 else
-    echo "Images directory: $images_dir does not exist." >> "$error_file"
+    echo "Images directory: $images_dir does not exist." | tee -a "$error_file"
     exit 1
 fi
 
@@ -197,13 +235,10 @@ if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   exit 0
 fi
 
-# Initialize the success and error files
-echo "File Upload Success Report - $(date)" > "$success_file"
-echo "----------------------------" >> "$success_file"
-echo "File Upload Error Report - $(date)" > "$error_file"
-echo "----------------------------" >> "$error_file"
-echo "File Sync Report - $(date)" > "$sync_output_file"
-echo "----------------------------" >> "$sync_output_file"
+##############################################
+# SubSection: Verify the S3 bucket
+##############################################
+
 
 # Set AWS configurations in the script (for S3 specifically)
 aws configure set region "${aws_region}"
