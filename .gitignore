@@ -11,8 +11,11 @@ git-commit-ref.txt
 *.tfstate*
 tf_output*
 *id_rsa*
-
+**/__pycache__/
+**/venv/
+**.pytest_cache
 
 error.txt
 success.txt
 sync_logs.txt
+**/results.xml
