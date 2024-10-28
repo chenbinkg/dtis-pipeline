@@ -50,3 +50,14 @@ bats ./upload/test/bats/*
 ```
 
 - running the Docker command directly - copy the command from the `tasks` script
+
+### Running the upload script yourself
+
+This comes handy when you want to familiarise yourself with the script, or experiment with new code added to the script, with getting fast feedback, and without impacting the production environment (production data or production infrastructure resources).
+
+Please run the following:
+```
+NIWA_DRY_RUN=true NIWA_ENVIRONMENT=testing NIWA_IMAGES_DIR=./upload/test/test-data/images ./upload/data_upload.sh
+```
+
+Read the contents of the .txt log files.
