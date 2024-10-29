@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Fail fast on any error
+set -Eeo pipefail
+
 # Enable case-insensitive pattern matching
 shopt -s nocasematch
 
@@ -125,17 +128,21 @@ check_image_files() {
     readarray files_with_matching_extension < <(find "${dir}" -name '*.jpg' -o -name '*.jpeg')
 
     for file in "${files_with_matching_extension[@]}"; do
+      #echo "file is ${file}"
+      file_no_trailing_whitespace="$(echo -e "${file}" | sed -e 's/[[:space:]]*$//')"
+      #echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
+
       file_name=$(basename "$file")
         if [[ ! "${file_name}" =~ ${image_pattern1} ]] && [[ ! "${file_name}" =~ ${image_pattern2} ]] && [[ ! "${file_name}" =~ ${image_pattern3} ]] && [[ ! "${file_name}" =~ ${image_pattern4} ]]; then
-            echo "File does not match image naming convention: ${file}" | tee -a "$error_file"
+            echo "File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         else
-            file_type=$(file --mime-type -b "$file")
-            if [[ "$file_type" != "image/jpeg" ]]; then
-                echo "File is not a valid JPEG: $(basename "$file") (Detected type: $file_type)" | tee -a "$error_file"
+          file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
+          if [[ "$file_type" != "image/jpeg" ]]; then
+              echo "File is not a valid JPEG: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
           else
-              echo "Uploading valid image file to S3: $(basename "$file")"
-              # TODO move the below line out of this function
-              # upload_to_s3 "$file"
+            echo "Uploading valid image file to S3: $(basename "$file")"
+            # TODO move the below line out of this function
+            # upload_to_s3 "$file"
           fi
       fi
     done

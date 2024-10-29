@@ -23,7 +23,9 @@ case "${command}" in
       rm -f ./upload/test/bats/success.txt
       rm -f ./upload/test/bats/sync_logs.txt
 
-      docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa bats/bats:1.11.0 -c "cd /tmp/niwa/upload/test/bats/ && bats ./*"
+      # We need the 'file' command for the data upload script. That command
+      # is not installed in the docker image. Therefore, we install it below.
+      docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa bats/bats:1.11.0 -c "cd /tmp/niwa/upload/test/bats/ && apk add -U file && bats ./*"
       ;;
   *)
       echo "Invalid command: '${command}'"
