@@ -297,7 +297,7 @@ else
     exit 1
 fi
 
-echo "The following images will be copied to S3:" | tee -a "$success_file"
+echo "The following images passed local verification:" | tee -a "$success_file"
 echo "${image_files_to_copy[@]}" | tee -a "$success_file"
 echo ""
 
@@ -316,7 +316,7 @@ else
     exit 1
 fi
 
-echo "The following videos will be copied to S3:" | tee -a "$success_file"
+echo "The following videos passed local verification:" | tee -a "$success_file"
 echo "${video_files_to_copy[@]}" | tee -a "$success_file"
 echo ""
 
@@ -335,7 +335,7 @@ else
     exit 1
 fi
 
-echo "The following text files will be copied to S3:" | tee -a "$success_file"
+echo "The following text files passed local verification:" | tee -a "$success_file"
 echo "${text_files_to_copy[@]}" | tee -a "$success_file"
 echo ""
 

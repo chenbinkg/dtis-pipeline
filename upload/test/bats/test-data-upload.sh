@@ -44,7 +44,7 @@ setup() {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2023' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/images for image files..."
-  assert_output --partial "The following images will be copied to S3:
+  assert_output --partial "The following images passed local verification:
 ../test-data/images/dir with space/TAN1802_Stn_160_001.jpg ../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg ../test-data/images/Tan1802_160/TAN1802_Stn_160_016.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_001.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_002.jpeg"
 	assert_equal "$status" 0
 
@@ -68,7 +68,7 @@ setup() {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2023' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2023 for video files..."
-  assert_output --partial "The following videos will be copied to S3:
+  assert_output --partial "The following videos passed local verification:
 ../test-data/2023/Video/TAN0616/TAN0616_003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/201012220153000.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/TAN0616_045.m2ts ../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/201012220153000.m2t"
 	assert_equal "$status" 0
 
@@ -82,7 +82,7 @@ setup() {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2010-2019' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2010-2019 for video files..."
-  assert_output --partial "The following videos will be copied to S3:
+  assert_output --partial "The following videos passed local verification:
 ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/201012220153001.m2t ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2t"
 	assert_equal "$status" 0
 
@@ -96,7 +96,7 @@ setup() {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2010-2019' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/text/TAN2203 for text files..."
-  assert_output --partial "The following text files will be copied to S3:
+  assert_output --partial "The following text files passed local verification:
 ../test-data/text/TAN2203/OFOP text files/tan2203_001_prot.txt ../test-data/text/TAN2203/OFOP text files/TAN2203_001_posi.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_posi.txt"
 
 	assert_equal "$status" 0
