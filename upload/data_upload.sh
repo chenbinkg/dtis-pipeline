@@ -23,8 +23,17 @@ if [ -z "${NIWA_VIDEOS_DIR}" ]; then
 else
   videos_dir="${NIWA_VIDEOS_DIR}"
 fi
+if [ -z "${NIWA_OFOP_DIR}" ]; then
+  # NIWA_OFOP_DIR not set, so let's set it explicitly
+  ofop_dir="ofop"
+else
+  ofop_dir="${NIWA_OFOP_DIR}"
+fi
 
-ofop_dir="ofop"
+if [ -z "${NIWA_CRUISE_ID}" ]; then
+  echo "NIWA_CRUISE_ID not set, please set it explicitly"
+  exit 1
+fi
 
 success_file="success.txt"
 error_file="error.txt"
@@ -39,23 +48,23 @@ fi
 if [ -z "${NIWA_ENVIRONMENT}" ]; then
   echo "Variable NIWA_ENVIRONMENT was not set. Please set it to either testing or production"
   exit 1
+fi
+
+if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
+  # S3 bucket details
+  bucket_name="dtis-ofop-851725470721-raw-testing"
+
+  # Lambda function URL
+  lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
+elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
+  # S3 bucket details
+  bucket_name="dtis-ofop-851725470721-raw-testing"
+
+  # Lambda function URL
+  lambda_function_url=https://TODO.lambda-url.us-east-1.on.aws/
 else
-  if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
-    # S3 bucket details
-    bucket_name="dtis-ofop-851725470721-raw-testing"
-
-    # Lambda function URL
-    lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
-  elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
-    # S3 bucket details
-    bucket_name="dtis-ofop-851725470721-raw-testing"
-
-    # Lambda function URL
-    lambda_function_url=https://TODO.lambda-url.us-east-1.on.aws/
-  else
-    echo "Variable NIWA_ENVIRONMENT was not set to a supported value. Please set it to either testing or production"
-    exit 1
-  fi
+  echo "Variable NIWA_ENVIRONMENT was not set to a supported value. Please set it to either testing or production"
+  exit 1
 fi
 
 ##############################################
@@ -75,10 +84,14 @@ video_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.m2t[s]?$"
 # e.g. 201012220153001.m2t or 201012220153001.m2ts (only digits)
 video_pattern2="^[0-9]{4,}\.m2t[s]?$"
 
-ofop_posi_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
-ofop_prot_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
-ofop_obser_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
-ofop_prot_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_prot\.txt$"
+# e.g. TAN1802_001_posi.txt
+ofop_posi_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
+# e.g. TAN1802_001_prot.txt
+ofop_prot_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
+# e.g. TAN1802_001.sth_rerun.sth_obser.txt
+ofop_obser_rerun_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
+# e.g. TAN1802_001.sth_rerun.sth_prot.txt
+ofop_prot_rerun_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_prot\.txt$"
 
 ##############################################
 # Section: functions
@@ -91,16 +104,6 @@ verify_s3_bucket() {
     else
         echo "S3 bucket is not accessible or does not exist: $bucket_name" >> "$error_file"
         exit 1  # Exit if the bucket doesn't exist or isn't accessible
-    fi
-}
-
-# Extract cruise ID (e.g., TAN0616) from the file name
-extract_cruise_id() {
-    local file_name=$(basename "$1")
-    if [[ "$file_name" =~ ^([A-Z]{3}[0-9]{4})_ ]]; then
-        echo "${BASH_REMATCH[1]}"
-    else
-        echo "UNKNOWN"
     fi
 }
 
@@ -201,23 +204,40 @@ check_video_files() {
     done
 }
 
-# Function to check ofop text files against specific patterns and upload valid files to S3
+# A bash function which verifies local text files. It checks:
+# * that the file name matches a naming convention
+# * that the file type is text
 check_ofop_files() {
     local dir=$1
+    echo "Checking $dir for text files..."
 
-    echo "Checking $dir for text files with specific patterns..."
+    # Find all the files, in the videos directory, with the selected
+    # file extensions.
+    # Write the file names into an bash array.
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.txt')
 
-    for file in "$dir"/*; do
-        if [[ $(basename "$file") =~ $ofop_posi_pattern || \
-              $(basename "$file") =~ $ofop_prot_pattern || \
-              $(basename "$file") =~ $ofop_obser_rerun_pattern || \
-              $(basename "$file") =~ $ofop_prot_rerun_pattern ]]; then
-            echo "File matches a valid pattern: $(basename "$file")"
-            # Upload the matching file to S3
-            upload_to_s3 "$file"
-        else
-            echo "File does not match any pattern: $(basename "$file")" >> "$error_file"
-        fi
+    for file in "${files_with_matching_extension[@]}"; do
+      # #echo "file is ${file}"
+      file_no_trailing_whitespace="$(echo -e "${file}" | sed -e 's/[[:space:]]*$//')"
+      # echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
+
+      file_name=$(basename "$file")
+
+      file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
+      if [[ "$file_type" != "text/plain" ]]; then
+        echo "File is not a valid text file: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
+        continue
+      fi
+
+      if [[ "${file_name}" =~ $ofop_posi_pattern || \
+            "${file_name}" =~ $ofop_prot_pattern || \
+            "${file_name}" =~ $ofop_obser_rerun_pattern || \
+            "${file_name}" =~ $ofop_prot_rerun_pattern ]]; then
+        text_files_to_copy+=("${file_no_trailing_whitespace}")
+        echo "matche ${file_name}"
+      else
+        echo "File does not match any pattern: ${file_name}" | tee -a  "$error_file"
+      fi
     done
 }
 
@@ -303,7 +323,21 @@ echo ""
 ##############################################
 # SubSubSection: text files
 ##############################################
-echo TODO
+# This array will contain the set of text files, which passed
+# the local verification steps
+declare -a text_files_to_copy=()
+
+# Check text directory for naming convention and file type
+if [ -d "$ofop_dir" ]; then
+    check_ofop_files "$ofop_dir"
+else
+    echo "Text files directory: $ofop_dir does not exist." | tee -a "$error_file"
+    exit 1
+fi
+
+echo "The following text files will be copied to S3:" | tee -a "$success_file"
+echo "${text_files_to_copy[@]}" | tee -a "$success_file"
+echo ""
 
 
 ##############################################
@@ -320,7 +354,8 @@ fi
 # SubSection: Verify the S3 bucket
 ##############################################
 
-TODO: do not upload if exists already; parse to get the stn number and the cruise number
+# Verify the S3 bucket
+verify_s3_bucket
 
 # Set AWS configurations in the script (for S3 specifically)
 aws configure set region "${aws_region}"
@@ -332,19 +367,6 @@ aws configure set s3.multipart_chunksize 16MB
 aws configure set s3.max_bandwidth 200MB/s
 aws configure set s3.use_accelerate_endpoint false
 aws configure set s3.addressing_style virtual
-
-# Verify the S3 bucket
-verify_s3_bucket
-
-# Check ofop directory for text file patterns
-if [ -d "$ofop_dir" ]; then
-    check_ofop_files "$ofop_dir"
-else
-    echo "$ofop_dir does not exist." >> "$error_file"
-fi
-
-
-
 
 # Trigger the Lambda function after upload completes
 # trigger_lambda_function

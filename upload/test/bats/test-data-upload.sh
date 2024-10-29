@@ -4,6 +4,7 @@
 setup() {
     bats_load_library bats-support
     bats_load_library bats-assert
+    export NIWA_CRUISE_ID=123
 }
 
 @test "run data_upload without NIWA_ENVIRONMENT, exits with error" {
@@ -21,7 +22,7 @@ setup() {
 	assert_equal "$status" 0
 }
 
-@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR, but fails because videos dir does not exist" {
+@test "run data_upload with NIWA_ENVIRONMENT, but fails because videos dir does not exist" {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && ../../data_upload.sh"
 	assert_equal "$status" 1
 
@@ -30,8 +31,17 @@ setup() {
 	assert_equal "$status" 0
 }
 
-@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR and NIWA_VIDEOS_DIR, test for image files verification" {
+@test "run data_upload with NIWA_ENVIRONMENT, but fails because text dir does not exist" {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2023' && ../../data_upload.sh"
+	assert_equal "$status" 1
+
+  run bash -c "cat error.txt"
+	assert_output --partial "Text files directory: ofop does not exist."
+	assert_equal "$status" 0
+}
+
+@test "run data_upload with NIWA_ENVIRONMENT, test for image files verification" {
+  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2023' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/images for image files..."
   assert_output --partial "The following images will be copied to S3:
@@ -54,8 +64,8 @@ setup() {
 	assert_equal "$status" 0
 }
 
-@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR and NIWA_VIDEOS_DIR, test for video files verification (dir: 2023)" {
-  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2023' && ../../data_upload.sh"
+@test "run data_upload with NIWA_ENVIRONMENT, test for video files verification (dir: 2023)" {
+  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2023' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2023 for video files..."
   assert_output --partial "The following videos will be copied to S3:
@@ -68,8 +78,8 @@ setup() {
 	assert_equal "$status" 0
 }
 
-@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR and NIWA_VIDEOS_DIR, test for video files verification (dir: 2010-2019)" {
-  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2010-2019' && ../../data_upload.sh"
+@test "run data_upload with NIWA_ENVIRONMENT, test for video files verification (dir: 2010-2019)" {
+  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2010-2019' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2010-2019 for video files..."
   assert_output --partial "The following videos will be copied to S3:
@@ -79,5 +89,22 @@ setup() {
   run bash -c "cat error.txt"
   # we should see these errors, regarding naming conventions
 	assert_output --partial "File does not match video naming convention: ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/1.m2t"
+	assert_equal "$status" 0
+}
+
+@test "run data_upload with NIWA_ENVIRONMENT, test for text files verification" {
+  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2010-2019' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && ../../data_upload.sh"
+	assert_output --partial "Exit, because dry run is set"
+  assert_output --partial "Checking ../test-data/text/TAN2203 for text files..."
+  assert_output --partial "The following text files will be copied to S3:
+../test-data/text/TAN2203/OFOP text files/tan2203_001_prot.txt ../test-data/text/TAN2203/OFOP text files/TAN2203_001_posi.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_posi.txt"
+
+	assert_equal "$status" 0
+
+  run bash -c "cat error.txt"
+  # we should see these errors, regarding naming conventions
+	assert_output --partial "File does not match any pattern: tan2203_001_test_obser.txt"
+	assert_output --partial "File does not match any pattern: tan2203_001_obser.txt"
+	assert_output --partial "File does not match any pattern: tan1802_113_AcousticMarkWatercolumnshot_obser.txt"
 	assert_equal "$status" 0
 }
