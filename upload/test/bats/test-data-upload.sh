@@ -12,7 +12,7 @@ setup() {
 	assert_equal "$status" 1
 }
 
-@test "run data_upload with NIWA_ENVIRONMENT, exits with success and log file shows images dir does not exist" {
+@test "run data_upload with NIWA_ENVIRONMENT, but fails because images dir does not exist" {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && ../../data_upload.sh"
 	assert_equal "$status" 1
 
@@ -21,8 +21,17 @@ setup() {
 	assert_equal "$status" 0
 }
 
-@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR, test for image files verification" {
+@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR, but fails because videos dir does not exist" {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && ../../data_upload.sh"
+	assert_equal "$status" 1
+
+  run bash -c "cat error.txt"
+	assert_output --partial "Videos directory: videos does not exist."
+	assert_equal "$status" 0
+}
+
+@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR and NIWA_VIDEOS_DIR, test for image files verification" {
+  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2023' && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/images for image files..."
   assert_output --partial "The following images will be copied to S3:
@@ -42,5 +51,33 @@ setup() {
 	refute_output --partial "File does not match image naming convention: ../test-data/images/dir with space/TAN1802_Stn_160_001.jpg"
 	refute_output --partial "File does not match image naming convention: ../test-data/images/Tan1802_160/TAN1802_Stn_160_002.jpeg"
 	refute_output --partial "File does not match image naming convention: ../test-data/images/Tan1802_160/TAN1802_Stn_160_016.jpg"
+	assert_equal "$status" 0
+}
+
+@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR and NIWA_VIDEOS_DIR, test for video files verification (dir: 2023)" {
+  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2023' && ../../data_upload.sh"
+	assert_output --partial "Exit, because dry run is set"
+  assert_output --partial "Checking ../test-data/2023 for video files..."
+  assert_output --partial "The following videos will be copied to S3:
+../test-data/2023/Video/TAN0616/TAN0616_003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/201012220153000.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/TAN0616_045.m2ts ../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/201012220153000.m2t"
+	assert_equal "$status" 0
+
+  run bash -c "cat error.txt"
+  # we should see these errors, regarding naming conventions
+	assert_output --partial "File does not match video naming convention: ../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/example.m2t"
+	assert_equal "$status" 0
+}
+
+@test "run data_upload with NIWA_ENVIRONMENT and NIWA_IMAGES_DIR and NIWA_VIDEOS_DIR, test for video files verification (dir: 2010-2019)" {
+  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2010-2019' && ../../data_upload.sh"
+	assert_output --partial "Exit, because dry run is set"
+  assert_output --partial "Checking ../test-data/2010-2019 for video files..."
+  assert_output --partial "The following videos will be copied to S3:
+../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/201012220153001.m2t ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2t"
+	assert_equal "$status" 0
+
+  run bash -c "cat error.txt"
+  # we should see these errors, regarding naming conventions
+	assert_output --partial "File does not match video naming convention: ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/1.m2t"
 	assert_equal "$status" 0
 }

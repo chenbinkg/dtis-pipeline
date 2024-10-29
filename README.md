@@ -57,7 +57,7 @@ This comes handy when you want to familiarise yourself with the script, or exper
 
 Please run the following:
 ```
-NIWA_DRY_RUN=true NIWA_ENVIRONMENT=testing NIWA_IMAGES_DIR=./upload/test/test-data/images ./upload/data_upload.sh
+NIWA_DRY_RUN=true NIWA_ENVIRONMENT=testing NIWA_IMAGES_DIR=./upload/test/test-data/images NIWA_VIDEOS_DIR=./upload/test/test-data/2023 ./upload/data_upload.sh
 ```
 
 Read the contents of the .txt log files.

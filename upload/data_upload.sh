@@ -17,8 +17,15 @@ if [ -z "${NIWA_IMAGES_DIR}" ]; then
 else
   images_dir="${NIWA_IMAGES_DIR}"
 fi
+if [ -z "${NIWA_VIDEOS_DIR}" ]; then
+  # NIWA_VIDEOS_DIR not set, so let's set it explicitly
+  videos_dir="videos"
+else
+  videos_dir="${NIWA_VIDEOS_DIR}"
+fi
+
 ofop_dir="ofop"
-videos_dir="videos"
+
 success_file="success.txt"
 error_file="error.txt"
 sync_output_file="sync_logs.txt"
@@ -63,11 +70,15 @@ image_pattern3="^[A-Z]{3}[0-9]{4}_Stn_[0-9]{3,}_[0-9]{3}\.jpeg$"
 # e.g. TAN1802_Stn_160_004.jpg
 image_pattern4="^[A-Z]{3}[0-9]{4}_Stn_[0-9]{3,}_[0-9]{3}\.jpg$"
 
+# e.g. TAN1802_001.m2t or TAN1802_001.m2ts
+video_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.m2t[s]?$"
+# e.g. 201012220153001.m2t or 201012220153001.m2ts (only digits)
+video_pattern2="^[0-9]{4,}\.m2t[s]?$"
+
 ofop_posi_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
 ofop_prot_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
 ofop_obser_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
 ofop_prot_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_prot\.txt$"
-video_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.m2t[s]?$"
 
 ##############################################
 # Section: functions
@@ -117,7 +128,9 @@ upload_to_s3() {
 }
 
 
-# Function to check files against a pattern and their actual type (Images)
+# A bash function which verifies local image files. It checks:
+# * that the file name matches a naming convention
+# * that the file type is jpeg
 check_image_files() {
     local dir=$1
     echo "Checking ${dir} for image files..."
@@ -133,36 +146,58 @@ check_image_files() {
       #echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
-        if [[ ! "${file_name}" =~ ${image_pattern1} ]] && [[ ! "${file_name}" =~ ${image_pattern2} ]] && [[ ! "${file_name}" =~ ${image_pattern3} ]] && [[ ! "${file_name}" =~ ${image_pattern4} ]]; then
-            echo "File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
-        else
-          file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
-          if [[ "$file_type" != "image/jpeg" ]]; then
-              echo "File is not a valid JPEG: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
-          else
-            image_files_to_copy+=("${file_no_trailing_whitespace}")
-          fi
+      if [[ ! "${file_name}" =~ ${image_pattern1} ]] && [[ ! "${file_name}" =~ ${image_pattern2} ]] && [[ ! "${file_name}" =~ ${image_pattern3} ]] && [[ ! "${file_name}" =~ ${image_pattern4} ]]; then
+        echo "File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
+        continue
+      fi
+
+      file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
+      if [[ "$file_type" != "image/jpeg" ]]; then
+        echo "File is not a valid JPEG: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
+      else
+        image_files_to_copy+=("${file_no_trailing_whitespace}")
       fi
     done
 }
 
-# Function to check files against a pattern and their actual type (Videos)
+# A bash function which verifies local video files. It checks:
+# * that the file name matches a naming convention
+# * that the file type is video
 check_video_files() {
     local dir=$1
     echo "Checking $dir for video files..."
 
-    for file in "$dir"/*; do
-        if [[ ! $(basename "$file") =~ $video_pattern ]]; then
-            echo "File does not match video naming convention: $(basename "$file")" >> "$error_file"
-        else
-            file_type=$(file --mime-type -b "$file")
-            if [[ "$file_type" != "video/MP2T" ]]; then
-                echo "File is not a valid .m2t or .m2ts file: $(basename "$file") (Detected type: $file_type)" >> "$error_file"
-            else
-                echo "Uploading valid video file to S3: $(basename "$file")"
-                upload_to_s3 "$file"
-            fi
-        fi
+    # Find all the files, in the videos directory, with the selected
+    # file extensions.
+    # Write the file names into an bash array.
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts')
+
+    for file in "${files_with_matching_extension[@]}"; do
+      # echo "file is ${file}"
+      file_no_trailing_whitespace="$(echo -e "${file}" | sed -e 's/[[:space:]]*$//')"
+      # echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
+
+      file_name=$(basename "$file")
+      if [[ ! "${file_name}" =~ ${video_pattern1} ]] && [[ ! "${file_name}" =~ ${video_pattern2} ]]; then
+        echo "File does not match video naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
+        continue
+      fi
+
+      if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
+        # We don't want to upload video files to the git repository,
+        # because video files are usually big and storing them in a git
+        # repository is not a right thing to do.
+        echo "NIWA_DRY_RUN is set, so skipping video file type verification"
+        video_files_to_copy+=("${file_no_trailing_whitespace}")
+        continue
+      fi
+
+      file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
+      if [[ "$file_type" != "video/MP2T" ]]; then
+        echo "File is not a valid .m2t or .m2ts file: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
+      else
+        video_files_to_copy+=("${file_no_trailing_whitespace}")
+      fi
     done
 }
 
@@ -224,9 +259,12 @@ echo "S3 Bucket Name: ${bucket_name}" >> "$sync_output_file"
 echo "Region: ${aws_region}" >> "$sync_output_file"
 
 ##############################################
-# SubSection: Verify the local files with dtis data
+# SubSection: Verify the local files containing dtis data
 ##############################################
 
+##############################################
+# SubSubSection: image files
+##############################################
 # This array will contain the set of image files, which passed
 # the local verification steps
 declare -a image_files_to_copy=()
@@ -239,8 +277,39 @@ else
     exit 1
 fi
 
-echo "The following images will be copied to S3:"
-echo "${image_files_to_copy[@]}"
+echo "The following images will be copied to S3:" | tee -a "$success_file"
+echo "${image_files_to_copy[@]}" | tee -a "$success_file"
+echo ""
+
+##############################################
+# SubSubSection: video files
+##############################################
+# This array will contain the set of video files, which passed
+# the local verification steps
+declare -a video_files_to_copy=()
+
+# Check Videos directory for naming convention and file type
+if [ -d "$videos_dir" ]; then
+    check_video_files "$videos_dir"
+else
+    echo "Videos directory: $videos_dir does not exist." | tee -a "$error_file"
+    exit 1
+fi
+
+echo "The following videos will be copied to S3:" | tee -a "$success_file"
+echo "${video_files_to_copy[@]}" | tee -a "$success_file"
+echo ""
+
+##############################################
+# SubSubSection: text files
+##############################################
+echo TODO
+
+
+##############################################
+# SubSubSection: finish the verification section
+##############################################
+echo "Local files verification completed."
 
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   echo "Exit, because dry run is set"
@@ -251,6 +320,7 @@ fi
 # SubSection: Verify the S3 bucket
 ##############################################
 
+TODO: do not upload if exists already; parse to get the stn number and the cruise number
 
 # Set AWS configurations in the script (for S3 specifically)
 aws configure set region "${aws_region}"
@@ -273,15 +343,8 @@ else
     echo "$ofop_dir does not exist." >> "$error_file"
 fi
 
-# Check Videos directory for naming convention and file type
-if [ -d "$videos_dir" ]; then
-    check_video_files "$videos_dir"
-else
-    echo "$videos_dir does not exist." >> "$error_file"
-fi
 
-# Final notification after upload completion
-echo "File check and upload completed."
+
 
 # Trigger the Lambda function after upload completes
 # trigger_lambda_function
