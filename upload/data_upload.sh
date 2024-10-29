@@ -140,9 +140,7 @@ check_image_files() {
           if [[ "$file_type" != "image/jpeg" ]]; then
               echo "File is not a valid JPEG: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
           else
-            echo "Uploading valid image file to S3: $(basename "$file")"
-            # TODO move the below line out of this function
-            # upload_to_s3 "$file"
+            image_files_to_copy+=("${file_no_trailing_whitespace}")
           fi
       fi
     done
@@ -229,6 +227,10 @@ echo "Region: ${aws_region}" >> "$sync_output_file"
 # SubSection: Verify the local files with dtis data
 ##############################################
 
+# This array will contain the set of image files, which passed
+# the local verification steps
+declare -a image_files_to_copy=()
+
 # Check Images directory for naming convention and file type
 if [ -d "$images_dir" ]; then
     check_image_files "$images_dir"
@@ -236,6 +238,9 @@ else
     echo "Images directory: $images_dir does not exist." | tee -a "$error_file"
     exit 1
 fi
+
+echo "The following images will be copied to S3:"
+echo "${image_files_to_copy[@]}"
 
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   echo "Exit, because dry run is set"
