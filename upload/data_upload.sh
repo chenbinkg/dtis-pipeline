@@ -107,27 +107,106 @@ verify_s3_bucket() {
     fi
 }
 
-upload_to_s3() {
-    local file=$1  # This will be used for logging
-    local dir=$(dirname "$file")  # Directory extracted from the file path
-    local cruise_id=$(extract_cruise_id "$(ls "$dir" | head -n 1)")
+function get_station_id() {
+  local file_path=$1
+  # make it fully upper case letters
+  file_path_upper_case="${file_path^^}"
 
-    if [ "$cruise_id" != "UNKNOWN" ]; then
-        # Run the sync command and capture the output
-        sync_output=$(aws s3 sync "$dir" "s3://$bucket_name/$cruise_id/" --exclude ".DS_Store" --exclude "*/.DS_Store")
+  set +e
 
-        # Check if the sync was successful
-        if [ $? -eq 0 ]; then
-            # Log each uploaded file to the success file
-            echo "$sync_output" >> "$sync_output_file"
-            echo "Sync to S3: $file" >> "$success_file"
-        else
-            # If sync fails, log the error
-            echo "Error uploading directory to S3: $dir" >> "$error_file"
-        fi
+  # First let's check if the file path matches the NIWA_CRUISE_ID;
+  # if it does not, we exit the function. This file will not
+  # be uploaded.
+  if ! echo "${file_path_upper_case}" | grep -q "${NIWA_CRUISE_ID}" ; then
+    echo "WARNING: File: ${file_path} does not come from the cruise of ID: ${NIWA_CRUISE_ID}" | tee -a "${error_file}"
+    station_id=""
+    return
+  fi
+
+  # Method 1 - extract station id from a directory name,
+  # It works for files such as:
+  # e.g. Video/TAN0616/TAN0616_003/TAN0616_045.m2ts
+
+  # this gives, e.g. /TAN0616_003/
+  local temp_parse
+  temp_parse=$(echo "${file_path_upper_case}" | grep -oF "/${NIWA_CRUISE_ID}_[0-9]{3,}/")
+  if [ $? -eq 0 ]; then
+    # this gives, e.g. 003/
+    temp_parse=$(echo $temp_parse | awk -F '_' '{print $2}')
+    # Remove possible trailing /
+    temp_parse=${temp_parse%/}
+    station_id="${temp_parse}"
+  else
+    # Method 1 did not work, let's try method 2.
+    # It works for files such as:
+    # e.g. images/dir with space/TAN1802_Stn_160_001.jpg
+
+    # this gives, e.g. /TAN1802_Stn_160
+    temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}_STN_[0-9]{3,}_")
+    if [ $? -eq 0 ]; then
+      # this gives, e.g. 160
+      temp_parse=$(echo $temp_parse | awk -F '_' '{print $3}')
+      station_id="${temp_parse}"
+      # remove whitespace
+      station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
     else
-        echo "Could not extract cruise ID for directory: $dir" >> "$error_file"
+      # Method 2 did not work, let's try method 3.
+      # It works for files such as:
+      # e.g. images/dir with space/TAN1802_160_DTIS__004.jpeg
+
+      # this gives, e.g. /TAN1802_160_
+      temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}_[0-9]{3,}_")
+      if [ $? -eq 0 ]; then
+        # this gives, e.g. 160
+        temp_parse=$(echo $temp_parse | awk -F '_' '{print $2}')
+        station_id="${temp_parse}"
+        # remove whitespace
+        station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
+      else
+        # TODO: we might want to not exit here, but move on to other files instead
+        echo "Could not get station id for the file: ${file_path} (file path matches no pattern)" | tee -a "${error_file}"
+        exit 1
+      fi
     fi
+  fi
+
+  set -e
+
+  # verify that station_id is exactly 3 digits and nothing else
+  station_id_pattern="^[0-9]{3}$"
+  if [[ ! "${station_id}" =~ ${station_id_pattern} ]]; then
+    echo "Could not get station id for the file: ${file_path} (station id was not a number: ${station_id})" | tee -a "${error_file}"
+    exit 1
+  fi
+}
+
+upload_to_s3() {
+  # this is an array of local file paths
+  local files_to_be_uploaded_to_s3=$1
+  # this is either: video, text, or image
+  local file_type=$2
+
+  for file in "${files_to_be_uploaded_to_s3[@]}"; do
+    local station_id=""
+    get_station_id "${file}"
+    if [[ "${station_id}" != "" ]]; then
+      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
+      s3_destination="s3://${bucket_name}${NIWA_CRUISE_ID}/${station_id}/${file_type}/"
+
+      # Run the upload command and capture the output
+      #sync_output=$(set -x; aws s3 copy "${file}" "${s3_destination}")
+      sync_output=$(echo "aws s3 copy ${file} ${s3_destination}")
+
+      if [ $? -eq 0 ]; then
+          # Upload successful, write the output to the success file
+          echo "Success uploading to S3: ${file}" | tee -a "${success_file}"
+      else
+          # Upload successful, write the output to the error file
+          echo "Error uploading to S3: ${file}" | tee -a  "${error_file}"
+      fi
+      echo "$sync_output" | tee -a "$sync_output_file"
+    fi
+  done
 }
 
 
@@ -234,7 +313,6 @@ check_ofop_files() {
             "${file_name}" =~ $ofop_obser_rerun_pattern || \
             "${file_name}" =~ $ofop_prot_rerun_pattern ]]; then
         text_files_to_copy+=("${file_no_trailing_whitespace}")
-        echo "matche ${file_name}"
       else
         echo "File does not match any pattern: ${file_name}" | tee -a  "$error_file"
       fi
@@ -346,7 +424,33 @@ echo ""
 echo "Local files verification completed." | tee -a "$success_file"
 
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
-  echo "Exit, because dry run is set"
+
+  # let's run get_station_id here, so that
+  # * we can reliably test it
+  # * a Scientist can preview the result in the DryRun mode
+  echo "" | tee -a "$success_file"
+  echo "Getting station IDs." | tee -a "$success_file"
+  station_id=""
+  for file in "${image_files_to_copy[@]}"; do
+    get_station_id "${file}"
+    if [[ "${station_id}" != "" ]]; then
+      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
+    fi
+  done
+  for file in "${video_files_to_copy[@]}"; do
+    get_station_id "${file}"
+    if [[ "${station_id}" != "" ]]; then
+      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
+    fi
+  done
+  for file in "${text_files_to_copy[@]}"; do
+    get_station_id "${file}"
+    if [[ "${station_id}" != "" ]]; then
+      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
+    fi
+  done
+
+  echo "Exit, because dry run is set" | tee -a "$success_file"
   exit 0
 fi
 
@@ -372,6 +476,15 @@ aws configure set s3.addressing_style virtual
 ##############################################
 # Section: Upload
 ##############################################
+
+echo "----------------------------" >> "$success_file"
+echo "Uploading files to S3 - $(date)" >> "$success_file"
+echo "----------------------------" >> "$success_file"
+
+upload_to_s3 "${image_files_to_copy[@]}" "images"
+#upload_to_s3 "${video_files_to_copy[@]}" "videos"
+#upload_to_s3 "${text_files_to_copy[@]}" "ofop"
+
 ##############################################
 # Section: Trigger the Lambda function
 ##############################################
