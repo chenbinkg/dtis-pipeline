@@ -1,3 +1,27 @@
+'''
+DataPlatform Lambda Function for ingesting text-file-based DTIS/OFOP content into MongoDB:
+
+* Text files on S3 are parsed by this function and the relevant content converted to MongoDB collections.
+* File format is expected to conform to the specifications used in/created by OFOP software for DTIS (prot and rerun files).
+* Folders that contain video and image files are being referenced in the output collection by adding links to those folders. 
+
+Requirements:
+* PyMongo needs to be available to the Lambda process Python 3 environment (can be added via a Lambda layer)
+* Define environment variables for 
+* MongoDB connection string, e.g. MONGODB_URI, 
+* and the name of the MongoDB database, e.g. MONGODB_DATABASE
+* Define environment variable for the name of the MongoDB collection used for observations, e.g. MONGODB__COLLECTION
+* Define environment variable for the name of the MongoDB collection used for overview, e.g. INGRESS_COLLECTION_DTIS
+* Define environment variable for the name of the S3 bucket containing the text files, e.g. S3_BUCKET_NAME
+* Prot and posi files need to be both available in an upload, image and video files are implicitly expected, too.
+
+
+
+October 2024 Tilmann Steinmetz
+
+'''
+
+
 import json
 import logging
 import os
