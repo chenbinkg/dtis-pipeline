@@ -102,7 +102,7 @@ verify_s3_bucket() {
     if aws s3api head-bucket --bucket "$bucket_name" >/dev/null 2>&1; then
         echo "Bucket Exists: $bucket_name"
     else
-        echo "S3 bucket is not accessible or does not exist: $bucket_name" >> "$error_file"
+        echo "S3 bucket is not accessible or does not exist: $bucket_name" | tee -a "$error_file"
         exit 1  # Exit if the bucket doesn't exist or isn't accessible
     fi
 }
@@ -341,9 +341,9 @@ echo ""
 
 
 ##############################################
-# SubSubSection: finish the verification section
+# SubSubSection: Finish the local verification
 ##############################################
-echo "Local files verification completed."
+echo "Local files verification completed." | tee -a "$success_file"
 
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   echo "Exit, because dry run is set"
@@ -351,7 +351,7 @@ if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
 fi
 
 ##############################################
-# SubSection: Verify the S3 bucket
+# SubSection: Verify the S3 bucket and local AWS CLI settings
 ##############################################
 
 # Verify the S3 bucket
@@ -367,6 +367,14 @@ aws configure set s3.multipart_chunksize 16MB
 aws configure set s3.max_bandwidth 200MB/s
 aws configure set s3.use_accelerate_endpoint false
 aws configure set s3.addressing_style virtual
+
+
+##############################################
+# Section: Upload
+##############################################
+##############################################
+# Section: Trigger the Lambda function
+##############################################
 
 # Trigger the Lambda function after upload completes
 # trigger_lambda_function
