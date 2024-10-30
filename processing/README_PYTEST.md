@@ -35,7 +35,7 @@ Alternatively install the necessary system dependencies on Arch Linux environmen
 We then need to setup a python virtual environment (it is good practise to keep our python environments organised by project) and install `pytest` and its dependencies - these are all listed in the `requirements.txt` file.
 
     python3 -m venv venv
-    . venv/bin/activate
+    source venv/bin/activate
 
     pip install -r requirements.txt
 
@@ -75,25 +75,10 @@ E.g.
 
     ...
     
-    custom options:
-      --ip=IP               Device IPv4 Address.
-      --signed              Device Signed Mode.
-      --swpack-version=SWPACK_VERSION
-                            Device swpack Version Number (x.y.z or LABEL.z).
-      --build={ci,nightly,pre,local}
-                            Specify the build-type (used to infer the swpack path).
-                            ci:      swpack is located in file-share ci directory (default).
-                            nightly: swpack is located in file-share nightly-ci directory.
-                            pre:     swpack is located in file-share pre-ga-release directory.
-                            local:   swpack is located at the local build path "$HOME/build_path".
-      --mode={normal,dev,test-dev}
-                            Specify the test mode.
-                            normal:   no tests are skipped (deafult).
-                            dev:      software load and rollback tests are skipped.
-                            test-dev: software init load, load, and, rollback tests are skipped.
+    Custom options:
+      --collection=COLLECTION                        MongoDB Collection Name.
     
     ...
-
 
 
 # Some useful pytest runtime options.
