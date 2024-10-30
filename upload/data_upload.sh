@@ -163,48 +163,50 @@ function get_station_id() {
         # remove whitespace
         station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
       else
-        # TODO: we might want to not exit here, but move on to other files instead
-        echo "Could not get station id for the file: ${file_path} (file path matches no pattern)" | tee -a "${error_file}"
-        exit 1
+        echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
       fi
     fi
   fi
 
   set -e
-
-  # verify that station_id is exactly 3 digits and nothing else
-  station_id_pattern="^[0-9]{3}$"
-  if [[ ! "${station_id}" =~ ${station_id_pattern} ]]; then
-    echo "Could not get station id for the file: ${file_path} (station id was not a number: ${station_id})" | tee -a "${error_file}"
-    exit 1
-  fi
 }
 
 upload_to_s3() {
-  # this is an array of local file paths
-  local files_to_be_uploaded_to_s3=$1
   # this is either: video, text, or image
-  local file_type=$2
+  local file_type=$1
+  # https://askubuntu.com/a/995110/665365
+  shift
+  # this is an array of local file paths
+  local files_to_be_uploaded_to_s3=("$@")
+  local station_id
 
   for file in "${files_to_be_uploaded_to_s3[@]}"; do
-    local station_id=""
+    station_id=""
     get_station_id "${file}"
     if [[ "${station_id}" != "" ]]; then
       echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
-      s3_destination="s3://${bucket_name}${NIWA_CRUISE_ID}/${station_id}/${file_type}/"
+      s3_destination="s3://${bucket_name}/${NIWA_CRUISE_ID}/${station_id}/${file_type}/"
+      echo "Uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
 
       # Run the upload command and capture the output
-      #sync_output=$(set -x; aws s3 copy "${file}" "${s3_destination}")
-      sync_output=$(echo "aws s3 copy ${file} ${s3_destination}")
-
-      if [ $? -eq 0 ]; then
+      if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
+        # we are not really uploading anything to S3, just pretending
+        sync_output=$(echo "aws s3 copy ${file} ${s3_destination}")
+        sync_output_exit_status=$?
+      else
+        # real upload happens here
+        #sync_output=$(set -x; aws s3 copy "${file}" "${s3_destination}")
+        echo "TODO"
+        sync_output_exit_status=$?
+      fi
+      echo "$sync_output" | tee -a "$sync_output_file"
+      if [ ${sync_output_exit_status} -eq 0 ]; then
           # Upload successful, write the output to the success file
           echo "Success uploading to S3: ${file}" | tee -a "${success_file}"
       else
           # Upload successful, write the output to the error file
           echo "Error uploading to S3: ${file}" | tee -a  "${error_file}"
       fi
-      echo "$sync_output" | tee -a "$sync_output_file"
     fi
   done
 }
@@ -423,55 +425,25 @@ echo ""
 ##############################################
 echo "Local files verification completed." | tee -a "$success_file"
 
-if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
-
-  # let's run get_station_id here, so that
-  # * we can reliably test it
-  # * a Scientist can preview the result in the DryRun mode
-  echo "" | tee -a "$success_file"
-  echo "Getting station IDs." | tee -a "$success_file"
-  station_id=""
-  for file in "${image_files_to_copy[@]}"; do
-    get_station_id "${file}"
-    if [[ "${station_id}" != "" ]]; then
-      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
-    fi
-  done
-  for file in "${video_files_to_copy[@]}"; do
-    get_station_id "${file}"
-    if [[ "${station_id}" != "" ]]; then
-      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
-    fi
-  done
-  for file in "${text_files_to_copy[@]}"; do
-    get_station_id "${file}"
-    if [[ "${station_id}" != "" ]]; then
-      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
-    fi
-  done
-
-  echo "Exit, because dry run is set" | tee -a "$success_file"
-  exit 0
-fi
-
 ##############################################
 # SubSection: Verify the S3 bucket and local AWS CLI settings
 ##############################################
 
-# Verify the S3 bucket
-verify_s3_bucket
+if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
+  # Verify the S3 bucket
+  verify_s3_bucket
 
-# Set AWS configurations in the script (for S3 specifically)
-aws configure set region "${aws_region}"
-aws configure set output json
-aws configure set s3.max_concurrent_requests 20
-aws configure set s3.max_queue_size 10000
-aws configure set s3.multipart_threshold 64MB
-aws configure set s3.multipart_chunksize 16MB
-aws configure set s3.max_bandwidth 200MB/s
-aws configure set s3.use_accelerate_endpoint false
-aws configure set s3.addressing_style virtual
-
+  # Set AWS configurations in the script (for S3 specifically)
+  aws configure set region "${aws_region}"
+  aws configure set output json
+  aws configure set s3.max_concurrent_requests 20
+  aws configure set s3.max_queue_size 10000
+  aws configure set s3.multipart_threshold 64MB
+  aws configure set s3.multipart_chunksize 16MB
+  aws configure set s3.max_bandwidth 200MB/s
+  aws configure set s3.use_accelerate_endpoint false
+  aws configure set s3.addressing_style virtual
+fi
 
 ##############################################
 # Section: Upload
@@ -481,9 +453,14 @@ echo "----------------------------" >> "$success_file"
 echo "Uploading files to S3 - $(date)" >> "$success_file"
 echo "----------------------------" >> "$success_file"
 
-upload_to_s3 "${image_files_to_copy[@]}" "images"
-#upload_to_s3 "${video_files_to_copy[@]}" "videos"
-#upload_to_s3 "${text_files_to_copy[@]}" "ofop"
+upload_to_s3 "images" "${image_files_to_copy[@]}"
+upload_to_s3 "videos" "${video_files_to_copy[@]}"
+upload_to_s3 "ofop" "${text_files_to_copy[@]}"
+
+if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
+  echo "Exit, because dry run is set" | tee -a "$success_file"
+  exit 0
+fi
 
 ##############################################
 # Section: Trigger the Lambda function

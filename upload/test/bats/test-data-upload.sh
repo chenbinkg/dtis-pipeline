@@ -4,7 +4,7 @@
 setup() {
     bats_load_library bats-support
     bats_load_library bats-assert
-    export NIWA_CRUISE_ID=123
+    export NIWA_CRUISE_ID=TAN123
 }
 
 @test "run data_upload without NIWA_ENVIRONMENT, exits with error" {
@@ -122,4 +122,6 @@ setup() {
   assert_output --partial "Station ID, for the file: ../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg, is: 160"
   # cruise id is mixed-case (not: TAN, but: Tan)
   assert_output --partial "Station ID, for the file: ../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg, is: 160"
+
+  assert_output --partial "Could not get station id for the file: ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts (file path matches no pattern, potential cruise ID mismatch)"
 }
