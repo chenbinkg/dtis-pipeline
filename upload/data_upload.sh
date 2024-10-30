@@ -185,7 +185,8 @@ upload_to_s3() {
     get_station_id "${file}"
     if [[ "${station_id}" != "" ]]; then
       echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
-      s3_destination="s3://${bucket_name}/${NIWA_CRUISE_ID}/${station_id}/${file_type}/"
+      file_basename=$(basename "$file")
+      s3_destination="s3://${bucket_name}/${NIWA_CRUISE_ID}/${station_id}/${file_type}/${file_basename}"
       echo "Uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
 
       # Run the upload command and capture the output
@@ -195,8 +196,13 @@ upload_to_s3() {
         sync_output_exit_status=$?
       else
         # real upload happens here
-        sync_output=$(set -x; aws s3 cp "${file}" "${s3_destination}")
-        sync_output_exit_status=$?
+        if aws s3api head-object --bucket "${bucket_name}" --key "${NIWA_CRUISE_ID}/${station_id}/${file_type}/${file_basename}" >/dev/null 2>/dev/null; then
+          sync_output="S3 object exists already, not uploading"
+          sync_output_exit_status=0
+        else
+          sync_output=$(set -x; aws s3 cp "${file}" "${s3_destination}")
+          sync_output_exit_status=$?
+        fi
       fi
       echo "$sync_output" | tee -a "$sync_output_file"
       if [ ${sync_output_exit_status} -eq 0 ]; then
