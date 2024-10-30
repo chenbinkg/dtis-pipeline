@@ -88,6 +88,8 @@ video_pattern2="^[0-9]{4,}\.m2t[s]?$"
 ofop_posi_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
 # e.g. TAN1802_001_prot.txt
 ofop_prot_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
+# e.g. TAN1802_001_obser.txt
+ofop_obser_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_obser\.txt$"
 # e.g. TAN1802_001.sth_rerun.sth_obser.txt
 ofop_obser_rerun_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
 # e.g. TAN1802_001.sth_rerun.sth_prot.txt
@@ -163,7 +165,21 @@ function get_station_id() {
         # remove whitespace
         station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
       else
-        echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+        # Method 3 did not work, let's try method 4.
+        # It works for files such as:
+        # e.g. text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_obser.txt
+
+        # this gives, e.g. /TAN2203_001.sth_rerun
+        temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}_[0-9]{3,}.*_RERUN")
+        if [ $? -eq 0 ]; then
+          # this gives, e.g. 160
+          temp_parse=$(echo $temp_parse | awk -F '_' '{print $2}' | awk -F '.' '{print $1}')
+          station_id="${temp_parse}"
+          # remove whitespace
+          station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
+        else
+          echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+        fi
       fi
     fi
   fi
@@ -317,6 +333,7 @@ check_ofop_files() {
 
       if [[ "${file_name}" =~ $ofop_posi_pattern || \
             "${file_name}" =~ $ofop_prot_pattern || \
+            "${file_name}" =~ $ofop_obser_pattern || \
             "${file_name}" =~ $ofop_obser_rerun_pattern || \
             "${file_name}" =~ $ofop_prot_rerun_pattern ]]; then
         text_files_to_copy+=("${file_no_trailing_whitespace}")
