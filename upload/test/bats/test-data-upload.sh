@@ -145,3 +145,18 @@ setup() {
 
   assert_output --partial "File does not match any pattern: tan1802_113_AcousticMarkWatercolumnshot_obser.txt"
 }
+
+@test "run data_upload with NIWA_ENVIRONMENT, test for get_station_id (2; cruise ID: TAN2203), ignore images and videos" {
+  run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='ignore' && export NIWA_VIDEOS_DIR='ignore' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && export NIWA_CRUISE_ID=TAN2203 && ../../data_upload.sh"
+	assert_output --partial "Exit, because dry run is set"
+  assert_output --partial "Checking ignore for image files..."
+  assert_output --partial "Images directory was set to 'ignore', cancelling the check"
+  assert_output --partial "Checking ignore for video files..."
+  assert_output --partial "Videos directory was set to 'ignore', cancelling the check"
+  assert_output --partial "Checking ../test-data/text/TAN2203 for text files..."
+
+  # since we are ignoring all video and image files, t
+  refute_output --partial "jpg"
+  refute_output --partial "m2t"
+  refute_output --partial "jpeg"
+}

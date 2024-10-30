@@ -240,6 +240,15 @@ check_image_files() {
     local dir=$1
     echo "Checking ${dir} for image files..."
 
+    if [[ "${dir}" == "ignore" ]]; then
+      echo "Images directory was set to 'ignore', cancelling the check"
+      return
+    fi
+    if [ ! -d "$dir" ]; then
+        echo "Images directory: $dir does not exist." | tee -a "$error_file"
+        exit 1
+    fi
+
     # Find all the files, in the images directory, with the selected
     # file extensions.
     # Write the file names into an bash array.
@@ -271,6 +280,16 @@ check_image_files() {
 check_video_files() {
     local dir=$1
     echo "Checking $dir for video files..."
+
+    if [[ "${dir}" == "ignore" ]]; then
+      echo "Videos directory was set to 'ignore', cancelling the check"
+      return
+    fi
+
+    if [ ! -d "$dir" ]; then
+      echo "Videos directory: $dir does not exist." | tee -a "$error_file"
+      exit 1
+    fi
 
     # Find all the files, in the videos directory, with the selected
     # file extensions.
@@ -392,12 +411,7 @@ echo "Region: ${aws_region}" >> "$sync_output_file"
 declare -a image_files_to_copy=()
 
 # Check Images directory for naming convention and file type
-if [ -d "$images_dir" ]; then
-    check_image_files "$images_dir"
-else
-    echo "Images directory: $images_dir does not exist." | tee -a "$error_file"
-    exit 1
-fi
+check_image_files "$images_dir"
 
 echo "The following images passed local verification:" | tee -a "$success_file"
 echo "${image_files_to_copy[@]}" | tee -a "$success_file"
@@ -411,12 +425,7 @@ echo ""
 declare -a video_files_to_copy=()
 
 # Check Videos directory for naming convention and file type
-if [ -d "$videos_dir" ]; then
-    check_video_files "$videos_dir"
-else
-    echo "Videos directory: $videos_dir does not exist." | tee -a "$error_file"
-    exit 1
-fi
+check_video_files "$videos_dir"
 
 echo "The following videos passed local verification:" | tee -a "$success_file"
 echo "${video_files_to_copy[@]}" | tee -a "$success_file"

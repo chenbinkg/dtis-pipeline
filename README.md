@@ -55,6 +55,9 @@ NIWA_DRY_RUN=false NIWA_ENVIRONMENT=testing \
 	./upload/data_upload.sh
 ```
 
+### For the Scientists - ignore images and videos
+
+It's possible to not upload the image and video files. In such a case only  the text files would be uploaded to S3. To use this feature, please set `NIWA_IMAGES_DIR=ignore` and `NIWA_VIDEOS_DIR=ignore`.
 
 ### For the Script Developers
 
