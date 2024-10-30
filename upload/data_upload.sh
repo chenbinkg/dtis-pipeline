@@ -191,12 +191,11 @@ upload_to_s3() {
       # Run the upload command and capture the output
       if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
         # we are not really uploading anything to S3, just pretending
-        sync_output=$(echo "aws s3 copy ${file} ${s3_destination}")
+        sync_output=$(echo "aws s3 cp ${file} ${s3_destination}")
         sync_output_exit_status=$?
       else
         # real upload happens here
-        #sync_output=$(set -x; aws s3 copy "${file}" "${s3_destination}")
-        echo "TODO"
+        sync_output=$(set -x; aws s3 cp "${file}" "${s3_destination}")
         sync_output_exit_status=$?
       fi
       echo "$sync_output" | tee -a "$sync_output_file"
@@ -449,9 +448,9 @@ fi
 # Section: Upload
 ##############################################
 
-echo "----------------------------" >> "$success_file"
-echo "Uploading files to S3 - $(date)" >> "$success_file"
-echo "----------------------------" >> "$success_file"
+echo "----------------------------" | tee -a  "$success_file"
+echo "Uploading files to S3 - $(date)" | tee -a  "$success_file"
+echo "----------------------------" | tee -a  "$success_file"
 
 upload_to_s3 "images" "${image_files_to_copy[@]}"
 upload_to_s3 "videos" "${video_files_to_copy[@]}"
