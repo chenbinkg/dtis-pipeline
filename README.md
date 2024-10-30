@@ -13,6 +13,8 @@ To manage data operations (data upload, data processing) for the ocean floor DTI
 
 ### For the Scientists
 
+The intention of the `data_upload.sh` script is to upload local files to S3. The files should only pertain to one particular ship cruise (voyage).
+
 1. **Run the Bash script, with dryrun**. Start with running this Bash command:
 ```
 NIWA_DRY_RUN=true NIWA_ENVIRONMENT=testing \
