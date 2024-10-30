@@ -1,4 +1,4 @@
-# Linux Embedded Device Integration Test Suite
+# Pytest Test Suite
 
 ## Introduction
 
