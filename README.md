@@ -14,6 +14,9 @@ To manage data operations (data upload, data processing) for the ocean floor DTI
 ### For the Scientists
 
 The intention of the `data_upload.sh` script is to upload local files to S3. The files should only pertain to one particular ship cruise (voyage).
+Windows machine dependencies:
+- Need to install git first
+- Need to have putty or MobaXterm installed
 
 1. **Run the Bash script, with dryrun**. Start with running this Bash command:
 ```
@@ -32,6 +35,13 @@ NIWA_DRY_RUN=true NIWA_ENVIRONMENT=testing \
 
 
 The above command will run locally, using your files, and it will **not** interact with AWS at all, thanks to setting `NIWA_DRY_RUN=true`. Therefore, **it is always safe to run the above command**.
+Need to update bash version and install additional bash packages if encounter error like ```> bash: file: command not found```:
+```
+apt-get update
+```
+```
+apt-get install file
+```
 
 2. **Inspect the output**. Please go through the output of the above command, printed in your terminal. The output from the script is also written to the local log files. The log files contain the same information as the terminal output but split across:
 	* `error.txt` - contains only warnings and errors
