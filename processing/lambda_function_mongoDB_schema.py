@@ -1,4 +1,4 @@
-'''
+"""
 DataPlatform Lambda Function for ingesting text-file-based DTIS/OFOP content into MongoDB:
 
 * Text files on S3 are parsed by this function and the relevant content converted to MongoDB collections.
@@ -19,8 +19,7 @@ Requirements:
 
 October 2024 Tilmann Steinmetz
 
-'''
-
+"""
 
 import json
 import logging
@@ -191,7 +190,7 @@ def parse_data_line(line, source_key, video_start_time, video_events):
             il = f'/images/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit("_prot.", 1)[0]}_{observation.rsplit("photo", 1)[1]}.jpg'
         except:
             il = f'/images/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}_{observation}.jpg'
-        
+
         media = il
         mediatype = "photo"
     elif (
@@ -204,7 +203,7 @@ def parse_data_line(line, source_key, video_start_time, video_events):
             vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit("_prot.", 1)[0]}.m2t'
         except:
             vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}.m2t'
-        
+
         media = vl
         mediatype = "video"
 
@@ -290,7 +289,7 @@ def lambda_handler(event, context):
     # Read the file from S3
     s3 = boto3.client("s3")
     bucket_name = os.environ["S3_BUCKET_NAME"]
-    
+
     file_key = urllib.parse.unquote_plus(
         event["Records"][0]["s3"]["object"]["key"], encoding="utf-8"
     )
@@ -404,6 +403,9 @@ def lambda_handler(event, context):
         # Insert documents into MongoDB
         result = collection.insert_many(documents)
         # Increment the ingressId for the next run
+        ingr_id = get_current_ingress_id(
+            db, COUNTER_COLLECTION_NAME, cruise, station, remarks, date_created
+        )
         increment_ingress_id(
             db,
             ingress_counter,
@@ -418,8 +420,7 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "body": json.dumps(
-                f"Inserted {len(result.inserted_ids)} documents into MongoDB. Current ingressId: 
-                {get_current_ingress_id(db, COUNTER_COLLECTION_NAME, cruise, station, remarks, date_created)}"
+                f"Inserted {len(result.inserted_ids)} documents into MongoDB. Current ingressId: {ingr_id}"
             ),
         }
     except Exception as e:
