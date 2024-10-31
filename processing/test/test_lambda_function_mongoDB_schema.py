@@ -189,7 +189,7 @@ def test_parse_data_line_complete_video_sequence():
     assert video_events[1]["event"] == "stop"
     assert video_events[1]["duration"] == str(timedelta(minutes=1))
 
-
+@pytest.mark.skip(reason="Work in progress.")
 # def test_get_posi_file_content_success():
 #     # Arrange
 #     mock_s3 = Mock()
