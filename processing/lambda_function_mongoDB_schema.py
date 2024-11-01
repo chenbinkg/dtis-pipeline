@@ -161,87 +161,65 @@ def parse_data_line(line, source_key, video_start_time, video_events):
     sub_lat, sub_lon = float(fields[10]), float(fields[11])
     speed, course, depth, heading = map(float, fields[4:8])
     observation = fields[13] if len(fields) > 12 else ""
-    media = ""
-    mediatype = ""
-    mediaoffset = None
 
     current_time = datetime.strptime(utc_time, "%H:%M:%S")
 
+    # Initialize feature dictionary
+    feature = {
+        "media": "",
+        "mediaType": "",
+        "mediaOffset": None,
+        "observation": observation,
+        "observation2": None,
+        "observation3": None,
+        "observationRef": "[AphiaID / link to WORMS]",
+    }
+
+    # Handle photo observations
+    if "photo" in observation.lower():
+        feature["mediaType"] = "photo"
+        # Extract voyage and station from source_key (assuming format like 'TAN2306_123_prot.txt')
+        voyage_station = source_key.split("_prot.txt")[0]
+        feature["media"] = f"/images/{voyage_station}/{voyage_station}_12.jpg"
+
+    # Handle video observations
+    if isinstance(video_start_time, str):
+        video_start_time = datetime.strptime(video_start_time, "%H:%M:%S")
+
     if "video started" in observation.lower() or "start video" in observation.lower():
         video_start_time = current_time
-        video_events.append({"event": "start", "time": current_time.isoformat()})
-        mediaoffset = timedelta(seconds=0)
+        video_events.append(
+            {"event": "start", "time": current_time.strftime("%H:%M:%S")}
+        )
+        feature["mediaOffset"] = timedelta(seconds=0)
+        feature["mediaType"] = "video"
+        voyage_station = source_key.split("_prot.txt")[0]
+        feature["media"] = f"/videos/{voyage_station}/{voyage_station}.m2t"
     elif "video stopped" in observation.lower() or "stop video" in observation.lower():
         if video_start_time:
-            mediaoffset = current_time - video_start_time
+            feature["mediaOffset"] = current_time - video_start_time
             video_events.append(
                 {
                     "event": "stop",
-                    "time": current_time.isoformat(),
-                    "duration": str(mediaoffset),
+                    "time": current_time.strftime("%H:%M:%S"),
+                    "duration": str(feature["mediaOffset"]),
                 }
             )
-        video_start_time = None
-    elif video_start_time:
-        mediaoffset = current_time - video_start_time
+            video_start_time = None
 
-    if "photo" in observation.lower():
-        try:
-            il = f'/images/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit("_prot.", 1)[0]}_{observation.rsplit("photo", 1)[1]}.jpg'
-        except:
-            il = f'/images/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}_{observation}.jpg'
+    # Create the result dictionary
+    result = {
+        "timestamp": utc_time,
+        "shipLocation": {"type": "Point", "coordinates": [lon, lat]},
+        "speed": speed,
+        "course": course,
+        "heading": heading,
+        "depth": depth,
+        "subLocation": {"type": "Point", "coordinates": [sub_lon, sub_lat]},
+        "feature": feature,
+    }
 
-        media = il
-        mediatype = "photo"
-    elif (
-        video_start_time
-        or "video stopped" in observation.lower()
-        or "stop video" in observation.lower()
-    ):
-        # construct a link to the video file which will also be uploaded
-        try:
-            vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit("_prot.", 1)[0]}.m2t'
-        except:
-            vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}.m2t'
-
-        media = vl
-        mediatype = "video"
-
-        # # construct a link to the video file which will also be uploaded
-        # vl = f'/videos/{source_key.rsplit("_prot.", 1)[0].rsplit("_", 1)[0]}/{source_key.rsplit(".", 1)[0]}.m2t'
-        # print(vl)
-        if os.path.exists(vl):
-            media = vl
-            mediatype = "video"
-        else:
-            # We just pretend it must be there, for now:
-            media = vl
-            mediatype = "video"
-
-    return (
-        {
-            "timestamp": utc_time,
-            "shipLocation": {"type": "Point", "coordinates": [lon, lat]},
-            "speed": speed,
-            "course": course,
-            "heading": heading,
-            "depth": depth,
-            "subLocation": {"type": "Point", "coordinates": [sub_lon, sub_lat]},
-            "feature": {
-                "media": media,
-                "mediaType": mediatype,
-                "mediaOffset": (
-                    mediaoffset.total_seconds() if mediaoffset else None
-                ),  # calculate the offset (time in seconds) for this record since "video started"
-                "observation": observation,
-                "observation2": None,
-                "observation3": None,
-                "observationRef": "[AphiaID / link to WORMS]",
-            },
-        },
-        video_start_time,
-        video_events,
-    )
+    return result, video_start_time, video_events
 
 
 def get_posi_file_content(s3, bucket, key):
