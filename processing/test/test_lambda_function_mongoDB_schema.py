@@ -20,9 +20,8 @@ from unittest.mock import Mock
 
 # import boto3
 import pytest
-
-# from botocore.exceptions import ClientError
-from lambda_function_mongoDB_schema import parse_data_line
+from botocore.exceptions import ClientError
+from lambda_function_mongoDB_schema import get_posi_file_content, parse_data_line
 
 
 @pytest.fixture
@@ -33,6 +32,85 @@ def basic_line():
 @pytest.fixture
 def source_key():
     return "TAN2306_123_prot.txt"
+
+
+def test_get_posi_file_content_success():
+    # Arrange
+    mock_s3 = Mock()
+    mock_response = {"Body": Mock()}
+    mock_response["Body"].read.return_value = b"sample posi content"
+    mock_s3.get_object.return_value = mock_response
+
+    # Act
+    result = get_posi_file_content(mock_s3, "test-bucket", "sample_prot.txt")
+
+    # Assert
+    assert result == "sample posi content"
+    mock_s3.get_object.assert_called_once_with(
+        Bucket="test-bucket",  # Changed from "XXXXXXXXXXX" to match the input parameter
+        Key="sample_posi.txt",
+    )
+
+
+def test_get_posi_file_content_no_file():
+    # Arrange
+    mock_s3 = Mock()
+    mock_s3.exceptions.NoSuchKey = ClientError
+    mock_s3.get_object.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "NoSuchKey",
+                "Message": "The specified key does not exist.",
+            }
+        },
+        "GetObject",
+    )
+
+    # Act
+    result = get_posi_file_content(mock_s3, "test-bucket", "sample_prot.txt")
+
+    # Assert
+    assert result is None
+
+
+def test_get_posi_file_content_file_name_transformation():
+    # Arrange
+    mock_s3 = Mock()
+    mock_response = {"Body": Mock()}
+    mock_response["Body"].read.return_value = b"sample posi content"
+    mock_s3.get_object.return_value = mock_response
+
+    # Act
+    result = get_posi_file_content(mock_s3, "test-bucket", "test123_prot.txt")
+
+    # Assert
+    mock_s3.get_object.assert_called_once_with(
+        Bucket="test-bucket", Key="test123_posi.txt"
+    )
+
+
+@pytest.mark.parametrize(
+    "input_key,expected_posi_key",
+    [
+        ("sample_prot.txt", "sample_posi.txt"),
+        ("test123_prot.txt", "test123_posi.txt"),
+        ("path/to/file_prot.txt", "path/to/file_posi.txt"),
+    ],
+)
+def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
+    # Arrange
+    mock_s3 = Mock()
+    mock_response = {"Body": Mock()}
+    mock_response["Body"].read.return_value = b"sample posi content"
+    mock_s3.get_object.return_value = mock_response
+
+    # Act
+    get_posi_file_content(mock_s3, "test-bucket", input_key)
+
+    # Assert
+    mock_s3.get_object.assert_called_once_with(
+        Bucket="test-bucket", Key=expected_posi_key
+    )
 
 
 @pytest.mark.parametrize(
@@ -263,7 +341,7 @@ def test_parse_data_line_media_types(
     assert result["feature"]["media"] == expected_media_path
 
 
-@pytest.mark.skip(reason="Work in progress.")
+# @pytest.mark.skip(reason="Work in progress.")
 def test_parse_data_line_complete_video_sequence():
     # Arrange
     lines = [
@@ -366,85 +444,3 @@ def test_parse_data_line_time_parsing():
     assert result["time"].hour == 23
     assert result["time"].minute == 59
     assert result["time"].second == 59
-
-
-@pytest.mark.skip(reason="Work in progress.")
-def test_get_posi_file_content_success():
-    # Arrange
-    mock_s3 = Mock()
-    mock_response = {"Body": Mock()}
-    mock_response["Body"].read.return_value = b"sample posi content"
-    mock_s3.get_object.return_value = mock_response
-
-    # # Act
-    # result = get_posi_file_content(mock_s3, "test-bucket", "sample_prot.txt")
-
-    # # Assert
-    # assert result == "sample posi content"
-    mock_s3.get_object.assert_called_once_with(
-        Bucket="XXXXXXXXXXX", Key="sample_posi.txt"
-    )
-
-
-@pytest.mark.skip(reason="Work in progress.")
-def test_get_posi_file_content_no_file():
-    # Arrange
-    mock_s3 = Mock()
-    mock_s3.exceptions.NoSuchKey = ClientError
-    mock_s3.get_object.side_effect = ClientError(
-        {
-            "Error": {
-                "Code": "NoSuchKey",
-                "Message": "The specified key does not exist.",
-            }
-        },
-        "GetObject",
-    )
-
-    # # Act
-    # result = get_posi_file_content(mock_s3, "test-bucket", "sample_prot.txt")
-
-    # # Assert
-    # assert result is None
-
-
-@pytest.mark.skip(reason="Work in progress.")
-def test_get_posi_file_content_file_name_transformation():
-    # Arrange
-    mock_s3 = Mock()
-    mock_response = {"Body": Mock()}
-    mock_response["Body"].read.return_value = b"sample posi content"
-    mock_s3.get_object.return_value = mock_response
-
-    # # Act
-    # result = get_posi_file_content(mock_s3, "test-bucket", "test123_prot.txt")
-
-    # Assert
-    mock_s3.get_object.assert_called_once_with(
-        Bucket="XXXXXXXXXXX", Key="test123_posi.txt"
-    )
-
-
-@pytest.mark.skip(reason="Work in progress.")
-@pytest.mark.parametrize(
-    "input_key,expected_posi_key",
-    [
-        ("sample_prot.txt", "sample_posi.txt"),
-        ("test123_prot.txt", "test123_posi.txt"),
-        ("path/to/file_prot.txt", "path/to/file_posi.txt"),
-    ],
-)
-def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
-    # Arrange
-    mock_s3 = Mock()
-    mock_response = {"Body": Mock()}
-    mock_response["Body"].read.return_value = b"sample posi content"
-    mock_s3.get_object.return_value = mock_response
-
-    # # Act
-    # get_posi_file_content(mock_s3, "test-bucket", input_key)
-
-    # Assert
-    mock_s3.get_object.assert_called_once_with(
-        Bucket="XXXXXXXXXXX", Key=expected_posi_key
-    )
