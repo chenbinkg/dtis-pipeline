@@ -1,18 +1,27 @@
 """
 This test suite covers:
 
-*test_parse_data_line_basic/basic_line: Basic parsing of a valid data line in prot.file
-*test_parse_data_line_basic/test_parse_data_line_invalid_format/source_key: Handling of invalid/incomplete lines
-*test_parse_data_line_media_types: Photo detection and path construction
-*test_parse_data_line_video_start/test_parse_data_line_video_stop/Video start/stop event detection
-*test_parse_data_line_video_duration: Video duration calculation
-*Time parsing
-*Media type detection
-*Complete video sequence handling
+* test_parse_data_line: parsing of a valid data line in prot.file
+* test_parse_data_line_invalid_format/source_key: Handling of invalid/incomplete lines in prot.file
+* test_parse_data_line_media_types: Photo detection and path construction
+* test_parse_data_line_complete_video_sequence: : check video observations and their timing work
+* test_parse_data_line_video_stop/Video start/stop event detection: check video observations and their timing work (these are older tests)
+* test_parse_data_line_video_duration: Video duration calculation
+
+* Time parsing:
+
+should we use the 'pendulum' library so we're better able to deal with dates/times?
+*TBD test_parse_data_line_time_parsing: Tests the time parsing logic for the date and time fields
+
+
+* Media type detection
+* Complete video sequence handling
 *test_get_posi_file_content_success: Tests the path where the posi file exists and can be retrieved successfully.
 *test_get_posi_file_content_no_file: Tests the error handling when the posi file doesn't exist.
 *test_get_posi_file_content_file_name_transformation: Specifically tests the file name transformation logic from "_prot.txt" to "_posi.txt".
 *test_get_posi_file_content_various_paths: Uses parametrize to test multiple input scenarios for different file paths and names.
+
+
 """
 
 from datetime import datetime, timedelta
@@ -247,7 +256,6 @@ def test_parse_data_line_video_events(
         assert video_events[0]["event"] == expected_video_state["event_type"]
 
 
-# @pytest.fixture
 def time_test_cases():
     return [
         {"time_str": "23:59:59", "expected": {"hour": 23, "minute": 59, "second": 59}},
@@ -341,7 +349,6 @@ def test_parse_data_line_media_types(
     assert result["feature"]["media"] == expected_media_path
 
 
-# @pytest.mark.skip(reason="Work in progress.")
 def test_parse_data_line_complete_video_sequence():
     # Arrange
     lines = [
@@ -365,7 +372,9 @@ def test_parse_data_line_complete_video_sequence():
     assert video_events[1]["duration"] == str(timedelta(minutes=1))
 
 
-@pytest.mark.skip(reason="Work in progress.")
+@pytest.mark.skip(
+    reason="OLD (this can probably be removed, as it has been superseded)/ Work in progress."
+)
 @pytest.mark.parametrize(
     "observation,expected_events_count",
     [
@@ -397,7 +406,9 @@ def test_parse_data_line_video_start(
         assert result["media"].endswith(".m2t")
 
 
-@pytest.mark.skip(reason="OLD/ Work in progress.")
+@pytest.mark.skip(
+    reason="OLD (this can probably be removed, as it has been superseded)/ Work in progress."
+)
 def test_parse_data_line_video_stop():
     # Arrange
     line = "12:35:00\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tvideo stopped"
@@ -417,7 +428,9 @@ def test_parse_data_line_video_stop():
     assert result["mediatype"] == "video"
 
 
-@pytest.mark.skip(reason="OLD/ Work in progress.")
+@pytest.mark.skip(
+    reason="OLD (this can probably be removed, as it has been superseded)/ Work in progress."
+)
 def test_parse_data_line_video_duration():
     # Arrange
     video_start = datetime.strptime("12:34:00", "%H:%M:%S")
@@ -431,7 +444,9 @@ def test_parse_data_line_video_duration():
     assert result["mediatype"] == "video"
 
 
-@pytest.mark.skip(reason="OLD/ Work in progress.")
+@pytest.mark.skip(
+    reason="OLD (this can probably be removed, as it has been superseded)/ Work in progress."
+)
 def test_parse_data_line_time_parsing():
     # Arrange
     line = "23:59:59\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
