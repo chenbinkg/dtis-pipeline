@@ -253,6 +253,7 @@ check_image_files() {
     # file extensions.
     # Write the file names into an bash array.
     readarray files_with_matching_extension < <(find "${dir}" -name '*.jpg' -o -name '*.jpeg')
+    echo "after readarray"
 
     for file in "${files_with_matching_extension[@]}"; do
       #echo "file is ${file}"
@@ -260,10 +261,13 @@ check_image_files() {
       #echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
+      echo "${file_name}"
       if [[ ! "${file_name}" =~ ${image_pattern1} ]] && [[ ! "${file_name}" =~ ${image_pattern2} ]] && [[ ! "${file_name}" =~ ${image_pattern3} ]] && [[ ! "${file_name}" =~ ${image_pattern4} ]]; then
         echo "File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
+
+      echo "after image file naming convention check"
 
       file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
       if [[ "$file_type" != "image/jpeg" ]]; then
@@ -271,6 +275,8 @@ check_image_files() {
       else
         image_files_to_copy+=("${file_no_trailing_whitespace}")
       fi
+
+      echo "after image file type check"
     done
 }
 
@@ -295,7 +301,8 @@ check_video_files() {
     # file extensions.
     # Write the file names into an bash array.
     readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts')
-
+    echo "after readarray"
+    
     for file in "${files_with_matching_extension[@]}"; do
       # echo "file is ${file}"
       file_no_trailing_whitespace="$(echo -e "${file}" | sed -e 's/[[:space:]]*$//')"
@@ -306,6 +313,8 @@ check_video_files() {
         echo "File does not match video naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
+
+      echo "after video file naming convention check"
 
       if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
         # We don't want to upload video files to the git repository,
@@ -322,6 +331,8 @@ check_video_files() {
       else
         video_files_to_copy+=("${file_no_trailing_whitespace}")
       fi
+
+      echo "after video file type check"
     done
 }
 
