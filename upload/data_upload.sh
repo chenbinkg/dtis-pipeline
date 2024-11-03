@@ -426,7 +426,7 @@ check_image_files "$images_dir"
 
 echo "The following images passed local verification:" | tee -a "$success_file"
 echo "${image_files_to_copy[@]}" | tee -a "$success_file"
-echo ""
+echo "" | tee -a "$success_file"
 
 ##############################################
 # SubSubSection: video files
@@ -440,7 +440,7 @@ check_video_files "$videos_dir"
 
 echo "The following videos passed local verification:" | tee -a "$success_file"
 echo "${video_files_to_copy[@]}" | tee -a "$success_file"
-echo ""
+echo "" | tee -a "$success_file"
 
 ##############################################
 # SubSubSection: text files
@@ -459,7 +459,7 @@ fi
 
 echo "The following text files passed local verification:" | tee -a "$success_file"
 echo "${text_files_to_copy[@]}" | tee -a "$success_file"
-echo ""
+echo "" | tee -a "$success_file"
 
 
 ##############################################
