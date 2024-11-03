@@ -253,6 +253,7 @@ check_image_files() {
     # file extensions.
     # Write the file names into an bash array.
     readarray files_with_matching_extension < <(find "${dir}" -name '*.jpg' -o -name '*.jpeg')
+    echo "after readarray"
 
     for file in "${files_with_matching_extension[@]}"; do
       #echo "file is ${file}"
@@ -260,6 +261,7 @@ check_image_files() {
       #echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
+      echo "${file_name}"
       if [[ ! "${file_name}" =~ ${image_pattern1} ]] && [[ ! "${file_name}" =~ ${image_pattern2} ]] && [[ ! "${file_name}" =~ ${image_pattern3} ]] && [[ ! "${file_name}" =~ ${image_pattern4} ]]; then
         echo "File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
