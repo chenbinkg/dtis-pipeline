@@ -45,7 +45,7 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/images for image files..."
   assert_output --partial "The following images passed local verification:
-../test-data/images/dir with space/TAN1802_Stn_160_001.jpg ../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg ../test-data/images/Tan1802_160/TAN1802_Stn_160_016.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_001.jpg ../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_002.jpeg"
+../test-data/images/TAN2203_002/TAN2203_Stn_002_033.jpg ../test-data/images/dir with space/TAN1802_Stn_160_001.jpg ../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg ../test-data/images/Tan1802_160/TAN1802_Stn_160_016.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_001.jpg ../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_002.jpeg"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
@@ -142,6 +142,8 @@ setup() {
   # rerun, obser
   assert_output --partial "Station ID, for the file: ../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_obser.txt, is: 001"
   assert_output --partial "Station ID, for the file: ../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_prot.txt, is: 001"
+  # an image
+  assert_output --partial "Station ID, for the file: ../test-data/images/TAN2203_002/TAN2203_Stn_002_033.jpg, is: 002"
 
   assert_output --partial "File does not match any pattern: tan1802_113_AcousticMarkWatercolumnshot_obser.txt"
 }
