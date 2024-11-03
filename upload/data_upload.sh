@@ -58,7 +58,7 @@ if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
   lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
 elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
   # S3 bucket details
-  bucket_name="dtis-ofop-851725470721-raw-testing"
+  bucket_name="dtis-ofop-851725470721-raw-production"
 
   # Lambda function URL
   lambda_function_url=https://TODO.lambda-url.us-east-1.on.aws/
@@ -302,7 +302,7 @@ check_video_files() {
     # Write the file names into an bash array.
     readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts')
     echo "after readarray"
-    
+
     for file in "${files_with_matching_extension[@]}"; do
       # echo "file is ${file}"
       file_no_trailing_whitespace="$(echo -e "${file}" | sed -e 's/[[:space:]]*$//')"
