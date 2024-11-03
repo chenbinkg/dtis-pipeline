@@ -267,12 +267,16 @@ check_image_files() {
         continue
       fi
 
+      echo "after image file naming convention check"
+
       file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
       if [[ "$file_type" != "image/jpeg" ]]; then
         echo "File is not a valid JPEG: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
       else
         image_files_to_copy+=("${file_no_trailing_whitespace}")
       fi
+
+      echo "after image file type check"
     done
 }
 
@@ -297,7 +301,8 @@ check_video_files() {
     # file extensions.
     # Write the file names into an bash array.
     readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts')
-
+    echo "after readarray"
+    
     for file in "${files_with_matching_extension[@]}"; do
       # echo "file is ${file}"
       file_no_trailing_whitespace="$(echo -e "${file}" | sed -e 's/[[:space:]]*$//')"
@@ -308,6 +313,8 @@ check_video_files() {
         echo "File does not match video naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
+
+      echo "after video file naming convention check"
 
       if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
         # We don't want to upload video files to the git repository,
@@ -324,6 +331,8 @@ check_video_files() {
       else
         video_files_to_copy+=("${file_no_trailing_whitespace}")
       fi
+
+      echo "after video file type check"
     done
 }
 
