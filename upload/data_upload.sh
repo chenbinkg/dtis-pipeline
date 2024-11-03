@@ -178,7 +178,21 @@ function get_station_id() {
           # remove whitespace
           station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
         else
-          echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+          # Method 4 did not work, let's try method 5.
+          # It works for files such as:
+          # e.g. TAN2203/Stn003/1234.m2t
+
+          # this gives, e.g. /TAN1802/STN003/
+          temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}/STN[0-9]{3,}/")
+          if [ $? -eq 0 ]; then
+            # this gives, e.g. STN003
+            temp_parse=$(echo $temp_parse | awk -F '/' '{print $3}' | grep -oE "[0-9]{3,}")
+            station_id="${temp_parse}"
+            # remove whitespace
+            station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
+          else
+            echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+          fi
         fi
       fi
     fi
