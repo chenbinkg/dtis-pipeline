@@ -38,6 +38,7 @@ fi
 success_file="success.txt"
 error_file="error.txt"
 sync_output_file="sync_logs.txt"
+plan_file="plan.txt"
 aws_region="ap-southeast-2"
 
 if [ -z "${NIWA_DRY_RUN}" ]; then
@@ -229,6 +230,7 @@ upload_to_s3() {
   local station_id
 
   for file in "${files_to_be_uploaded_to_s3[@]}"; do
+    # TODO: remove
     station_id=""
     get_station_id "${file}"
     if [[ "${station_id}" != "" ]]; then
@@ -426,6 +428,28 @@ trigger_lambda_function() {
     fi
 }
 
+function write_validated_file_paths() {
+  # this is either: video, text, or image
+  local file_type=$1
+  # https://askubuntu.com/a/995110/665365
+  shift
+  # this is an array of local file paths
+  local files_array=("$@")
+
+  echo "The following ${file_type} files passed local verification:" | tee -a "${plan_file}"
+  echo "FILE_PATH;STATION_ID" | tee -a "${plan_file}"
+  for file in "${files_array[@]}"; do
+    station_id=""
+    get_station_id "${file}"
+    if [[ "${station_id}" != "" ]]; then
+      # TODO: remove this?
+      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
+      echo "${file};${station_id}" | tee -a "${plan_file}"
+    fi
+  done
+  echo "" | tee -a "${plan_file}"
+}
+
 ##############################################
 # Section: the actual run
 ##############################################
@@ -437,6 +461,7 @@ trigger_lambda_function() {
 true > "${error_file}"
 true > "${success_file}"
 true > "${sync_output_file}"
+true > "${plan_file}"
 
 # 2. Write informative headers to the log files
 echo "File Upload Success Report - $(date)" > "$success_file"
@@ -445,6 +470,9 @@ echo "File Upload Error Report - $(date)" > "$error_file"
 echo "----------------------------" >> "$error_file"
 echo "File Sync Report - $(date)" > "$sync_output_file"
 echo "----------------------------" >> "$sync_output_file"
+echo "Data Upload Plan - $(date)" > "$plan_file"
+echo "----------------------------" >> "$plan_file"
+
 echo "Environment Name: ${NIWA_ENVIRONMENT}" >> "$sync_output_file"
 echo "S3 Bucket Name: ${bucket_name}" >> "$sync_output_file"
 echo "Region: ${aws_region}" >> "$sync_output_file"
@@ -462,10 +490,8 @@ declare -a image_files_to_copy=()
 
 # Check Images directory for naming convention and file type
 check_image_files "$images_dir"
-
-echo "The following images passed local verification:" | tee -a "$success_file"
-printf '%s\n' "${image_files_to_copy[@]}" | tee -a "$success_file"
-echo "" | tee -a "$success_file"
+# Check station ID, write which files passed all the checks into a file
+write_validated_file_paths "image" "${image_files_to_copy[@]}"
 
 ##############################################
 # SubSubSection: video files
@@ -476,10 +502,8 @@ declare -a video_files_to_copy=()
 
 # Check Videos directory for naming convention and file type
 check_video_files "$videos_dir"
-
-echo "The following videos passed local verification:" | tee -a "$success_file"
-printf '%s\n' "${video_files_to_copy[@]}" | tee -a "$success_file"
-echo "" | tee -a "$success_file"
+# Check station ID, write which files passed all the checks into a file
+write_validated_file_paths "video" "${video_files_to_copy[@]}"
 
 ##############################################
 # SubSubSection: text files
@@ -496,15 +520,14 @@ else
     exit 1
 fi
 
-echo "The following text files passed local verification:" | tee -a "$success_file"
-printf '%s\n' "${text_files_to_copy[@]}" | tee -a "$success_file"
-echo "" | tee -a "$success_file"
-
+# Check station ID, write which files passed all the checks into a file
+write_validated_file_paths "text" "${text_files_to_copy[@]}"
 
 ##############################################
 # SubSubSection: Finish the local verification
 ##############################################
 echo "Local files verification completed." | tee -a "$success_file"
+echo "Please read ${plan_file} to see which files passed local verification." | tee -a "$success_file"
 
 ##############################################
 # SubSection: Verify the S3 bucket and local AWS CLI settings

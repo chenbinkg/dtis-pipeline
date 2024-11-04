@@ -22,6 +22,7 @@ case "${command}" in
       rm -f ./upload/test/bats/error.txt
       rm -f ./upload/test/bats/success.txt
       rm -f ./upload/test/bats/sync_logs.txt
+      rm -f ./upload/test/bats/plan.txt
 
       # We need the 'file' command for the data upload script. That command
       # is not installed in the docker image. Therefore, we install it below.
