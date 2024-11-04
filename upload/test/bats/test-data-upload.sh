@@ -45,7 +45,7 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/images for image files..."
   assert_output --partial "The following images passed local verification:
-../test-data/images/dir with space/TAN1802_Stn_160_001.jpg ../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg ../test-data/images/Tan1802_160/TAN1802_Stn_160_016.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_001.jpg ../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_002.jpeg"
+../test-data/images/TAN2203_002/TAN2203_Stn_002_033.jpg ../test-data/images/dir with space/TAN1802_Stn_160_001.jpg ../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg ../test-data/images/Tan1802_160/TAN1802_Stn_160_016.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_001.jpg ../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_002.jpeg"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
@@ -69,7 +69,7 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2023 for video files..."
   assert_output --partial "The following videos passed local verification:
-../test-data/2023/Video/TAN0616/TAN0616_003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/201012220153000.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/TAN0616_045.m2ts ../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/201012220153000.m2t"
+../test-data/2023/Video/TAN0616/Stn003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/201012220153000.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/TAN0616_045.m2ts ../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/201012220153000.m2t"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
@@ -83,7 +83,7 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2010-2019 for video files..."
   assert_output --partial "The following videos passed local verification:
-../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/201012220153001.m2t ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2t"
+../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/201012220153001.m2t ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2t ../test-data/2010-2019/Video/TAN1802/Stn003/1234.m2t"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
@@ -109,7 +109,7 @@ setup() {
 	assert_equal "$status" 0
 }
 
-@test "run data_upload with NIWA_ENVIRONMENT, test for get_station_id" {
+@test "run data_upload with NIWA_ENVIRONMENT, test for get_station_id (cruise ID: 1802)" {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='../test-data/images' && export NIWA_VIDEOS_DIR='../test-data/2010-2019' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && export NIWA_CRUISE_ID=TAN1802 && ../../data_upload.sh"
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/images for image files..."
@@ -122,6 +122,8 @@ setup() {
   assert_output --partial "Station ID, for the file: ../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg, is: 160"
   # cruise id is mixed-case (not: TAN, but: Tan)
   assert_output --partial "Station ID, for the file: ../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg, is: 160"
+  # directory name is /Stn003/
+  assert_output --partial "Station ID, for the file: ../test-data/2010-2019/Video/TAN1802/Stn003/1234.m2t, is: 003"
 
   assert_output --partial "Could not get station id for the file: ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts (file path matches no pattern, potential cruise ID mismatch)"
 }
@@ -142,6 +144,8 @@ setup() {
   # rerun, obser
   assert_output --partial "Station ID, for the file: ../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_obser.txt, is: 001"
   assert_output --partial "Station ID, for the file: ../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_prot.txt, is: 001"
+  # an image
+  assert_output --partial "Station ID, for the file: ../test-data/images/TAN2203_002/TAN2203_Stn_002_033.jpg, is: 002"
 
   assert_output --partial "File does not match any pattern: tan1802_113_AcousticMarkWatercolumnshot_obser.txt"
 }

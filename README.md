@@ -17,6 +17,8 @@ The intention of the `data_upload.sh` script is to upload local files to S3. The
 Windows machine dependencies:
 - Need to install git first
 - Need to have putty or MobaXterm installed
+- Need to install AWS CLI version 2 (please follow the official [link](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
+- Need to set up AWS CLI credentials (please follow the section below [Setting up AWS credentials](#Setting-up-AWS-credentials)).
 
 1. **Run the Bash script, with dryrun**. Start with running this Bash command:
 ```
@@ -86,6 +88,37 @@ NIWA_DRY_RUN=true NIWA_ENVIRONMENT=testing \
 The above command will run locally, using the dummy test files, and it will not interact with AWS at all. Therefore, **it is always safe to run the above command**. Use it e.g. when you want to experiment, familiarise yourself with the script, or edit the script. The idea is that this should get you fast feedback, and it will not impact the production environment (the real data or production infrastructure resources).
 
 Run the tests below to confirm the script works.
+
+### Setting up AWS credentials
+1. Log in to https://myapplications.microsoft.com/
+You should see the icon titled AWS IAM Identity Center
+![](docs/aws-credentials1.png)
+
+2. Please click on that icon. It should redirect you to the AWS access portal.
+
+![](docs/aws-credentials2.png)
+
+3. Please click on the AWS account named `NIWA-data-platform-POC` and then click on the `Access keys`. You should now see multiple options to choose from.
+
+![](docs/aws-credentials3.png)
+
+4. Please select the tab that matches your operating system (e.g. `macOS and Linux`). Then, please copy the credentials provided by `Option 1: Set AWS environment variables`. You should have AWS credentials copied to your clipboard now.
+
+5. Please paste the credentials into the terminal.
+
+6. You may want to test whether it worked (whether you are now authenticated into the correct AWS account) by running:
+```
+aws sts get-caller-identity
+```
+
+The output should be similar to:
+```
+{
+    "UserId": "<your email address here>",
+    "Account": "851725470721",
+    "Arn": "arn:aws:sts::851725470721:assumed-role/AWSReservedSSO_<the AWS IAM Role name here>"
+}
+```
 
 
 ## Local testing

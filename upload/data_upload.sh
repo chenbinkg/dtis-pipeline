@@ -58,7 +58,7 @@ if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
   lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
 elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
   # S3 bucket details
-  bucket_name="dtis-ofop-851725470721-raw-testing"
+  bucket_name="dtis-ofop-851725470721-raw-production"
 
   # Lambda function URL
   lambda_function_url=https://TODO.lambda-url.us-east-1.on.aws/
@@ -178,7 +178,21 @@ function get_station_id() {
           # remove whitespace
           station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
         else
-          echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+          # Method 4 did not work, let's try method 5.
+          # It works for files such as:
+          # e.g. TAN2203/Stn003/1234.m2t
+
+          # this gives, e.g. /TAN1802/STN003/
+          temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}/STN[0-9]{3,}/")
+          if [ $? -eq 0 ]; then
+            # this gives, e.g. STN003
+            temp_parse=$(echo $temp_parse | awk -F '/' '{print $3}' | grep -oE "[0-9]{3,}")
+            station_id="${temp_parse}"
+            # remove whitespace
+            station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
+          else
+            echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+          fi
         fi
       fi
     fi
@@ -302,7 +316,7 @@ check_video_files() {
     # Write the file names into an bash array.
     readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts')
     echo "after readarray"
-    
+
     for file in "${files_with_matching_extension[@]}"; do
       # echo "file is ${file}"
       file_no_trailing_whitespace="$(echo -e "${file}" | sed -e 's/[[:space:]]*$//')"
@@ -426,7 +440,7 @@ check_image_files "$images_dir"
 
 echo "The following images passed local verification:" | tee -a "$success_file"
 echo "${image_files_to_copy[@]}" | tee -a "$success_file"
-echo ""
+echo "" | tee -a "$success_file"
 
 ##############################################
 # SubSubSection: video files
@@ -440,7 +454,7 @@ check_video_files "$videos_dir"
 
 echo "The following videos passed local verification:" | tee -a "$success_file"
 echo "${video_files_to_copy[@]}" | tee -a "$success_file"
-echo ""
+echo "" | tee -a "$success_file"
 
 ##############################################
 # SubSubSection: text files
@@ -459,7 +473,7 @@ fi
 
 echo "The following text files passed local verification:" | tee -a "$success_file"
 echo "${text_files_to_copy[@]}" | tee -a "$success_file"
-echo ""
+echo "" | tee -a "$success_file"
 
 
 ##############################################
