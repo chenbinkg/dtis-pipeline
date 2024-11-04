@@ -45,7 +45,14 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/images for image files..."
   assert_output --partial "The following images passed local verification:
-../test-data/images/TAN2203_002/TAN2203_Stn_002_033.jpg ../test-data/images/dir with space/TAN1802_Stn_160_001.jpg ../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg ../test-data/images/Datasets/Voyage 2022-2024/Data/TAN2203/DTIS/DTIS Stills/TAN2203_002/TAN2203_002_001.JPG ../test-data/images/Tan1802_160/TAN1802_Stn_160_016.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_001.jpg ../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg ../test-data/images/Tan1802_160/TAN1802_Stn_160_002.jpeg"
+../test-data/images/TAN2203_002/TAN2203_Stn_002_033.jpg
+../test-data/images/dir with space/TAN1802_Stn_160_001.jpg
+../test-data/images/dir with space/TAN1802_160_DTIS__004.jpeg
+../test-data/images/Datasets/Voyage 2022-2024/Data/TAN2203/DTIS/DTIS Stills/TAN2203_002/TAN2203_002_001.JPG
+../test-data/images/Tan1802_160/TAN1802_Stn_160_016.jpg
+../test-data/images/Tan1802_160/TAN1802_Stn_160_001.jpg
+../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg
+../test-data/images/Tan1802_160/TAN1802_Stn_160_002.jpeg"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
@@ -69,7 +76,12 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2023 for video files..."
   assert_output --partial "The following videos passed local verification:
-../test-data/2023/Video/TAN0616/Stn003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/201012220153000.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/TAN0616_045.m2ts ../test-data/2023/Video/TAN0616/TAN0616_003/12345.M2T ../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/201012220153000.m2t"
+../test-data/2023/Video/TAN0616/Stn003/1234.m2t
+../test-data/2023/Video/TAN0616/TAN0616_003/1234.m2t
+../test-data/2023/Video/TAN0616/TAN0616_003/201012220153000.m2t
+../test-data/2023/Video/TAN0616/TAN0616_003/TAN0616_045.m2ts
+../test-data/2023/Video/TAN0616/TAN0616_003/12345.M2T
+../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/201012220153000.m2t"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
@@ -83,7 +95,12 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2010-2019 for video files..."
   assert_output --partial "The following videos passed local verification:
-../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/201012220153001.m2t ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2t ../test-data/2010-2019/Video/TAN1802/Stn003/1234.m2t ../test-data/2010-2019/Voyage 2022-2024/Video/TAN1802/DTIS Video/Stn052/11-04-2022/20220411191258.m2ts"
+../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2ts
+../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/201012220153001.m2t
+../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts
+../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2t
+../test-data/2010-2019/Video/TAN1802/Stn003/1234.m2t
+../test-data/2010-2019/Voyage 2022-2024/Video/TAN1802/DTIS Video/Stn052/11-04-2022/20220411191258.m2ts"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
@@ -97,7 +114,13 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/text/TAN2203 for text files..."
   assert_output --partial "The following text files passed local verification:
-../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_obser.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_obser.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_prot.txt ../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_prot.txt ../test-data/text/TAN2203/OFOP text files/tan2203_034_prot.TXT ../test-data/text/TAN2203/OFOP text files/TAN2203_001_posi.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_posi.txt"
+../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_obser.txt
+../test-data/text/TAN2203/OFOP text files/tan2203_001_obser.txt
+../test-data/text/TAN2203/OFOP text files/tan2203_001_prot.txt
+../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_prot.txt
+../test-data/text/TAN2203/OFOP text files/tan2203_034_prot.TXT
+../test-data/text/TAN2203/OFOP text files/TAN2203_001_posi.txt
+../test-data/text/TAN2203/OFOP text files/tan2203_001_posi.txt"
 
 	assert_equal "$status" 0
 

@@ -464,7 +464,7 @@ declare -a image_files_to_copy=()
 check_image_files "$images_dir"
 
 echo "The following images passed local verification:" | tee -a "$success_file"
-echo "${image_files_to_copy[@]}" | tee -a "$success_file"
+printf '%s\n' "${image_files_to_copy[@]}" | tee -a "$success_file"
 echo "" | tee -a "$success_file"
 
 ##############################################
@@ -478,7 +478,7 @@ declare -a video_files_to_copy=()
 check_video_files "$videos_dir"
 
 echo "The following videos passed local verification:" | tee -a "$success_file"
-echo "${video_files_to_copy[@]}" | tee -a "$success_file"
+printf '%s\n' "${video_files_to_copy[@]}" | tee -a "$success_file"
 echo "" | tee -a "$success_file"
 
 ##############################################
@@ -497,7 +497,7 @@ else
 fi
 
 echo "The following text files passed local verification:" | tee -a "$success_file"
-echo "${text_files_to_copy[@]}" | tee -a "$success_file"
+printf '%s\n' "${text_files_to_copy[@]}" | tee -a "$success_file"
 echo "" | tee -a "$success_file"
 
 
