@@ -83,7 +83,7 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2010-2019 for video files..."
   assert_output --partial "The following videos passed local verification:
-../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/201012220153001.m2t ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2t ../test-data/2010-2019/Video/TAN1802/Stn003/1234.m2t"
+../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/201012220153001.m2t ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/201012220153000.m2t ../test-data/2010-2019/Video/TAN1802/Stn003/1234.m2t ../test-data/2010-2019/Voyage 2022-2024/Video/TAN1802/DTIS Video/Stn052/11-04-2022/20220411191258.m2ts"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
@@ -124,6 +124,8 @@ setup() {
   assert_output --partial "Station ID, for the file: ../test-data/images/Tan1802_160/Tan1802_Stn_160_009.jpg, is: 160"
   # directory name is /Stn003/
   assert_output --partial "Station ID, for the file: ../test-data/2010-2019/Video/TAN1802/Stn003/1234.m2t, is: 003"
+  # Stn002/11-04-2022/20220411191258.m2ts
+  assert_output --partial "Station ID, for the file: ../test-data/2010-2019/Voyage 2022-2024/Video/TAN1802/DTIS Video/Stn052/11-04-2022/20220411191258.m2ts, is: 052"
 
   assert_output --partial "Could not get station id for the file: ../test-data/2010-2019/Video/TAN0616/TAN0616_003/sth/sth/TAN1802_001.m2ts (file path matches no pattern, potential cruise ID mismatch)"
 }

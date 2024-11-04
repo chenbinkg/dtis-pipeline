@@ -68,7 +68,7 @@ else
 fi
 
 ##############################################
-# Subsection: Regex patterns based on naming conventions
+# Subsection: Regex patterns based on file naming conventions
 ##############################################
 # e.g. TAN1802_160_DTIS__004.jpeg
 image_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$"
@@ -195,7 +195,21 @@ function get_station_id() {
             # remove whitespace
             station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
           else
-            echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+            # Method 5 did not work, let's try method 6.
+            # It works for files such as:
+            # e.g. /Stn002/11-04-2022/20220411191258.m2ts
+
+            # this gives, e.g. /STN002/11-04-2022/2
+            temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/STN[0-9]{3,}/[0-9]{2}-[0-9]{2}-[0-9]{4}/*.M*")
+            if [ $? -eq 0 ]; then
+              # this gives, e.g. STN003
+              temp_parse=$(echo $temp_parse | awk -F '/' '{print $2}' | grep -oE "[0-9]{3,}")
+              station_id="${temp_parse}"
+              # remove whitespace
+              station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
+            else
+              echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+            fi
           fi
         fi
       fi
