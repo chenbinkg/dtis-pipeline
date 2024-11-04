@@ -30,8 +30,7 @@ from unittest.mock import Mock
 # import boto3
 import pytest
 from botocore.exceptions import ClientError
-from lambda_function_mongoDB_schema import (get_posi_file_content,
-                                            parse_data_line)
+from lambda_function_mongoDB_schema import get_posi_file_content, parse_data_line
 
 
 @pytest.fixture
@@ -161,7 +160,7 @@ def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
                     "mediaOffset": None,
                     "observation": "general observation",
                     "observation2": None,
-                    "observation3": None,
+                    "observation_source": "original",
                     "observationRef": "<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=general observation&marine_only=true'>Try a WORMS search for general observation</a>",
                 },
             },
@@ -237,7 +236,7 @@ def test_parse_data_line_new_format(new_format_line, new_format_header, source_k
             "mediaOffset": None,
             "observation": "[29] OBSCURED",
             "observation2": None,
-            "observation3": None,
+            "observation_source": "new",
             "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=OBSCURED&marine_only=true'>Try a WORMS search for OBSCURED</a>",
         },
     }
@@ -437,81 +436,7 @@ def test_parse_data_line_complete_video_sequence():
     assert video_events[1]["duration"] == str(timedelta(minutes=1))
 
 
-@pytest.mark.skip(
-    reason="OLD (this can probably be removed, as it has been superseded)/ Work in progress."
-)
-@pytest.mark.parametrize(
-    "observation,expected_events_count",
-    [
-        ("video started", 1),
-        ("start video", 1),
-        ("Video Started at surface", 1),
-        ("general observation", 0),
-    ],
-)
-def test_parse_data_line_video_start(
-    basic_line, source_key, observation, expected_events_count
-):
-    # Arrange
-    line = basic_line.rsplit("\t", 1)[0] + "\t" + observation
-    video_events = []
-
-    # Act
-    result, video_start, video_events = parse_data_line(
-        line, source_key, None, video_events
-    )
-
-    # Assert
-    assert len(video_events) == expected_events_count
-    if expected_events_count > 0:
-        assert video_events[0]["event"] == "start"
-        assert video_start is not None
-        assert result["mediatype"] == "video"
-        assert "/videos/" in result["media"]
-        assert result["media"].endswith(".m2t")
-
-
-@pytest.mark.skip(
-    reason="OLD (this can probably be removed, as it has been superseded)/ Work in progress."
-)
-def test_parse_data_line_video_stop():
-    # Arrange
-    line = "12:35:00\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tvideo stopped"
-    video_start = datetime.strptime("12:34:00", "%H:%M:%S")
-    video_events = []
-
-    # Act
-    result, video_start_after, video_events = parse_data_line(
-        line, "test_key", video_start, video_events
-    )
-
-    # Assert
-    assert len(video_events) == 1
-    assert video_events[0]["event"] == "stop"
-    assert "duration" in video_events[0]
-    assert video_start_after is None
-    assert result["mediatype"] == "video"
-
-
-@pytest.mark.skip(
-    reason="OLD (this can probably be removed, as it has been superseded)/ Work in progress."
-)
-def test_parse_data_line_video_duration():
-    # Arrange
-    video_start = datetime.strptime("12:34:00", "%H:%M:%S")
-    line = "12:34:30\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
-
-    # Act
-    result, _, _ = parse_data_line(line, "test_key", video_start, [])
-
-    # Assert
-    assert result["mediaoffset"] == timedelta(seconds=30)
-    assert result["mediatype"] == "video"
-
-
-@pytest.mark.skip(
-    reason="OLD (this can probably be removed, as it has been superseded)/ Work in progress."
-)
+@pytest.mark.skip(reason="Work in progress.")
 def test_parse_data_line_time_parsing():
     # Arrange
     line = "23:59:59\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"

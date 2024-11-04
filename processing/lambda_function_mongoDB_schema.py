@@ -31,6 +31,7 @@ import urllib
 from datetime import datetime, time, timedelta, timezone
 
 import boto3
+from botocore.exceptions import ClientError
 from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.collection import ReturnDocument
@@ -269,7 +270,7 @@ def parse_data_line(
         "mediaOffset": None,
         "observation": observation,
         "observation2": None,
-        "observation3": None,
+        "observation_source": file_format,
         "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={observation}&marine_only=true'>Try a WORMS search for {observation}</a>",
     }
 
@@ -399,38 +400,36 @@ def parse_posi_file(content):
     return data
 
 
-def lambda_handler(event, context):
-    # Read the file from S3
-    s3 = boto3.client("s3")
-    bucket_name = os.environ["S3_BUCKET_NAME"]
+def initialize_resources():
+    # Initialize resources like MongoDB client, S3 client, etc.
+    s3_client = boto3.client("s3")
+    mongo_client = MongoClient(os.environ["MONGODB_URI"])
+    db = mongo_client[os.environ["MONGODB_DATABASE"]]
+    return s3_client, mongo_client, db
 
-    file_key = urllib.parse.unquote_plus(
-        event["Records"][0]["s3"]["object"]["key"], encoding="utf-8"
+
+def get_file_from_s3(s3_client, bucket, key):
+    try:
+        response = s3_client.get_object(Bucket=bucket, Key=key)
+        logger.info(f"Successfully retrieved file content for key {key}")
+        return response["Body"].read().decode("utf-8")
+
+    except ClientError as e:
+        print(f"Error retrieving file from S3: {str(e)}")
+        raise FileNotFoundError(f"File {key} not found in bucket {bucket}")
+
+
+def parse_file_content(file_content, key):
+    # data parsing logic
+    logger.info(f"file_content: {file_content}")
+
+    # split the key into cruise and station:
+    cruise_from_name, station_from_name = key.split("_")[0:2]
+    logger.info(
+        f"From file name we know - cruise: {cruise_from_name}, station: {station_from_name}"
     )
 
-    try:
-        logger.info(f"Attempting to get object: {file_key} from bucket: {bucket_name}")
-        response = s3.get_object(Bucket=bucket_name, Key=file_key)
-        file_content = response["Body"].read().decode("utf-8")
-        logger.info(f"Successfully retrieved file content")
-        # Process file_content here
-    except s3.exceptions.NoSuchKey:
-        logger.error(f"The object {file_key} does not exist in bucket {bucket_name}")
-        # Handle the error - maybe return an error message or set a default value
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {str(e)}")
-        # Handle other potential errors
-
-    # Read the prot file from s3
-    response = s3.get_object(Bucket=bucket_name, Key=file_key)
-    file_content = response["Body"].read().decode("utf-8")
-
-    # Get and parse the corresponding posi file
-    posi_content = get_posi_file_content(s3, bucket_name, file_key)
-    posi_data = parse_posi_file(posi_content) if posi_content else {}
-
-    logger.info(f"successfully read the file {file_key} from S3-bucket {bucket_name}.")
-    logger.info(f"file_content: {file_content}")
+    # split the file content into indivdual lines
     lines = file_content.split("\n")
 
     # Split the file into header and data
@@ -443,8 +442,9 @@ def lambda_handler(event, context):
             header = aline
             data_lines = lines[1:]
 
-            cruise = None
-            station = None
+            # if the file is a rerun file, cruise and station name are derive from file name:
+            cruise = cruise_from_name
+            station = station_from_name
             remarks = None
             break  # Exit the loop once we've identified the format
 
@@ -460,12 +460,66 @@ def lambda_handler(event, context):
         station = meta.get("station", "")
         remarks = meta.get("remarks", "")
 
-    # Connect to MongoDB (assuming connection string is in environment variable)
-    client = MongoClient(os.environ["MONGODB_URI"])
-    db = client[os.environ["MONGODB_DATABASE"]]
+    return {
+        "header": header,
+        "data_lines": data_lines,
+        "cruise": cruise,
+        "station": station,
+        "remarks": remarks,
+        "file_format": file_format,
+    }
+
+
+def lambda_handler(event, context):
+    # Initialize resources
+    s3, client, db = initialize_resources()
+
+    # Extract bucket and key from the event
+    bucket_name = os.environ["S3_BUCKET_NAME"]
+    file_key = urllib.parse.unquote_plus(
+        event["Records"][0]["s3"]["object"]["key"], encoding="utf-8"
+    )
+    # MongoDB (assuming connection string is in environment variable)
     collection = db[os.environ["MONGODB_COLLECTION"]]
     ingress_counter = os.environ["INGRESS_COLLECTION_DTIS"]
     COUNTER_COLLECTION_NAME = ingress_counter
+
+    # Get file content from S3
+    file_content = get_file_from_s3(s3, bucket_name, file_key)
+
+    # Parse file content
+    documents = parse_file_content(file_content, file_key)
+
+    # Get and parse the corresponding posi file
+    posi_content = get_posi_file_content(s3, bucket_name, file_key)
+    posi_data = parse_posi_file(posi_content) if posi_content else {}
+
+    # Process the documents
+    (
+        header,
+        data_lines,
+        cruise,
+        station,
+        remarks,
+        file_format,
+    ) = documents.values()
+
+    logger.info(f"header: {header}")
+    logger.info(f"data_lines: {data_lines}")
+    logger.info(f"cruise: {cruise}")
+    logger.info(f"station: {station}")
+    logger.info(f"remarks: {remarks}")
+    logger.info(f"file_format: {file_format}")
+    # logger.info(f"posi_data: {posi_data}")
+    # logger.info(f"posi_data: {type(posi_data)}")
+    # logger.info(f"posi_data: {len(posi_data)}")
+    # logger.info(f"posi_data: {posi_data.keys()}")
+    # logger.info(f"posi_data: {posi_data.values()}")
+    # logger.info(f"posi_data: {posi_data.items()}")
+    # logger.info(f"posi_data: {posi_data.get('datetime')}")
+    # logger.info(f"posi_data: {posi_data.get('data')}")
+    # logger.info(f"posi_data: {posi_data.get('data').get('Latitude')}")
+
     date_created = datetime.now(timezone.utc).isoformat()
 
     try:
@@ -487,7 +541,7 @@ def lambda_handler(event, context):
                 logger.info(f"Found end of data at line {i}: {line}")
                 break  # This will exit the loop
 
-            logger.info(f"Processing input data line {i}: {line}")
+            # logger.info(f"Processing input data line {i}: {line}")
             data_point, video_start_time, video_events = parse_data_line(
                 line,
                 file_key,
