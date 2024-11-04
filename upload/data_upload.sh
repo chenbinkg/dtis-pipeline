@@ -89,15 +89,15 @@ video_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.M2T[S]?$"
 video_pattern2="^[0-9]{4,}\.M2T[S]?$"
 
 # e.g. TAN1802_001_posi.txt
-ofop_posi_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
+ofop_posi_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\.TXT$"
 # e.g. TAN1802_001_prot.txt
-ofop_prot_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
+ofop_prot_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\.TXT$"
 # e.g. TAN1802_001_obser.txt
-ofop_obser_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_obser\.txt$"
+ofop_obser_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\.TXT$"
 # e.g. TAN1802_001.sth_rerun.sth_obser.txt
-ofop_obser_rerun_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
+ofop_obser_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_OBSER\.TXT$"
 # e.g. TAN1802_001.sth_rerun.sth_prot.txt
-ofop_prot_rerun_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_prot\.txt$"
+ofop_prot_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_PROT\.TXT$"
 
 ##############################################
 # Section: functions
@@ -369,7 +369,7 @@ check_ofop_files() {
     # Find all the files, in the videos directory, with the selected
     # file extensions.
     # Write the file names into an bash array.
-    readarray files_with_matching_extension < <(find "${dir}" -name '*.txt')
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.txt' -o -name '*.TXT')
 
     for file in "${files_with_matching_extension[@]}"; do
       # #echo "file is ${file}"
@@ -377,6 +377,8 @@ check_ofop_files() {
       # echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
+      # make it fully upper case letters
+      file_path_upper_case="${file_name^^}"
 
       file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
       if [[ "$file_type" != "text/plain" ]]; then
@@ -384,11 +386,11 @@ check_ofop_files() {
         continue
       fi
 
-      if [[ "${file_name}" =~ $ofop_posi_pattern || \
-            "${file_name}" =~ $ofop_prot_pattern || \
-            "${file_name}" =~ $ofop_obser_pattern || \
-            "${file_name}" =~ $ofop_obser_rerun_pattern || \
-            "${file_name}" =~ $ofop_prot_rerun_pattern ]]; then
+      if [[ "${file_path_upper_case}" =~ $ofop_posi_pattern || \
+            "${file_path_upper_case}" =~ $ofop_prot_pattern || \
+            "${file_path_upper_case}" =~ $ofop_obser_pattern || \
+            "${file_path_upper_case}" =~ $ofop_obser_rerun_pattern || \
+            "${file_path_upper_case}" =~ $ofop_prot_rerun_pattern ]]; then
         text_files_to_copy+=("${file_no_trailing_whitespace}")
       else
         echo "File does not match any pattern: ${file_name}" | tee -a  "$error_file"

@@ -97,7 +97,7 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/text/TAN2203 for text files..."
   assert_output --partial "The following text files passed local verification:
-../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_obser.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_obser.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_prot.txt ../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_prot.txt ../test-data/text/TAN2203/OFOP text files/TAN2203_001_posi.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_posi.txt"
+../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_obser.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_obser.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_prot.txt ../test-data/text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_prot.txt ../test-data/text/TAN2203/OFOP text files/tan2203_034_prot.TXT ../test-data/text/TAN2203/OFOP text files/TAN2203_001_posi.txt ../test-data/text/TAN2203/OFOP text files/tan2203_001_posi.txt"
 
 	assert_equal "$status" 0
 
