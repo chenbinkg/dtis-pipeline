@@ -27,8 +27,6 @@ should we use the 'pendulum' library so we're better able to deal with dates/tim
 import json
 import logging
 import os
-
-# import re
 import urllib
 from datetime import datetime, time, timedelta, timezone
 
@@ -41,7 +39,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 START_TIME = datetime.now(timezone.utc)
-MAX_EXECUTION_TIME = 60  # 1 minute (for 15-minute Lambda timeout)
+MAX_EXECUTION_TIME = 850  # 14.5 minutes (for 15-minute Lambda timeout)
 
 
 def check_timeout():
@@ -254,10 +252,15 @@ def parse_data_line(
 
     # Determine source type
     is_prot = source_key.endswith("_prot.txt")
-    is_obs = source_key.endswith("_obs.txt")
+    is_obs = source_key.endswith("_obser.txt")
 
     if not (is_prot or is_obs):
         raise ValueError("Invalid source input (text) file type")
+
+    # posi_key = source_key.replace(
+    #     '_prot.txt' if is_prot else '_obs.txt',
+    #     '_posi.txt'
+    # )
 
     # Initialize feature dictionary
     feature = {
@@ -338,15 +341,6 @@ def get_posi_file_content(s3, bucket, key):
     get_posi_file_content() is used to find a file which has a similar file name,
     but instead of ending in _prot.txt, it ends in _posi.txt.
     """
-    # # Extract the stem of the file name
-    # file_stem = re.sub(r"_prot\.txt$", "", key)
-    # posi_key = f"{file_stem}_posi.txt"
-    # try:
-    #     response = s3.get_object(Bucket=bucket, Key=posi_key)
-    #     return response["Body"].read().decode("utf-8")
-    # except s3.exceptions.NoSuchKey:
-    #     print(f"No corresponding posi file found for {key}")
-    #     return None
 
     try:
         # Handle both _prot.txt and _obser.txt cases
@@ -465,30 +459,6 @@ def lambda_handler(event, context):
         cruise = meta.get("cruise", "")
         station = meta.get("station", "")
         remarks = meta.get("remarks", "")
-
-    # Execution throttle
-
-    # START_TIME = time.time()
-    # MAX_ITERATIONS = len(data_lines) * 2  # Reasonable maximum based on input size
-    # MAX_EXECUTION_TIME = 300  # 5 minutes in seconds
-    # logger.info(f"MAX_ITERATIONS: {MAX_ITERATIONS}")
-
-    # iteration_count = 0
-    # for i, line in enumerate(data_lines):
-    #     # Safety checks
-    #     if time.time() - START_TIME > MAX_EXECUTION_TIME:
-    #         logger.warning("Function approaching timeout - forcing exit")
-    #         raise Exception("Function timeout reached")
-
-    #     iteration_count += 1
-    #     if iteration_count > MAX_ITERATIONS:
-    #         logger.error(f"Maximum iterations exceeded - forcing exit")
-    #         raise Exception("Maximum iterations exceeded")
-
-    #     # Check for empty lines or end marker
-    #     if not line.strip() or line.startswith("End ###"):
-    #         logger.info(f"Found end of data at line {i}: {line}")
-    #         return
 
     # Connect to MongoDB (assuming connection string is in environment variable)
     client = MongoClient(os.environ["MONGODB_URI"])
