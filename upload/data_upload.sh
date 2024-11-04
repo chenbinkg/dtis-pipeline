@@ -84,9 +84,9 @@ image_pattern5="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$"
 image_pattern6="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$"
 
 # e.g. TAN1802_001.m2t or TAN1802_001.m2ts
-video_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.m2t[s]?$"
+video_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.M2T[S]?$"
 # e.g. 201012220153001.m2t or 201012220153001.m2ts (only digits)
-video_pattern2="^[0-9]{4,}\.m2t[s]?$"
+video_pattern2="^[0-9]{4,}\.M2T[S]?$"
 
 # e.g. TAN1802_001_posi.txt
 ofop_posi_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
@@ -321,7 +321,7 @@ check_video_files() {
     # Find all the files, in the videos directory, with the selected
     # file extensions.
     # Write the file names into an bash array.
-    readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts')
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts'  -o -name '*.M2TS' -o -name '*.M2T')
     echo "after readarray"
 
     for file in "${files_with_matching_extension[@]}"; do
@@ -330,7 +330,9 @@ check_video_files() {
       # echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
-      if [[ ! "${file_name}" =~ ${video_pattern1} ]] && [[ ! "${file_name}" =~ ${video_pattern2} ]]; then
+      # make it fully upper case letters
+      file_path_upper_case="${file_name^^}"
+      if [[ ! "${file_path_upper_case}" =~ ${video_pattern1} ]] && [[ ! "${file_path_upper_case}" =~ ${video_pattern2} ]]; then
         echo "File does not match video naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi

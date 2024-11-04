@@ -69,7 +69,7 @@ setup() {
 	assert_output --partial "Exit, because dry run is set"
   assert_output --partial "Checking ../test-data/2023 for video files..."
   assert_output --partial "The following videos passed local verification:
-../test-data/2023/Video/TAN0616/Stn003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/201012220153000.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/TAN0616_045.m2ts ../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/201012220153000.m2t"
+../test-data/2023/Video/TAN0616/Stn003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/1234.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/201012220153000.m2t ../test-data/2023/Video/TAN0616/TAN0616_003/TAN0616_045.m2ts ../test-data/2023/Video/TAN0616/TAN0616_003/12345.M2T ../test-data/2023/Video/TAN0616_sthsth/TAN0616_003/201012220153000.m2t"
 	assert_equal "$status" 0
 
   run bash -c "cat error.txt"
