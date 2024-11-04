@@ -30,7 +30,8 @@ from unittest.mock import Mock
 # import boto3
 import pytest
 from botocore.exceptions import ClientError
-from lambda_function_mongoDB_schema import get_posi_file_content, parse_data_line
+from lambda_function_mongoDB_schema import (get_posi_file_content,
+                                            parse_data_line)
 
 
 @pytest.fixture
@@ -74,6 +75,9 @@ def test_get_posi_file_content_success():
 
 
 def test_get_posi_file_content_no_file():
+    """
+    Tests the error handling when the posi file doesn't exist.
+    """
     # Arrange
     mock_s3 = Mock()
     mock_s3.exceptions.NoSuchKey = ClientError
@@ -87,11 +91,9 @@ def test_get_posi_file_content_no_file():
         "GetObject",
     )
 
-    # Act
-    result = get_posi_file_content(mock_s3, "test-bucket", "sample_prot.txt")
-
-    # Assert
-    assert result is None
+    # Act & Assert
+    with pytest.raises(FileNotFoundError):
+        get_posi_file_content(mock_s3, "test-bucket", "sample_prot.txt")
 
 
 def test_get_posi_file_content_file_name_transformation():
@@ -360,7 +362,7 @@ def test_parse_data_line_video_sequences(sequence_times, expected_duration):
     # Process each line
     for line in lines:
         _, video_start, video_events = parse_data_line(
-            line, "test_key", video_start, video_events
+            line, "test_key_prot.txt", video_start, video_events
         )
 
     # Verify the results
@@ -425,7 +427,7 @@ def test_parse_data_line_complete_video_sequence():
     # Act
     for line in lines:
         _, video_start, video_events = parse_data_line(
-            line, "test_key", video_start, video_events
+            line, "test_key_prot.txt", video_start, video_events, "original"
         )
 
     # Assert
