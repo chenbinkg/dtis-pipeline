@@ -71,13 +71,17 @@ fi
 # Subsection: Regex patterns based on naming conventions
 ##############################################
 # e.g. TAN1802_160_DTIS__004.jpeg
-image_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.jpeg$"
+image_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$"
 # e.g. TAN1802_160_DTIS__004.jpg
-image_pattern2="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.jpg$"
+image_pattern2="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPG$"
 # e.g. TAN1802_Stn_160_004.jpeg
-image_pattern3="^[A-Z]{3}[0-9]{4}_Stn_[0-9]{3,}_[0-9]{3}\.jpeg$"
+image_pattern3="^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPEG$"
 # e.g. TAN1802_Stn_160_004.jpg
-image_pattern4="^[A-Z]{3}[0-9]{4}_Stn_[0-9]{3,}_[0-9]{3}\.jpg$"
+image_pattern4="^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPG$"
+# e.g. TAN1802_160_004.jpg
+image_pattern5="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$"
+# e.g. TAN1802_160_004.jpeg
+image_pattern6="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$"
 
 # e.g. TAN1802_001.m2t or TAN1802_001.m2ts
 video_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.m2t[s]?$"
@@ -266,7 +270,7 @@ check_image_files() {
     # Find all the files, in the images directory, with the selected
     # file extensions.
     # Write the file names into an bash array.
-    readarray files_with_matching_extension < <(find "${dir}" -name '*.jpg' -o -name '*.jpeg')
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.jpg' -o -name '*.jpeg' -o -name '*.JPEG' -o -name '*.JPG')
     echo "after readarray"
 
     for file in "${files_with_matching_extension[@]}"; do
@@ -275,8 +279,11 @@ check_image_files() {
       #echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
+      # make it fully upper case letters
+      file_path_upper_case="${file_name^^}"
+
       echo "${file_name}"
-      if [[ ! "${file_name}" =~ ${image_pattern1} ]] && [[ ! "${file_name}" =~ ${image_pattern2} ]] && [[ ! "${file_name}" =~ ${image_pattern3} ]] && [[ ! "${file_name}" =~ ${image_pattern4} ]]; then
+      if [[ ! "${file_path_upper_case}" =~ ${image_pattern1} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern2} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern3} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern4} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern5} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern6} ]]; then
         echo "File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
