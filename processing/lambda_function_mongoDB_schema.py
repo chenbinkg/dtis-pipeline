@@ -15,16 +15,20 @@ Requirements:
 * Define environment variable for the name of the S3 bucket containing the text files, e.g. S3_BUCKET_NAME
 * Prot and posi files need to be both available in an upload, image and video files are implicitly expected, too.
 
+* Time parsing:
+
+should we use the 'pendulum' library so we're better able to deal with dates/times?
 
 
-October 2024 Tilmann Steinmetz
+4 November 2024 Tilmann Steinmetz
 
 """
 
 import json
 import logging
 import os
-import re
+
+# import re
 import urllib
 from datetime import datetime, time, timedelta, timezone
 
@@ -36,6 +40,39 @@ from pymongo.collection import ReturnDocument
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+START_TIME = datetime.now(timezone.utc)
+MAX_EXECUTION_TIME = 60  # 1 minute (for 15-minute Lambda timeout)
+
+
+def check_timeout():
+    elapsed_time = (datetime.now(timezone.utc) - START_TIME).total_seconds()
+    if elapsed_time > MAX_EXECUTION_TIME:
+        logger.warning("Function approaching timeout - forcing exit")
+        raise Exception("Function timeout reached")
+
+
+def prepare_for_mongodb(document):
+    """Convert any datetime/timedelta objects to strings in a document"""
+    if isinstance(document, dict):
+        return {k: prepare_for_mongodb(v) for k, v in document.items()}
+    elif isinstance(document, list):
+        return [prepare_for_mongodb(v) for v in document]
+    elif isinstance(document, (datetime, time)):
+        return document.isoformat()
+    elif isinstance(document, timedelta):
+        return str(document)
+    return document
+
+
+def datetime_handler(obj):
+    if isinstance(obj, (datetime, time)):
+        return obj.isoformat()
+    elif isinstance(obj, timedelta):
+        return str(obj)
+    elif isinstance(obj, ObjectId):
+        return str(obj)  # Convert ObjectId to string
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
 
 def get_current_ingress_id(
     db, COUNTER_COLLECTION_NAME, cruise, station, remarks, date_created
@@ -45,12 +82,16 @@ def get_current_ingress_id(
         {
             "$setOnInsert": {
                 "value": 0,
-                "date_created": date_created,
-                "date_updated": datetime.now(timezone.utc),
+                "date_created": (
+                    date_created.isoformat()
+                    if isinstance(date_created, datetime)
+                    else date_created
+                ),
+                "date_updated": datetime.now(timezone.utc).isoformat(),
             }
         },
         upsert=True,
-        return_document=ReturnDocument.AFTER,  # CHANGE 1
+        return_document=ReturnDocument.AFTER,
     )
     return counter["value"]
 
@@ -66,36 +107,40 @@ def increment_ingress_id(
     date_created,
     video_events,
 ):
-    # Calculate total duration
-    total_duration = timedelta()
-    for start, stop in zip(
-        [e for e in video_events if e["event"] == "start"],
-        [e for e in video_events if e["event"] == "stop"],
-    ):
-        start_time = datetime.fromisoformat(start["time"])
-        stop_time = datetime.fromisoformat(stop["time"])
-        total_duration += stop_time - start_time
-
-    video_info = {
-        "events": video_events,
-        "total_videos": sum(1 for event in video_events if event["event"] == "start"),
-        "total_duration": str(total_duration),
-    }
-
-    result = db[COUNTER_COLLECTION_NAME].update_one(
-        {"cruise": cruise, "station": station, "remarks": remarks},
-        {
+    try:
+        update_doc = {
             "$inc": {"value": 1},
             "$set": {
                 "observationCount": count_documents,
                 "boundingBox": bounding_box,
-                "date_updated": datetime.now(timezone.utc),
-                "video": video_info,
+                "date_updated": datetime.now(
+                    timezone.utc
+                ).isoformat(),  # Convert to ISO string
             },
-            "$setOnInsert": {"date_created": date_created},
-        },
-        upsert=True,
-    )
+            "$setOnInsert": {
+                "date_created": (
+                    date_created.isoformat()
+                    if isinstance(date_created, datetime)
+                    else date_created
+                )
+            },
+        }
+
+        # Log the document before insertion
+        logger.info(
+            f"Attempting to update with document: {json.dumps(update_doc, default=str)}"
+        )
+
+        result = db[COUNTER_COLLECTION_NAME].update_one(
+            {"cruise": cruise, "station": station, "remarks": remarks},
+            update_doc,
+            upsert=True,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error in increment_ingress_id: {str(e)}")
+        logger.error(f"Document that caused error: {update_doc}")
+        raise
 
 
 def calculate_bounding_box(coordinates):
@@ -151,18 +196,68 @@ def parse_header(header_text):
     return meta
 
 
-def parse_data_line(line, source_key, video_start_time, video_events):
-    fields = line.split("\t")
-    if len(fields) < 12:
+def parse_data_line(
+    line,
+    source_key,
+    video_start_time=None,
+    video_events=[],
+    file_format="original",
+    header=None,
+):
+    """
+    Parse a line of data from either original or new rerun_XX_obs format files
+    """
+    check_timeout()
+
+    # Add safety check for video_events list size
+    if len(video_events) > 1000:  # Set appropriate limit
+        logger.error("Too many video events - possible infinite loop")
+
+    if not line or line.startswith("#") or line.startswith("End ###"):
         return None, video_start_time, video_events
 
-    utc_time = fields[0]
-    lat, lon = float(fields[2]), float(fields[3])
-    sub_lat, sub_lon = float(fields[10]), float(fields[11])
-    speed, course, depth, heading = map(float, fields[4:8])
-    observation = fields[13] if len(fields) > 12 else ""
+    fields = line.strip().split("\t")
 
-    current_time = datetime.strptime(utc_time, "%H:%M:%S")
+    if file_format == "original":
+        if len(fields) < 12:  # Original format requires at least 12 fields
+            return None, video_start_time, video_events
+        logger.info(f"Fields: {fields}, file_format = {file_format}")
+        utc_time = fields[0]
+        lon = float(fields[3])
+        lat = float(fields[2])
+        speed = float(fields[4])
+        course = float(fields[5])
+        depth = float(fields[6])
+        heading = float(fields[7])
+        sub_lon = float(fields[11])
+        sub_lat = float(fields[10])
+        observation = fields[13] if len(fields) > 12 else ""
+        current_time = datetime.strptime(utc_time, "%H:%M:%S")
+
+    else:  # new rerun_obser text file format
+        if len(fields) != 6:  # New format requires exactly 6 fields
+            return None, video_start_time, video_events
+        logger.info(f"Fields: {fields}, file_format = {file_format}")
+
+        utc_time = fields[1]
+        # Skip date field[0] in rerun file. We will interpolate the date
+        lon = float(fields[2])
+        lat = float(fields[3])
+        speed = None
+        course = None
+        depth = None
+        heading = None
+        sub_lon = lon  # Use same coordinates for sub location
+        sub_lat = lat
+        observation = fields[5]
+        current_time = datetime.strptime(utc_time, "%H:%M:%S")
+
+    # Determine source type
+    is_prot = source_key.endswith("_prot.txt")
+    is_obs = source_key.endswith("_obs.txt")
+
+    if not (is_prot or is_obs):
+        raise ValueError("Invalid source input (text) file type")
 
     # Initialize feature dictionary
     feature = {
@@ -172,14 +267,19 @@ def parse_data_line(line, source_key, video_start_time, video_events):
         "observation": observation,
         "observation2": None,
         "observation3": None,
-        "observationRef": "[AphiaID / link to WORMS]",
+        "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={observation}&marine_only=true'>Try a WORMS search for {observation}</a>",
     }
 
     # Handle photo observations
     if "photo" in observation.lower():
         feature["mediaType"] = "photo"
         # Extract voyage and station from source_key (assuming format like 'TAN2306_123_prot.txt')
-        voyage_station = source_key.split("_prot.txt")[0]
+        if is_prot:
+            voyage_station = source_key.split("_prot.txt")[0]
+        elif is_obs:
+            voyage_station = source_key.split("_obser.txt")[0]
+
+        # voyage_station = source_key.split("_prot.txt")[0]
         feature["media"] = f"/images/{voyage_station}/{voyage_station}_12.jpg"
 
     # Handle video observations
@@ -187,27 +287,36 @@ def parse_data_line(line, source_key, video_start_time, video_events):
         video_start_time = datetime.strptime(video_start_time, "%H:%M:%S")
 
     if "video started" in observation.lower() or "start video" in observation.lower():
+        a_start_time = timedelta(seconds=0)
         video_start_time = current_time
         video_events.append(
             {"event": "start", "time": current_time.strftime("%H:%M:%S")}
         )
-        feature["mediaOffset"] = timedelta(seconds=0)
+        feature["mediaOffset"] = str(a_start_time)
         feature["mediaType"] = "video"
-        voyage_station = source_key.split("_prot.txt")[0]
+        # Extract voyage and station from source_key (assuming format like 'TAN2306_123_prot.txt')
+        if is_prot:
+            voyage_station = source_key.split("_prot.txt")[0]
+        elif is_obs:
+            voyage_station = source_key.split("_obser.txt")[0]
+
         feature["media"] = f"/videos/{voyage_station}/{voyage_station}.m2t"
+
     elif "video stopped" in observation.lower() or "stop video" in observation.lower():
         if video_start_time:
-            feature["mediaOffset"] = current_time - video_start_time
+            media_offset = current_time - video_start_time
+            feature["mediaOffset"] = str(media_offset)
             video_events.append(
                 {
                     "event": "stop",
                     "time": current_time.strftime("%H:%M:%S"),
-                    "duration": str(feature["mediaOffset"]),
+                    "duration": str(media_offset),
                 }
             )
             video_start_time = None
 
     # Create the result dictionary
+    # Common processing for both formats
     result = {
         "timestamp": utc_time,
         "shipLocation": {"type": "Point", "coordinates": [lon, lat]},
@@ -223,16 +332,49 @@ def parse_data_line(line, source_key, video_start_time, video_events):
 
 
 def get_posi_file_content(s3, bucket, key):
-    # Extract the stem of the file name
-    file_stem = re.sub(r"_prot\.txt$", "", key)
-    posi_key = f"{file_stem}_posi.txt"
+    """
+    We are using a companion _'posi.txt' file to look up date/time information:
+    Lambda function uses a lookup of information from a a pair of 'companion' text files.
+    get_posi_file_content() is used to find a file which has a similar file name,
+    but instead of ending in _prot.txt, it ends in _posi.txt.
+    """
+    # # Extract the stem of the file name
+    # file_stem = re.sub(r"_prot\.txt$", "", key)
+    # posi_key = f"{file_stem}_posi.txt"
+    # try:
+    #     response = s3.get_object(Bucket=bucket, Key=posi_key)
+    #     return response["Body"].read().decode("utf-8")
+    # except s3.exceptions.NoSuchKey:
+    #     print(f"No corresponding posi file found for {key}")
+    #     return None
 
     try:
-        response = s3.get_object(Bucket=bucket, Key=posi_key)
-        return response["Body"].read().decode("utf-8")
-    except s3.exceptions.NoSuchKey:
-        print(f"No corresponding posi file found for {key}")
-        return None
+        # Handle both _prot.txt and _obser.txt cases
+        if key.endswith("_prot.txt"):
+            posi_key = key.replace("_prot.txt", "_posi.txt")
+        elif key.endswith("_obser.txt"):
+            posi_key = key.replace("_obser.txt", "_posi.txt")
+        else:
+            raise ValueError(
+                f"Source file {key} is neither a _prot.txt nor _obs.txt file"
+            )
+        logger.info(f"Looking for companion posi file: {posi_key}")
+
+        # Get the posi file content from S3
+        try:
+            response = s3.get_object(Bucket=bucket, Key=posi_key)
+            content = response["Body"].read().decode("utf-8")
+            logger.info(f"Found posi file: {posi_key}")
+            return content  # .splitlines()
+        except s3.exceptions.NoSuchKey:
+            logger.error(f"Companion posi file not found: {posi_key}")
+            raise FileNotFoundError(f"Companion posi file not found: {posi_key}")
+
+    except Exception as e:
+        logger.error(
+            f"Error getting posi file content: {str(e)} - We cannot use date lookups. Stopping."
+        )
+        raise
 
 
 def parse_posi_file(content):
@@ -293,16 +435,60 @@ def lambda_handler(event, context):
     posi_content = get_posi_file_content(s3, bucket_name, file_key)
     posi_data = parse_posi_file(posi_content) if posi_content else {}
 
+    logger.info(f"successfully read the file {file_key} from S3-bucket {bucket_name}.")
+    logger.info(f"file_content: {file_content}")
     lines = file_content.split("\n")
-    # Split the file into header and data
-    header = lines[:12]  # Adjust based on your actual header size
-    data_lines = lines[12:]
 
-    # Parse the header
-    meta = parse_header(header)
-    cruise = meta.get("cruise", "")
-    station = meta.get("station", "")
-    remarks = meta.get("remarks", "")
+    # Split the file into header and data
+    file_format = "original"
+    for aline in lines:
+        logger.info(f"Processing input data line: {aline}")
+        if aline.startswith("#Date"):  # Detect new format (rerun_XX_obs file)
+            file_format = "new"
+            logger.info(f"File format: {file_format}")
+            header = aline
+            data_lines = lines[1:]
+
+            cruise = None
+            station = None
+            remarks = None
+            break  # Exit the loop once we've identified the format
+
+    if file_format == "original":
+        # Only for the original observations file:
+        logger.info(f"File format: {file_format}")
+        header = lines[:12]  # Adjust based on your actual header size
+        data_lines = lines[13:]
+
+        # Parse the header
+        meta = parse_header(header)
+        cruise = meta.get("cruise", "")
+        station = meta.get("station", "")
+        remarks = meta.get("remarks", "")
+
+    # Execution throttle
+
+    # START_TIME = time.time()
+    # MAX_ITERATIONS = len(data_lines) * 2  # Reasonable maximum based on input size
+    # MAX_EXECUTION_TIME = 300  # 5 minutes in seconds
+    # logger.info(f"MAX_ITERATIONS: {MAX_ITERATIONS}")
+
+    # iteration_count = 0
+    # for i, line in enumerate(data_lines):
+    #     # Safety checks
+    #     if time.time() - START_TIME > MAX_EXECUTION_TIME:
+    #         logger.warning("Function approaching timeout - forcing exit")
+    #         raise Exception("Function timeout reached")
+
+    #     iteration_count += 1
+    #     if iteration_count > MAX_ITERATIONS:
+    #         logger.error(f"Maximum iterations exceeded - forcing exit")
+    #         raise Exception("Maximum iterations exceeded")
+
+    #     # Check for empty lines or end marker
+    #     if not line.strip() or line.startswith("End ###"):
+    #         logger.info(f"Found end of data at line {i}: {line}")
+    #         return
 
     # Connect to MongoDB (assuming connection string is in environment variable)
     client = MongoClient(os.environ["MONGODB_URI"])
@@ -317,22 +503,37 @@ def lambda_handler(event, context):
         current_ingress_id = get_current_ingress_id(
             db, COUNTER_COLLECTION_NAME, cruise, station, remarks, date_created
         )
+        logger.info(f"Current ingressId: {current_ingress_id}")
 
         # Prepare documents and collect subLocation coordinates
         video_events = []
         video_start_time = None
         documents = []
         sub_coordinates = []
+
         for i, line in enumerate(data_lines):
+            # Check for empty lines or end marker
+            if not line.strip() or line.startswith("End"):
+                logger.info(f"Found end of data at line {i}: {line}")
+                break  # This will exit the loop
+
+            logger.info(f"Processing input data line {i}: {line}")
             data_point, video_start_time, video_events = parse_data_line(
-                line, file_key, video_start_time, video_events
+                line,
+                file_key,
+                video_start_time,
+                video_events,
+                file_format=file_format,
+                header=header,
             )
+
             if data_point:
                 prot_time = datetime.strptime(
                     data_point["timestamp"], "%H:%M:%S"
                 ).time()
 
                 # Find the closest matching timestamp in posi_data
+                logger.info(f"Finding closest matching timestamp in posi: {prot_time}")
                 closest_posi_entry = min(
                     posi_data.values(),
                     key=lambda x: abs(
@@ -345,6 +546,7 @@ def lambda_handler(event, context):
                     ),
                     default=None,
                 )
+                # logger.info(f"Found matching timestamp in posi")
 
                 if closest_posi_entry:
                     # Use the date from the posi file and time from the prot file
@@ -372,7 +574,16 @@ def lambda_handler(event, context):
                     **data_point,
                 }
 
-                documents.append(doc)
+                # Before inserting/updating
+                document = prepare_for_mongodb(doc)
+
+                # For debugging purposes only
+                logger.info(
+                    "Document to be inserted/updated: %s",
+                    json.dumps(document, default=datetime_handler),
+                )
+
+                documents.append(document)
                 sub_coordinates.append(doc["subLocation"]["coordinates"])
 
         # Calculate the bounding box
@@ -395,17 +606,23 @@ def lambda_handler(event, context):
             date_created,
             video_events,
         )
+        # Convert ObjectIds to strings for the response
+        inserted_ids = [str(id) for id in result.inserted_ids]
+
         return {
             "statusCode": 200,
             "body": json.dumps(
-                f"Inserted {len(result.inserted_ids)} documents into MongoDB. Current ingressId: {ingr_id}"
+                f"Inserted {len(inserted_ids)} documents into MongoDB. Current ingressId: {ingr_id}",
+                default=datetime_handler,
             ),
         }
     except Exception as e:
-        print(e)
+        print(f"Error processing document: {str(e)}")
         return {
             "statusCode": 500,
-            "body": json.dumps(f"Error processing file. Error: {str(e)}"),
+            "body": json.dumps(
+                f"Error processing file. Error: {str(e)}", default=datetime_handler
+            ),
         }
     finally:
         # Close the MongoDB connection

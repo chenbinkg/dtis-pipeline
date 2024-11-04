@@ -43,6 +43,18 @@ def source_key():
     return "TAN2306_123_prot.txt"
 
 
+# Added for rerun_XX_obser.txt format:
+@pytest.fixture
+def new_format_line():
+    return "11/14/2006\t14:08:08\t173.6320797\t-42.5125708\t[29]\t[29] OBSCURED"
+
+
+# Added for rerun_XX_obser.txt format:
+@pytest.fixture
+def new_format_header():
+    return "#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name"
+
+
 def test_get_posi_file_content_success():
     # Arrange
     mock_s3 = Mock()
@@ -148,7 +160,7 @@ def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
                     "observation": "general observation",
                     "observation2": None,
                     "observation3": None,
-                    "observationRef": "[AphiaID / link to WORMS]",
+                    "observationRef": "<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=general observation&marine_only=true'>Try a WORMS search for general observation</a>",
                 },
             },
         ),
@@ -197,6 +209,57 @@ def test_parse_data_line(line, expected_results, source_key):
             # Handle other values
             else:
                 assert result[key] == expected_results[key]
+
+
+def test_parse_data_line_new_format(new_format_line, new_format_header, source_key):
+    result, video_start, video_events = parse_data_line(
+        new_format_line,
+        source_key,
+        None,
+        [],
+        file_format="new",
+        header=new_format_header,
+    )
+
+    expected_results = {
+        "timestamp": "14:08:08",
+        "shipLocation": {"type": "Point", "coordinates": [173.6320797, -42.5125708]},
+        "subLocation": {"type": "Point", "coordinates": [173.6320797, -42.5125708]},
+        "speed": None,
+        "course": None,
+        "depth": None,
+        "heading": None,
+        "feature": {
+            "media": "",
+            "mediaType": "",
+            "mediaOffset": None,
+            "observation": "[29] OBSCURED",
+            "observation2": None,
+            "observation3": None,
+            "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=OBSCURED&marine_only=true'>Try a WORMS search for OBSCURED</a>",
+        },
+    }
+
+    assert result is not None
+    for key in expected_results:
+        assert key in result
+        if key in ["shipLocation", "subLocation"]:
+            assert result[key]["type"] == "Point"
+            assert len(result[key]["coordinates"]) == 2
+            assert (
+                abs(
+                    result[key]["coordinates"][0]
+                    - expected_results[key]["coordinates"][0]
+                )
+                < 0.0001
+            )
+            assert (
+                abs(
+                    result[key]["coordinates"][1]
+                    - expected_results[key]["coordinates"][1]
+                )
+                < 0.0001
+            )
 
 
 @pytest.mark.parametrize(
