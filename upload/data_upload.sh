@@ -68,32 +68,36 @@ else
 fi
 
 ##############################################
-# Subsection: Regex patterns based on naming conventions
+# Subsection: Regex patterns based on file naming conventions
 ##############################################
 # e.g. TAN1802_160_DTIS__004.jpeg
-image_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.jpeg$"
+image_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$"
 # e.g. TAN1802_160_DTIS__004.jpg
-image_pattern2="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.jpg$"
+image_pattern2="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPG$"
 # e.g. TAN1802_Stn_160_004.jpeg
-image_pattern3="^[A-Z]{3}[0-9]{4}_Stn_[0-9]{3,}_[0-9]{3}\.jpeg$"
+image_pattern3="^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPEG$"
 # e.g. TAN1802_Stn_160_004.jpg
-image_pattern4="^[A-Z]{3}[0-9]{4}_Stn_[0-9]{3,}_[0-9]{3}\.jpg$"
+image_pattern4="^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPG$"
+# e.g. TAN1802_160_004.jpg
+image_pattern5="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$"
+# e.g. TAN1802_160_004.jpeg
+image_pattern6="^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$"
 
 # e.g. TAN1802_001.m2t or TAN1802_001.m2ts
-video_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.m2t[s]?$"
+video_pattern1="^[A-Z]{3}[0-9]{4}_[0-9]{3}\.M2T[S]?$"
 # e.g. 201012220153001.m2t or 201012220153001.m2ts (only digits)
-video_pattern2="^[0-9]{4,}\.m2t[s]?$"
+video_pattern2="^[0-9]{4,}\.M2T[S]?$"
 
 # e.g. TAN1802_001_posi.txt
-ofop_posi_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_posi\.txt$"
+ofop_posi_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\.TXT$"
 # e.g. TAN1802_001_prot.txt
-ofop_prot_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_prot\.txt$"
+ofop_prot_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\.TXT$"
 # e.g. TAN1802_001_obser.txt
-ofop_obser_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}_obser\.txt$"
+ofop_obser_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\.TXT$"
 # e.g. TAN1802_001.sth_rerun.sth_obser.txt
-ofop_obser_rerun_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_obser\.txt$"
+ofop_obser_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_OBSER\.TXT$"
 # e.g. TAN1802_001.sth_rerun.sth_prot.txt
-ofop_prot_rerun_pattern="^[A-Za-z]{3}[0-9]{4}_[0-9]{3}.*_rerun.*_prot\.txt$"
+ofop_prot_rerun_pattern="^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_PROT\.TXT$"
 
 ##############################################
 # Section: functions
@@ -191,7 +195,21 @@ function get_station_id() {
             # remove whitespace
             station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
           else
-            echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+            # Method 5 did not work, let's try method 6.
+            # It works for files such as:
+            # e.g. /Stn002/11-04-2022/20220411191258.m2ts
+
+            # this gives, e.g. /STN002/11-04-2022/2
+            temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/STN[0-9]{3,}/[0-9]{2}-[0-9]{2}-[0-9]{4}/*.M*")
+            if [ $? -eq 0 ]; then
+              # this gives, e.g. STN003
+              temp_parse=$(echo $temp_parse | awk -F '/' '{print $2}' | grep -oE "[0-9]{3,}")
+              station_id="${temp_parse}"
+              # remove whitespace
+              station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
+            else
+              echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+            fi
           fi
         fi
       fi
@@ -266,7 +284,7 @@ check_image_files() {
     # Find all the files, in the images directory, with the selected
     # file extensions.
     # Write the file names into an bash array.
-    readarray files_with_matching_extension < <(find "${dir}" -name '*.jpg' -o -name '*.jpeg')
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.jpg' -o -name '*.jpeg' -o -name '*.JPEG' -o -name '*.JPG')
     echo "after readarray"
 
     for file in "${files_with_matching_extension[@]}"; do
@@ -275,8 +293,11 @@ check_image_files() {
       #echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
+      # make it fully upper case letters
+      file_path_upper_case="${file_name^^}"
+
       echo "${file_name}"
-      if [[ ! "${file_name}" =~ ${image_pattern1} ]] && [[ ! "${file_name}" =~ ${image_pattern2} ]] && [[ ! "${file_name}" =~ ${image_pattern3} ]] && [[ ! "${file_name}" =~ ${image_pattern4} ]]; then
+      if [[ ! "${file_path_upper_case}" =~ ${image_pattern1} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern2} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern3} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern4} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern5} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern6} ]]; then
         echo "File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
@@ -314,7 +335,7 @@ check_video_files() {
     # Find all the files, in the videos directory, with the selected
     # file extensions.
     # Write the file names into an bash array.
-    readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts')
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.m2t' -o -name '*.m2ts'  -o -name '*.M2TS' -o -name '*.M2T')
     echo "after readarray"
 
     for file in "${files_with_matching_extension[@]}"; do
@@ -323,7 +344,9 @@ check_video_files() {
       # echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
-      if [[ ! "${file_name}" =~ ${video_pattern1} ]] && [[ ! "${file_name}" =~ ${video_pattern2} ]]; then
+      # make it fully upper case letters
+      file_path_upper_case="${file_name^^}"
+      if [[ ! "${file_path_upper_case}" =~ ${video_pattern1} ]] && [[ ! "${file_path_upper_case}" =~ ${video_pattern2} ]]; then
         echo "File does not match video naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
@@ -360,7 +383,7 @@ check_ofop_files() {
     # Find all the files, in the videos directory, with the selected
     # file extensions.
     # Write the file names into an bash array.
-    readarray files_with_matching_extension < <(find "${dir}" -name '*.txt')
+    readarray files_with_matching_extension < <(find "${dir}" -name '*.txt' -o -name '*.TXT')
 
     for file in "${files_with_matching_extension[@]}"; do
       # #echo "file is ${file}"
@@ -368,6 +391,8 @@ check_ofop_files() {
       # echo "file_no_trailing_whitespace is ${file_no_trailing_whitespace}"
 
       file_name=$(basename "$file")
+      # make it fully upper case letters
+      file_path_upper_case="${file_name^^}"
 
       file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
       if [[ "$file_type" != "text/plain" ]]; then
@@ -375,11 +400,11 @@ check_ofop_files() {
         continue
       fi
 
-      if [[ "${file_name}" =~ $ofop_posi_pattern || \
-            "${file_name}" =~ $ofop_prot_pattern || \
-            "${file_name}" =~ $ofop_obser_pattern || \
-            "${file_name}" =~ $ofop_obser_rerun_pattern || \
-            "${file_name}" =~ $ofop_prot_rerun_pattern ]]; then
+      if [[ "${file_path_upper_case}" =~ $ofop_posi_pattern || \
+            "${file_path_upper_case}" =~ $ofop_prot_pattern || \
+            "${file_path_upper_case}" =~ $ofop_obser_pattern || \
+            "${file_path_upper_case}" =~ $ofop_obser_rerun_pattern || \
+            "${file_path_upper_case}" =~ $ofop_prot_rerun_pattern ]]; then
         text_files_to_copy+=("${file_no_trailing_whitespace}")
       else
         echo "File does not match any pattern: ${file_name}" | tee -a  "$error_file"
@@ -439,7 +464,7 @@ declare -a image_files_to_copy=()
 check_image_files "$images_dir"
 
 echo "The following images passed local verification:" | tee -a "$success_file"
-echo "${image_files_to_copy[@]}" | tee -a "$success_file"
+printf '%s\n' "${image_files_to_copy[@]}" | tee -a "$success_file"
 echo "" | tee -a "$success_file"
 
 ##############################################
@@ -453,7 +478,7 @@ declare -a video_files_to_copy=()
 check_video_files "$videos_dir"
 
 echo "The following videos passed local verification:" | tee -a "$success_file"
-echo "${video_files_to_copy[@]}" | tee -a "$success_file"
+printf '%s\n' "${video_files_to_copy[@]}" | tee -a "$success_file"
 echo "" | tee -a "$success_file"
 
 ##############################################
@@ -472,7 +497,7 @@ else
 fi
 
 echo "The following text files passed local verification:" | tee -a "$success_file"
-echo "${text_files_to_copy[@]}" | tee -a "$success_file"
+printf '%s\n' "${text_files_to_copy[@]}" | tee -a "$success_file"
 echo "" | tee -a "$success_file"
 
 
