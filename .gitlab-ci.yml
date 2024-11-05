@@ -10,5 +10,8 @@ shellcheck:
   services:
     - docker:dind
   script:
+    - pwd
+    - whoami
+    - ls -la
     - chmod +x ./tasks
     - ./tasks shellcheck
