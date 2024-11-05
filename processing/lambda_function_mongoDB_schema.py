@@ -73,10 +73,8 @@ def datetime_handler(obj):
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 
-def get_current_ingress_id(
-    db, COUNTER_COLLECTION_NAME, cruise, station, remarks, date_created
-):
-    counter = db[COUNTER_COLLECTION_NAME].find_one_and_update(
+def get_current_ingress_id(ingress_collection, cruise, station, remarks, date_created):
+    counter = ingress_collection.find_one_and_update(
         {"cruise": cruise, "station": station, "remarks": remarks},
         {
             "$setOnInsert": {
@@ -96,15 +94,14 @@ def get_current_ingress_id(
 
 
 def increment_ingress_id(
-    db,
-    COUNTER_COLLECTION_NAME,
+    ingress_collection,
     cruise,
     station,
     remarks,
     bounding_box,
     count_documents,
     date_created,
-    video_events,
+    # video_events,
 ):
     try:
         update_doc = {
@@ -130,7 +127,7 @@ def increment_ingress_id(
             f"Attempting to update with document: {json.dumps(update_doc, default=str)}"
         )
 
-        result = db[COUNTER_COLLECTION_NAME].update_one(
+        result = ingress_collection.update_one(
             {"cruise": cruise, "station": station, "remarks": remarks},
             update_doc,
             upsert=True,
@@ -220,7 +217,7 @@ def parse_data_line(
     if file_format == "original":
         if len(fields) < 12:  # Original format requires at least 12 fields
             return None, video_start_time, video_events
-        logger.info(f"Fields: {fields}, file_format = {file_format}")
+        # logger.info(f"Fields: {fields}, file_format = {file_format}")
         utc_time = fields[0]
         lon = float(fields[3])
         lat = float(fields[2])
@@ -257,11 +254,6 @@ def parse_data_line(
 
     if not (is_prot or is_obs):
         raise ValueError("Invalid source input (text) file type")
-
-    # posi_key = source_key.replace(
-    #     '_prot.txt' if is_prot else '_obs.txt',
-    #     '_posi.txt'
-    # )
 
     # Initialize feature dictionary
     feature = {
@@ -460,6 +452,9 @@ def parse_file_content(file_content, key):
         station = meta.get("station", "")
         remarks = meta.get("remarks", "")
 
+    # return parsing results
+    logger.info(f"Returning parsed results for header: {header}")
+
     return {
         "header": header,
         "data_lines": data_lines,
@@ -468,6 +463,120 @@ def parse_file_content(file_content, key):
         "remarks": remarks,
         "file_format": file_format,
     }
+
+
+def prepare_documents(
+    ingress_collection,
+    data_lines,
+    file_key,
+    posi_data,
+    cruise,
+    station,
+    remarks,
+    file_format=None,
+    header=None,
+):
+    date_created = datetime.now(timezone.utc).isoformat()
+
+    # Get the current ingressId
+    current_ingress_id = get_current_ingress_id(
+        ingress_collection, cruise, station, remarks, date_created
+    )
+    logger.info(f"Current ingressId: {current_ingress_id}")
+
+    # Prepare documents and collect subLocation coordinates
+    video_events = []
+    video_start_time = None
+    documents = []
+    sub_coordinates = []
+
+    for i, line in enumerate(data_lines):
+        # Check for empty lines or end marker
+        if not line.strip() or line.startswith("End"):
+            logger.info(f"Found end of data at line {i}: {line}")
+            break  # This will exit the loop
+
+        # logger.info(f"Processing input data line {i}: {line}")
+        data_point, video_start_time, video_events = parse_data_line(
+            line,
+            file_key,
+            video_start_time,
+            video_events,
+            file_format=file_format,
+            header=header,
+        )
+
+        if data_point:
+            prot_time = datetime.strptime(data_point["timestamp"], "%H:%M:%S").time()
+
+            # Find the closest matching timestamp in posi_data
+            logger.info("Finding closest matching timestamp in posi: %s", prot_time)
+            closest_posi_entry = min(
+                posi_data.values(),
+                key=lambda x: abs(
+                    (
+                        datetime.combine(x["datetime"].date(), prot_time).replace(
+                            tzinfo=timezone.utc
+                        )
+                        - x["datetime"]
+                    ).total_seconds()
+                ),
+                default=None,
+            )
+            # logger.info(f"Found matching timestamp in posi")
+
+            if closest_posi_entry:
+                # Use the date from the posi file and time from the prot file
+                timestamp = closest_posi_entry["datetime"].replace(
+                    hour=prot_time.hour,
+                    minute=prot_time.minute,
+                    second=prot_time.second,
+                )
+
+            else:
+                raise ValueError("No matching timestamp found in posi_data.")
+
+            data_point["timestamp"] = timestamp.isoformat()
+
+            doc = {
+                "_id": ObjectId(),
+                "meta": {
+                    "cruiseStationId": ObjectId(),
+                    "cruise": cruise,
+                    "station": station,
+                    "remarks": remarks,
+                    "ingressId": current_ingress_id,
+                    "created": date_created,
+                },
+                **data_point,
+            }
+
+            # Before inserting/updating
+            document = prepare_for_mongodb(doc)
+
+            # For debugging purposes only
+            logger.info(
+                "Document to be inserted/updated: %s",
+                json.dumps(document, default=datetime_handler),
+            )
+
+            documents.append(document)
+            sub_coordinates.append(doc["subLocation"]["coordinates"])
+
+    # Calculate the bounding box
+    bounding_box = calculate_bounding_box(sub_coordinates)
+
+    return documents, bounding_box
+
+
+def insert_documents_to_mongodb(collection_name, documents):
+    # upload new 'documents' (a.k.a records) to MongoDB Atlas collection
+    try:
+        result = collection_name.insert_many(documents)
+        return result.inserted_ids
+    except Exception as e:
+        print(f"Error inserting documents into MongoDB: {str(e)}")
+        raise
 
 
 def lambda_handler(event, context):
@@ -481,7 +590,7 @@ def lambda_handler(event, context):
     )
     # MongoDB (assuming connection string is in environment variable)
     collection = db[os.environ["MONGODB_COLLECTION"]]
-    ingress_counter = os.environ["INGRESS_COLLECTION_DTIS"]
+    ingress_counter = db[os.environ["INGRESS_COLLECTION_DTIS"]]
     COUNTER_COLLECTION_NAME = ingress_counter
 
     # Get file content from S3
@@ -489,10 +598,6 @@ def lambda_handler(event, context):
 
     # Parse file content
     documents = parse_file_content(file_content, file_key)
-
-    # Get and parse the corresponding posi file
-    posi_content = get_posi_file_content(s3, bucket_name, file_key)
-    posi_data = parse_posi_file(posi_content) if posi_content else {}
 
     # Process the documents
     (
@@ -504,139 +609,48 @@ def lambda_handler(event, context):
         file_format,
     ) = documents.values()
 
-    logger.info(f"header: {header}")
-    logger.info(f"data_lines: {data_lines}")
-    logger.info(f"cruise: {cruise}")
-    logger.info(f"station: {station}")
-    logger.info(f"remarks: {remarks}")
-    logger.info(f"file_format: {file_format}")
-    # logger.info(f"posi_data: {posi_data}")
-    # logger.info(f"posi_data: {type(posi_data)}")
-    # logger.info(f"posi_data: {len(posi_data)}")
-    # logger.info(f"posi_data: {posi_data.keys()}")
-    # logger.info(f"posi_data: {posi_data.values()}")
-    # logger.info(f"posi_data: {posi_data.items()}")
-    # logger.info(f"posi_data: {posi_data.get('datetime')}")
-    # logger.info(f"posi_data: {posi_data.get('data')}")
-    # logger.info(f"posi_data: {posi_data.get('data').get('Latitude')}")
-
-    date_created = datetime.now(timezone.utc).isoformat()
+    # Get and parse the corresponding posi file
+    posi_content = get_posi_file_content(s3, bucket_name, file_key)
+    posi_data = parse_posi_file(posi_content) if posi_content else {}
 
     try:
-        # Get the current ingressId
-        current_ingress_id = get_current_ingress_id(
-            db, COUNTER_COLLECTION_NAME, cruise, station, remarks, date_created
-        )
-        logger.info(f"Current ingressId: {current_ingress_id}")
-
+        date_created = datetime.now(timezone.utc).isoformat()
         # Prepare documents and collect subLocation coordinates
-        video_events = []
-        video_start_time = None
-        documents = []
-        sub_coordinates = []
+        out_documents, bounding_box = prepare_documents(
+            COUNTER_COLLECTION_NAME,
+            data_lines,
+            file_key,
+            posi_data,
+            cruise,
+            station,
+            remarks,
+            file_format,
+            header,
+        )
 
-        for i, line in enumerate(data_lines):
-            # Check for empty lines or end marker
-            if not line.strip() or line.startswith("End"):
-                logger.info(f"Found end of data at line {i}: {line}")
-                break  # This will exit the loop
+        # number of inserted documents for summary update in ingresses collection
+        len_outdocuments = len(out_documents)
+        logger.info(f"Number of documents to be inserted: {len_outdocuments}")
 
-            # logger.info(f"Processing input data line {i}: {line}")
-            data_point, video_start_time, video_events = parse_data_line(
-                line,
-                file_key,
-                video_start_time,
-                video_events,
-                file_format=file_format,
-                header=header,
-            )
-
-            if data_point:
-                prot_time = datetime.strptime(
-                    data_point["timestamp"], "%H:%M:%S"
-                ).time()
-
-                # Find the closest matching timestamp in posi_data
-                logger.info(f"Finding closest matching timestamp in posi: {prot_time}")
-                closest_posi_entry = min(
-                    posi_data.values(),
-                    key=lambda x: abs(
-                        (
-                            datetime.combine(x["datetime"].date(), prot_time).replace(
-                                tzinfo=timezone.utc
-                            )
-                            - x["datetime"]
-                        ).total_seconds()
-                    ),
-                    default=None,
-                )
-                # logger.info(f"Found matching timestamp in posi")
-
-                if closest_posi_entry:
-                    # Use the date from the posi file and time from the prot file
-                    timestamp = closest_posi_entry["datetime"].replace(
-                        hour=prot_time.hour,
-                        minute=prot_time.minute,
-                        second=prot_time.second,
-                    )
-
-                else:
-                    raise ValueError("No matching timestamp found in posi_data.")
-
-                data_point["timestamp"] = timestamp.isoformat()
-
-                doc = {
-                    "_id": ObjectId(),
-                    "meta": {
-                        "cruiseStationId": ObjectId(),
-                        "cruise": cruise,
-                        "station": station,
-                        "remarks": remarks,
-                        "ingressId": current_ingress_id,
-                        "created": date_created,
-                    },
-                    **data_point,
-                }
-
-                # Before inserting/updating
-                document = prepare_for_mongodb(doc)
-
-                # For debugging purposes only
-                logger.info(
-                    "Document to be inserted/updated: %s",
-                    json.dumps(document, default=datetime_handler),
-                )
-
-                documents.append(document)
-                sub_coordinates.append(doc["subLocation"]["coordinates"])
-
-        # Calculate the bounding box
-        bounding_box = calculate_bounding_box(sub_coordinates)
+        # logger.info(f"Video events: {video_events}")
 
         # Insert documents into MongoDB
-        result = collection.insert_many(documents)
-        # Increment the ingressId for the next run
-        ingr_id = get_current_ingress_id(
-            db, COUNTER_COLLECTION_NAME, cruise, station, remarks, date_created
-        )
+        inserted_ids = insert_documents_to_mongodb(collection, out_documents)
+
+        # Update ingress counter
         increment_ingress_id(
-            db,
-            ingress_counter,
+            COUNTER_COLLECTION_NAME,
             cruise,
             station,
             remarks,
             bounding_box,
-            len(documents),
+            len_outdocuments,
             date_created,
-            video_events,
         )
-        # Convert ObjectIds to strings for the response
-        inserted_ids = [str(id) for id in result.inserted_ids]
-
         return {
             "statusCode": 200,
             "body": json.dumps(
-                f"Inserted {len(inserted_ids)} documents into MongoDB. Current ingressId: {ingr_id}",
+                f"Inserted {len(inserted_ids)} documents into MongoDB. ",
                 default=datetime_handler,
             ),
         }
@@ -645,7 +659,8 @@ def lambda_handler(event, context):
         return {
             "statusCode": 500,
             "body": json.dumps(
-                f"Error processing file. Error: {str(e)}", default=datetime_handler
+                f"Error processing file. Error: {str(e)}",
+                default=datetime_handler,
             ),
         }
     finally:

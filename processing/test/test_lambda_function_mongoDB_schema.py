@@ -21,16 +21,51 @@ should we use the 'pendulum' library so we're better able to deal with dates/tim
 *test_get_posi_file_content_file_name_transformation: Specifically tests the file name transformation logic from "_prot.txt" to "_posi.txt".
 *test_get_posi_file_content_various_paths: Uses parametrize to test multiple input scenarios for different file paths and names.
 
+Tests for refactored code (after removal of various functions from Lambda Handler):
+
+initialize_resources: Tests that resources are initialized correctly.
+get_file_from_s3: Tests both successful file retrieval and handling of a missing file.
+parse_file_content: Tests parsing of file content.
+prepare_documents: Tests preparation of documents.
+insert_documents_to_mongodb: Tests insertion of documents into MongoDB.
+lambda_handler: Tests the overall lambda handler function using mocks for dependencies.
 
 """
 
-from datetime import datetime, timedelta
-from unittest.mock import Mock
+import json
+import os
+import sys
+from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, Mock, patch
 
-# import boto3
 import pytest
 from botocore.exceptions import ClientError
-from lambda_function_mongoDB_schema import get_posi_file_content, parse_data_line
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from lambda_function_mongoDB_schema import (
+    get_file_from_s3,
+    get_posi_file_content,
+    initialize_resources,
+    insert_documents_to_mongodb,
+    lambda_handler,
+    parse_data_line,
+    parse_file_content,
+    prepare_documents,
+)
+
+# from lambda_function_mongoDB_schema import lambda_handler
+
+# (
+#     get_file_from_s3,
+#     get_posi_file_content,
+#     initialize_resources,
+#     insert_documents_to_mongodb,
+#     lambda_handler,
+#     parse_data_line,
+#     parse_file_content,
+#     prepare_documents,
+# )
 
 
 @pytest.fixture
@@ -53,6 +88,139 @@ def new_format_line():
 @pytest.fixture
 def new_format_header():
     return "#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name"
+
+
+# Mock environment variables
+os.environ["MONGODB_URI"] = "mongodb://localhost:27017"
+os.environ["MONGODB_DATABASE"] = "test_db"
+os.environ["MONGODB_COLLECTION"] = "test_collection"
+os.environ["INGRESS_COLLECTION_DTIS"] = "ingress_collection"
+os.environ["S3_BUCKET_NAME"] = "test_bucket"
+
+
+@pytest.fixture
+def s3_client():
+    return Mock()
+
+
+@pytest.fixture
+def mongo_client():
+    return Mock()
+
+
+@pytest.fixture
+def db(mongo_client):
+    return MagicMock()
+
+
+def test_initialize_resources():
+    s3_client, mongo_client, db = initialize_resources()
+    assert s3_client is not None
+    assert mongo_client is not None
+    assert db is not None
+
+
+def test_get_file_from_s3_success(s3_client):
+    s3_client.get_object.return_value = {"Body": Mock(read=lambda: b"file content")}
+    result = get_file_from_s3(s3_client, "test_bucket", "test_key")
+    assert result == "file content"
+
+
+def test_get_file_from_s3_no_file(s3_client):
+    s3_client.get_object.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "NoSuchKey",
+                "Message": "The specified key does not exist.",
+            }
+        },
+        "GetObject",
+    )
+    with pytest.raises(FileNotFoundError):
+        get_file_from_s3(s3_client, "test_bucket", "test_key")
+
+
+def test_parse_file_content():
+    file_content = "#Date\tTime\n12.12.2020\t12:34:56\n"
+    key = "cruise_station_prot.txt"
+    result = parse_file_content(file_content, key)
+    assert "header" in result
+    assert "data_lines" in result
+    assert "cruise" in result
+    assert "station" in result
+    assert "remarks" in result
+    assert "file_format" in result
+
+
+def test_prepare_documents():
+    data_lines = [
+        "12:34:56\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
+    ]
+    file_key = "test_key"
+    posi_data = {
+        "2020-12-12T12:34:56Z": {
+            "datetime": datetime(2020, 12, 12, 12, 34, 56, tzinfo=timezone.utc),
+            "data": {},
+        }
+    }
+    cruise = "cruise"
+    station = "station"
+    remarks = "remarks"
+    documents, sub_coordinates = prepare_documents(
+        data_lines, file_key, posi_data, cruise, station, remarks
+    )
+    assert len(documents) > 0
+    assert len(sub_coordinates) > 0
+
+
+def test_insert_documents_to_mongodb(db):
+    collection = db[os.environ["MONGODB_COLLECTION"]]
+    documents = [{"_id": 1}, {"_id": 2}]
+    collection.insert_many.return_value = Mock(inserted_ids=[1, 2])
+    result = insert_documents_to_mongodb(collection, documents)
+    assert result == [1, 2]
+
+
+@patch("lambda_function_mongoDB_schema.initialize_resources")
+@patch("lambda_function_mongoDB_schema.get_file_from_s3")
+@patch("lambda_function_mongoDB_schema.parse_file_content")
+@patch("lambda_function_mongoDB_schema.prepare_documents")
+@patch("lambda_function_mongoDB_schema.insert_documents_to_mongodb")
+def test_lambda_handler(
+    mock_insert_documents_to_mongodb,
+    mock_prepare_documents,
+    mock_parse_file_content,
+    mock_get_file_from_s3,
+    mock_initialize_resources,
+):
+    mock_initialize_resources.return_value = (Mock(), Mock(), MagicMock())
+    mock_get_file_from_s3.return_value = "file content"
+    mock_parse_file_content.return_value = {
+        "header": "header",
+        "data_lines": ["data line"],
+        "cruise": "cruise",
+        "station": "station",
+        "remarks": "remarks",
+        "file_format": "original",
+    }
+    mock_prepare_documents.return_value = (["document"], ["sub_coordinates"])
+    mock_insert_documents_to_mongodb.return_value = [1, 2]
+
+    event = {
+        "Records": [
+            {
+                "s3": {
+                    "bucket": {"name": "test_bucket"},
+                    "object": {"key": "test_key"},
+                }
+            }
+        ]
+    }
+    context = Mock()
+
+    result = lambda_handler(event, context)
+    assert result["statusCode"] == 200
+    assert "Inserted" in json.loads(result["body"])
 
 
 def test_get_posi_file_content_success():
@@ -435,17 +603,7 @@ def test_parse_data_line_complete_video_sequence():
     assert video_events[1]["event"] == "stop"
     assert video_events[1]["duration"] == str(timedelta(minutes=1))
 
+    assert video_events[1]["duration"] == str(timedelta(minutes=1))
+    assert video_events[1]["duration"] == str(timedelta(minutes=1))
 
-@pytest.mark.skip(reason="Work in progress.")
-def test_parse_data_line_time_parsing():
-    # Arrange
-    line = "23:59:59\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
-
-    # Act
-    result, _, _ = parse_data_line(line, "test_key", None, [])
-
-    # Assert
-    assert isinstance(result["time"], datetime)
-    assert result["time"].hour == 23
-    assert result["time"].minute == 59
-    assert result["time"].second == 59
+    assert video_events[1]["duration"] == str(timedelta(minutes=1))
