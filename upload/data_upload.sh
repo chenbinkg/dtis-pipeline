@@ -139,7 +139,7 @@ function get_station_id() {
   temp_parse=$(echo "${file_path_upper_case}" | grep -oF "/${NIWA_CRUISE_ID}_[0-9]{3,}/")
   if [ $? -eq 0 ]; then
     # this gives, e.g. 003/
-    temp_parse=$(echo $temp_parse | awk -F '_' '{print $2}')
+    temp_parse=$(echo "${temp_parse}" | awk -F '_' '{print $2}')
     # Remove possible trailing /
     temp_parse=${temp_parse%/}
     station_id="${temp_parse}"
@@ -152,7 +152,7 @@ function get_station_id() {
     temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}_STN_[0-9]{3,}_")
     if [ $? -eq 0 ]; then
       # this gives, e.g. 160
-      temp_parse=$(echo $temp_parse | awk -F '_' '{print $3}')
+      temp_parse=$(echo "${temp_parse}" | awk -F '_' '{print $3}')
       station_id="${temp_parse}"
       # remove whitespace
       station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
@@ -165,7 +165,7 @@ function get_station_id() {
       temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}_[0-9]{3,}_")
       if [ $? -eq 0 ]; then
         # this gives, e.g. 160
-        temp_parse=$(echo $temp_parse | awk -F '_' '{print $2}')
+        temp_parse=$(echo "${temp_parse}" | awk -F '_' '{print $2}')
         station_id="${temp_parse}"
         # remove whitespace
         station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
@@ -178,7 +178,7 @@ function get_station_id() {
         temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}_[0-9]{3,}.*_RERUN")
         if [ $? -eq 0 ]; then
           # this gives, e.g. 160
-          temp_parse=$(echo $temp_parse | awk -F '_' '{print $2}' | awk -F '.' '{print $1}')
+          temp_parse=$(echo "${temp_parse}" | awk -F '_' '{print $2}' | awk -F '.' '{print $1}')
           station_id="${temp_parse}"
           # remove whitespace
           station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
@@ -191,7 +191,7 @@ function get_station_id() {
           temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/${NIWA_CRUISE_ID}/STN[0-9]{3,}/")
           if [ $? -eq 0 ]; then
             # this gives, e.g. STN003
-            temp_parse=$(echo $temp_parse | awk -F '/' '{print $3}' | grep -oE "[0-9]{3,}")
+            temp_parse=$(echo "${temp_parse}" | awk -F '/' '{print $3}' | grep -oE "[0-9]{3,}")
             station_id="${temp_parse}"
             # remove whitespace
             station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
@@ -204,7 +204,7 @@ function get_station_id() {
             temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/STN[0-9]{3,}/[0-9]{2}-[0-9]{2}-[0-9]{4}/*.M*")
             if [ $? -eq 0 ]; then
               # this gives, e.g. STN003
-              temp_parse=$(echo $temp_parse | awk -F '/' '{print $2}' | grep -oE "[0-9]{3,}")
+              temp_parse=$(echo "${temp_parse}" | awk -F '/' '{print $2}' | grep -oE "[0-9]{3,}")
               station_id="${temp_parse}"
               # remove whitespace
               station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
@@ -235,6 +235,7 @@ upload_to_s3() {
   readarray -t plan_file_as_array < "${plan_file_to_read_from}"
 
   for plan_file_line in "${plan_file_as_array[@]}"; do
+    # shellcheck disable=SC2076
     if [[ ! "${plan_file_line}" =~ "." ]] || [[ ! "${plan_file_line}" =~ ";" ]]; then
       # ignore the lines with comments
       continue
@@ -247,7 +248,7 @@ upload_to_s3() {
     # Run the upload command and capture the output
     if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
       echo "Pretending to be uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
-      sync_output=$(echo "aws s3 cp ${file} ${s3_destination}")
+      sync_output="aws s3 cp ${file} ${s3_destination}"
       sync_output_exit_status=$?
     else
       echo "Really uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
@@ -465,7 +466,7 @@ if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   echo "----------------------------" >> "$sync_output_file"
   echo "Data Upload Plan - $(date)" > "$plan_file"
   echo "----------------------------" >> "$plan_file"
-
+  # shellcheck disable=SC2129
   echo "Environment Name: ${NIWA_ENVIRONMENT}" >> "$sync_output_file"
   echo "S3 Bucket Name: ${bucket_name}" >> "$sync_output_file"
   echo "Region: ${aws_region}" >> "$sync_output_file"
