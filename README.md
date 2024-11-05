@@ -19,7 +19,7 @@ Windows machine dependencies:
 - Need to install git first
 - Need to have putty or MobaXterm installed
 - Need to install AWS CLI version 2 (please follow the official [link](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
-- Need to set up AWS CLI credentials (please follow the section below [Setting up AWS credentials](#Setting-up-AWS-credentials)).
+- Need to set up AWS CLI credentials (please follow the section below [Setting up AWS credentials](#setting-up-aws-credentials)).
 
 1. **Run the Bash script, with dryrun**. Start with running this Bash command:
 ```
