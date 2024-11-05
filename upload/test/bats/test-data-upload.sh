@@ -53,7 +53,7 @@ setup() {
 
   run bash -c "cat error.txt"
 	assert_output --partial "File does not match any pattern: tan2203_001_test_obser.txt"
-	assert_output --partial "WARNING: File: ../test-data/text/TAN2203/OFOP text files/tan2203_001_obser.txt does not come from the cruise of ID: TAN123"
+	assert_output --partial "Error: File: ../test-data/text/TAN2203/OFOP text files/tan2203_001_obser.txt does not come from the cruise of ID: TAN123"
 	assert_output --partial "File does not match any pattern: tan1802_113_AcousticMarkWatercolumnshot_obser.txt"
 	assert_output --partial "File does not match image naming convention: ../test-data/images/TAN2203_002/example2.jpg"
 	assert_output --partial "File does not match image naming convention: ../test-data/images/TAN2203_002/example.jpg"
@@ -167,8 +167,6 @@ End of video files that passed local verification"
   assert_output --partial "../test-data/text/TAN2203/OFOP text files/TAN2203_001_posi.txt;001"
   assert_output --partial "../test-data/text/TAN2203/OFOP text files/tan2203_001_posi.txt;001"
 }
-
-
 
 @test "cruise ID: TAN2203, ignore images and videos" {
   run bash -c "export NIWA_DRY_RUN='true' && export  NIWA_ENVIRONMENT='testing' && export NIWA_IMAGES_DIR='ignore' && export NIWA_VIDEOS_DIR='ignore' && export NIWA_OFOP_DIR=../test-data/text/TAN2203 && export NIWA_CRUISE_ID=TAN2203 && ../../data_upload.sh"

@@ -125,7 +125,7 @@ function get_station_id() {
   # if it does not, we exit the function. This file will not
   # be uploaded.
   if ! echo "${file_path_upper_case}" | grep -q "${NIWA_CRUISE_ID}" ; then
-    echo "WARNING: File: ${file_path} does not come from the cruise of ID: ${NIWA_CRUISE_ID}" | tee -a "${error_file}"
+    echo "Error: File: ${file_path} does not come from the cruise of ID: ${NIWA_CRUISE_ID}" | tee -a "${error_file}"
     station_id=""
     return
   fi
@@ -209,7 +209,7 @@ function get_station_id() {
               # remove whitespace
               station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
             else
-              echo "Warning: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+              echo "Error: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
             fi
           fi
         fi
@@ -286,7 +286,7 @@ check_image_files() {
       return
     fi
     if [ ! -d "$dir" ]; then
-        echo "Images directory: $dir does not exist." | tee -a "$error_file"
+        echo "Error: Images directory: $dir does not exist." | tee -a "$error_file"
         exit 1
     fi
 
@@ -304,13 +304,13 @@ check_image_files() {
       file_path_upper_case="${file_name^^}"
 
       if [[ ! "${file_path_upper_case}" =~ ${image_pattern1} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern2} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern3} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern4} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern5} ]] && [[ ! "${file_path_upper_case}" =~ ${image_pattern6} ]]; then
-        echo "File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
+        echo "Error: File does not match image naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
 
       file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
       if [[ "$file_type" != "image/jpeg" ]]; then
-        echo "File is not a valid JPEG: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
+        echo "Error: File is not a valid JPEG: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
       else
         image_files_to_copy+=("${file_no_trailing_whitespace}")
       fi
@@ -330,7 +330,7 @@ check_video_files() {
     fi
 
     if [ ! -d "$dir" ]; then
-      echo "Videos directory: $dir does not exist." | tee -a "$error_file"
+      echo "Error: Videos directory: $dir does not exist." | tee -a "$error_file"
       exit 1
     fi
 
@@ -346,7 +346,7 @@ check_video_files() {
       # make it fully upper case letters
       file_path_upper_case="${file_name^^}"
       if [[ ! "${file_path_upper_case}" =~ ${video_pattern1} ]] && [[ ! "${file_path_upper_case}" =~ ${video_pattern2} ]]; then
-        echo "File does not match video naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
+        echo "Error: File does not match video naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
 
@@ -361,7 +361,7 @@ check_video_files() {
 
       file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
       if [[ "$file_type" != "video/MP2T" ]]; then
-        echo "File is not a valid .m2t or .m2ts file: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
+        echo "Error: File is not a valid .m2t or .m2ts file: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
       else
         video_files_to_copy+=("${file_no_trailing_whitespace}")
       fi
@@ -389,7 +389,7 @@ check_ofop_files() {
 
       file_type=$(file --mime-type -b "${file_no_trailing_whitespace}")
       if [[ "$file_type" != "text/plain" ]]; then
-        echo "File is not a valid text file: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
+        echo "Error: File is not a valid text file: ${file_no_trailing_whitespace} (Detected type: $file_type)" | tee -a "$error_file"
         continue
       fi
 
@@ -400,7 +400,7 @@ check_ofop_files() {
             "${file_path_upper_case}" =~ $ofop_prot_rerun_pattern ]]; then
         text_files_to_copy+=("${file_no_trailing_whitespace}")
       else
-        echo "File does not match any pattern: ${file_name}" | tee -a  "$error_file"
+        echo "Error: File does not match any pattern: ${file_name}" | tee -a  "$error_file"
       fi
     done
 }
@@ -427,19 +427,19 @@ function write_validated_file_paths() {
   # this is an array of local file paths
   local files_array=("$@")
 
-  echo "The following ${file_type} files passed local verification:" | tee -a "${plan_file}"
-  echo "FILE_PATH;STATION_ID" | tee -a "${plan_file}"
+  echo "The following ${file_type} files passed local verification:" >> "${plan_file}"
+  echo "FILE_PATH;STATION_ID" >> "${plan_file}"
   for file in "${files_array[@]}"; do
     station_id=""
     get_station_id "${file}"
     if [[ "${station_id}" != "" ]]; then
       # TODO: remove this?
       echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
-      echo "${file};${station_id}" | tee -a "${plan_file}"
+      echo "${file};${station_id}" >> "${plan_file}"
     fi
   done
-  echo "End of ${file_type} files that passed local verification" | tee -a "${plan_file}"
-  echo "" | tee -a "${plan_file}"
+  echo "End of ${file_type} files that passed local verification" >> "${plan_file}"
+  echo "" >> "${plan_file}"
 }
 
 ##############################################
@@ -520,8 +520,10 @@ if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   ##############################################
   # SubSubSection: Finish the local verification
   ##############################################
+  echo "" | tee -a "$success_file"
   echo "Local files verification completed." | tee -a "$success_file"
   echo "Please read ${plan_file} to see which files passed local verification." | tee -a "$success_file"
+  echo "" | tee -a "$success_file"
 
 fi
 ##############################################
