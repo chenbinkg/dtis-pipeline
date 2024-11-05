@@ -14,4 +14,4 @@ shellcheck:
     - whoami
     - ls -la
     - chmod +x ./tasks
-    - ./tasks shellcheck
+    - bash -c "./tasks shellcheck"
