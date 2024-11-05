@@ -254,28 +254,26 @@ upload_to_s3() {
 
     # Run the upload command and capture the output
     if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
-      echo "Pretending to be uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
-      sync_output="aws s3 cp ${file} ${s3_destination}"
-      sync_output_exit_status=$?
+      echo "Pretending to be uploading ${file_path} to ${s3_destination}" | tee -a "${success_file}"
     else
-      echo "Really uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
+      echo "Really uploading ${file_path} to ${s3_destination}" | tee -a "${success_file}"
       # real upload happens here
       if aws s3api head-object --bucket "${bucket_name}" --key "${NIWA_CRUISE_ID}/${station_id}/${file_type}/${file_basename}" >/dev/null 2>/dev/null; then
         sync_output="S3 object exists already, not uploading"
         sync_output_exit_status=0
       else
-        sync_output=$(set -x; aws s3 cp "${file}" "${s3_destination}")
+        sync_output=$(set -x; aws s3 cp "${file_path}" "${s3_destination}")
         sync_output_exit_status=$?
       fi
-    fi
 
-    echo "$sync_output" | tee -a "$sync_output_file"
-    if [ ${sync_output_exit_status} -eq 0 ]; then
-        # Upload successful, write the output to the success file
-        echo "Success uploading to S3: ${file}" | tee -a "${success_file}"
-    else
-        # Upload successful, write the output to the error file
-        echo "Error uploading to S3: ${file}" | tee -a  "${error_file}"
+      echo "$sync_output" | tee -a "$sync_output_file"
+      if [ ${sync_output_exit_status} -eq 0 ]; then
+          # Upload successful, write the output to the success file
+          echo "Success uploading to S3: ${file_path}" | tee -a "${success_file}"
+      else
+          # Upload successful, write the output to the error file
+          echo "Error uploading to S3: ${file_path}" | tee -a  "${error_file}"
+      fi
     fi
   done
 }
@@ -542,6 +540,7 @@ if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
   verify_s3_bucket
 
   # Set AWS configurations in the script (for S3 specifically)
+  echo "Setting AWS configurations"
   aws configure set region "${aws_region}"
   aws configure set output json
   aws configure set s3.max_concurrent_requests 20
@@ -551,6 +550,7 @@ if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
   aws configure set s3.max_bandwidth 200MB/s
   aws configure set s3.use_accelerate_endpoint false
   aws configure set s3.addressing_style virtual
+  echo "Finished setting AWS configurations"
 fi
 
 ##############################################
@@ -564,7 +564,9 @@ echo "----------------------------" | tee -a  "$success_file"
 upload_to_s3 "${plan_file}"
 
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
+  echo "" | tee -a "$success_file"
   echo "Exit, because dry run is set" | tee -a "$success_file"
+  echo "Please read ${plan_file} to see which files passed local verification." | tee -a "$success_file"
   exit 0
 fi
 
