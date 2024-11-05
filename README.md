@@ -14,11 +14,12 @@ To manage data operations (data upload, data processing) for the ocean floor DTI
 ### For the Scientists
 
 The intention of the `data_upload.sh` script is to upload local files to S3. The files should only pertain to one particular ship cruise (voyage).
+
 Windows machine dependencies:
 - Need to install git first
 - Need to have putty or MobaXterm installed
 - Need to install AWS CLI version 2 (please follow the official [link](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
-- Need to set up AWS CLI credentials (please follow the section below [Setting up AWS credentials](#Setting-up-AWS-credentials)).
+- Need to set up AWS CLI credentials (please follow the section below [Setting up AWS credentials](#setting-up-aws-credentials)).
 
 1. **Run the Bash script, with dryrun**. Start with running this Bash command:
 ```
@@ -30,13 +31,15 @@ NIWA_DRY_RUN=true NIWA_ENVIRONMENT=testing \
 	./upload/data_upload.sh
 ```
 
-	Please set the following variables:
-	* `NIWA_CRUISE_ID` - this is the ID of the ship voyage, should be e.g. TAN0616
-	* `NIWA_ENVIRONMENT` - set it to either `testing` or `production`. This decides which S3 bucket to use. Since the script works, but it's in its initial version, let's use the testing S3 bucket first.
-	* `NIWA_IMAGES_DIR`, `NIWA_VIDEOS_DIR`, `NIWA_OFOP_DIR` - should be set to paths to local directories containing respectivelly: images, videos, text files
+Please set the following variables:
+* `NIWA_CRUISE_ID` - this is the ID of the ship voyage, should be e.g. TAN0616
+* `NIWA_ENVIRONMENT` - set it to either `testing` or `production`. This decides which S3 bucket to use. Since the script works, but it's in its initial version, let's use the testing S3 bucket first.
+* `NIWA_IMAGES_DIR`, `NIWA_VIDEOS_DIR`, `NIWA_OFOP_DIR` - should be set to paths to local directories containing respectivelly: images, videos, text files
 
 
 The above command will run locally, using your files, and it will **not** interact with AWS at all, thanks to setting `NIWA_DRY_RUN=true`. Therefore, **it is always safe to run the above command**.
+
+
 Need to update bash version and install additional bash packages if encounter error like ```> bash: file: command not found```:
 ```
 apt-get update
@@ -45,10 +48,12 @@ apt-get update
 apt-get install file
 ```
 
-2. **Inspect the output**. Please go through the output of the above command, printed in your terminal. The output from the script is also written to the local log files. The log files contain the same information as the terminal output but split across:
-	* `error.txt` - contains only warnings and errors
-	* `success.txt` - contains successful messages
-	* `sync_logs.txt` - contains AWS S3 upload logs
+2. **Inspect the output**.
+	* Please inspect the `plan.txt` file. It contains the list of your local files that are going to be uploaded to S3. It also contains the Station ID, parsed from your files paths.  
+	* You could also go through the output of the above command, printed in your terminal. The output from the script is also written to the local log files. The log files contain the same information as the terminal output but split across:
+		* `error.txt` - contains only warnings and errors
+		* `success.txt` - contains successful messages
+		* `sync_logs.txt` - contains AWS S3 upload logs
 
 If you are looking for an error message, it might be faster to go look for it in the `error.txt` file, rather than trying to find it in the terminal output.
 
@@ -69,9 +74,11 @@ NIWA_DRY_RUN=false NIWA_ENVIRONMENT=testing \
 	./upload/data_upload.sh
 ```
 
+This will read the contents of `plan.txt` file generated before, and run the actual upload to S3.
+
 ### For the Scientists - ignore images and videos
 
-It's possible to not upload the image and video files. In such a case only  the text files would be uploaded to S3. To use this feature, please set `NIWA_IMAGES_DIR=ignore` and `NIWA_VIDEOS_DIR=ignore`.
+It's possible to not upload the image and video files. In such a case only the text files would be uploaded to S3. To use this feature, please set `NIWA_IMAGES_DIR=ignore` and `NIWA_VIDEOS_DIR=ignore`.
 
 ### For the Script Developers
 
