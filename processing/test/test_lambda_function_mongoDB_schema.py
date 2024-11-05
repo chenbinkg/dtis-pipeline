@@ -16,19 +16,19 @@ should we use the 'pendulum' library so we're better able to deal with dates/tim
 
 * Media type detection
 * Complete video sequence handling
-*test_get_posi_file_content_success: Tests the path where the posi file exists and can be retrieved successfully.
-*test_get_posi_file_content_no_file: Tests the error handling when the posi file doesn't exist.
-*test_get_posi_file_content_file_name_transformation: Specifically tests the file name transformation logic from "_prot.txt" to "_posi.txt".
-*test_get_posi_file_content_various_paths: Uses parametrize to test multiple input scenarios for different file paths and names.
+* test_get_posi_file_content_success: Tests the path where the posi file exists and can be retrieved successfully.
+* test_get_posi_file_content_no_file: Tests the error handling when the posi file doesn't exist.
+* test_get_posi_file_content_file_name_transformation: Specifically tests the file name transformation logic from "_prot.txt" to "_posi.txt".
+* test_get_posi_file_content_various_paths: Uses parametrize to test multiple input scenarios for different file paths and names.
 
 Tests for refactored code (after removal of various functions from Lambda Handler):
 
-initialize_resources: Tests that resources are initialized correctly.
-get_file_from_s3: Tests both successful file retrieval and handling of a missing file.
-parse_file_content: Tests parsing of file content.
-prepare_documents: Tests preparation of documents.
-insert_documents_to_mongodb: Tests insertion of documents into MongoDB.
-lambda_handler: Tests the overall lambda handler function using mocks for dependencies.
+* initialize_resources: Tests that resources are initialized correctly.
+* get_file_from_s3: Tests both successful file retrieval and handling of a missing file.
+* parse_file_content: Tests parsing of file content.
+* prepare_documents: Tests preparation of documents.
+* insert_documents_to_mongodb: Tests insertion of documents into MongoDB.
+* lambda_handler: Tests the overall lambda handler function using mocks for dependencies.
 
 """
 
@@ -53,19 +53,6 @@ from lambda_function_mongoDB_schema import (
     parse_file_content,
     prepare_documents,
 )
-
-# from lambda_function_mongoDB_schema import lambda_handler
-
-# (
-#     get_file_from_s3,
-#     get_posi_file_content,
-#     initialize_resources,
-#     insert_documents_to_mongodb,
-#     lambda_handler,
-#     parse_data_line,
-#     parse_file_content,
-#     prepare_documents,
-# )
 
 
 @pytest.fixture
@@ -156,7 +143,7 @@ def test_prepare_documents():
     data_lines = [
         "12:34:56\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
     ]
-    file_key = "test_key"
+    file_key = "test_key_prot.txt"
     posi_data = {
         "2020-12-12T12:34:56Z": {
             "datetime": datetime(2020, 12, 12, 12, 34, 56, tzinfo=timezone.utc),
@@ -166,11 +153,29 @@ def test_prepare_documents():
     cruise = "cruise"
     station = "station"
     remarks = "remarks"
+    ingress_collection = MagicMock()
+
+    # Call the actual prepare_documents function
     documents, sub_coordinates = prepare_documents(
-        data_lines, file_key, posi_data, cruise, station, remarks
+        ingress_collection,
+        data_lines,
+        file_key,
+        posi_data,
+        cruise,
+        station,
+        remarks,
+        file_format="original",
+        header=None,
     )
-    assert len(documents) > 0
-    assert len(sub_coordinates) > 0
+
+    assert len(documents) == 1
+    assert len(sub_coordinates) == 1
+    assert "meta" in documents[0]
+    assert "subLocation" in documents[0]
+    assert documents[0]["meta"]["cruise"] == cruise
+    assert documents[0]["meta"]["station"] == station
+    assert documents[0]["meta"]["remarks"] == remarks
+    assert documents[0]["subLocation"]["coordinates"] == [-41.2345, 174.9876]
 
 
 def test_insert_documents_to_mongodb(db):

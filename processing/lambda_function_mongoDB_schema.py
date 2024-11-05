@@ -44,6 +44,7 @@ MAX_EXECUTION_TIME = 850  # 14.5 minutes (for 15-minute Lambda timeout)
 
 
 def check_timeout():
+    """Check if the function is approaching the timeout limit"""
     elapsed_time = (datetime.now(timezone.utc) - START_TIME).total_seconds()
     if elapsed_time > MAX_EXECUTION_TIME:
         logger.warning("Function approaching timeout - forcing exit")
@@ -64,6 +65,7 @@ def prepare_for_mongodb(document):
 
 
 def datetime_handler(obj):
+    """Custom JSON serializer for datetime objects"""
     if isinstance(obj, (datetime, time)):
         return obj.isoformat()
     elif isinstance(obj, timedelta):
@@ -74,6 +76,12 @@ def datetime_handler(obj):
 
 
 def get_current_ingress_id(ingress_collection, cruise, station, remarks, date_created):
+    """
+    Get the current ingressId for a given cruise, station, and remarks.
+    If the document does not exist, create it with a value of 0.
+
+    This is used to keep track of the number of ingresses for a given cruise/station/remarks.
+    """
     counter = ingress_collection.find_one_and_update(
         {"cruise": cruise, "station": station, "remarks": remarks},
         {
@@ -101,8 +109,14 @@ def increment_ingress_id(
     bounding_box,
     count_documents,
     date_created,
-    # video_events,
 ):
+    """
+    Increment the ingressId for a given cruise, station, and remarks.
+    If the document does not exist, create it with a value of 1.
+
+    This is used to keep track of the number of ingresses for a given cruise/station/remarks.
+    """
+
     try:
         update_doc = {
             "$inc": {"value": 1},
@@ -393,7 +407,9 @@ def parse_posi_file(content):
 
 
 def initialize_resources():
-    # Initialize resources like MongoDB client, S3 client, etc.
+    """
+    Initialize resources like MongoDB client, S3 client, etc.
+    """
     s3_client = boto3.client("s3")
     mongo_client = MongoClient(os.environ["MONGODB_URI"])
     db = mongo_client[os.environ["MONGODB_DATABASE"]]
@@ -401,6 +417,20 @@ def initialize_resources():
 
 
 def get_file_from_s3(s3_client, bucket, key):
+    """
+    Retrieve file content from S3.
+
+    Args:
+        s3_client: The S3 client.
+        bucket: The S3 bucket name.
+        key: The S3 object key.
+
+    Returns:
+        The file content as a string.
+
+    Raises:
+        FileNotFoundError: If the file is not found in the bucket.
+    """
     try:
         response = s3_client.get_object(Bucket=bucket, Key=key)
         logger.info(f"Successfully retrieved file content for key {key}")
@@ -412,6 +442,16 @@ def get_file_from_s3(s3_client, bucket, key):
 
 
 def parse_file_content(file_content, key):
+    """
+    Parse the file content.
+
+    Args:
+        file_content: The file content as a string.
+        key: The S3 object key.
+
+    Returns:
+        A dictionary containing the parsed data.
+    """
     # data parsing logic
     logger.info(f"file_content: {file_content}")
 
@@ -476,6 +516,23 @@ def prepare_documents(
     file_format=None,
     header=None,
 ):
+    """
+    Prepare documents for MongoDB insertion.
+
+    Args:
+        ingress_collection: The MongoDB collection for ingresses.
+        data_lines: The data lines from the file.
+        file_key: The S3 object key.
+        posi_data: The posi data.
+        cruise: The cruise name.
+        station: The station name.
+        remarks: Any remarks.
+        file_format: The file format.
+        header: The header of the file.
+
+    Returns:
+        A list of documents to be inserted into MongoDB.
+    """
     date_created = datetime.now(timezone.utc).isoformat()
 
     # Get the current ingressId
@@ -555,10 +612,14 @@ def prepare_documents(
             document = prepare_for_mongodb(doc)
 
             # For debugging purposes only
-            logger.info(
-                "Document to be inserted/updated: %s",
-                json.dumps(document, default=datetime_handler),
-            )
+            try:
+                logger.info(
+                    "Document to be inserted/updated: %s",
+                    json.dumps(document, default=datetime_handler),
+                )
+            except TypeError as e:
+                logger.error(f"Error serializing document: {str(e)}")
+                continue  # Skip this document
 
             documents.append(document)
             sub_coordinates.append(doc["subLocation"]["coordinates"])
@@ -570,7 +631,17 @@ def prepare_documents(
 
 
 def insert_documents_to_mongodb(collection_name, documents):
-    # upload new 'documents' (a.k.a records) to MongoDB Atlas collection
+    """
+    Upload new 'documents' (a.k.a records) to MongoDB Atlas
+    collection.
+
+    Args:
+        collection_name: The MongoDB collection to insert documents into.
+        documents: The documents to be inserted.
+
+    Returns:
+        The result of the insertion operation.
+    """
     try:
         result = collection_name.insert_many(documents)
         return result.inserted_ids
@@ -580,6 +651,18 @@ def insert_documents_to_mongodb(collection_name, documents):
 
 
 def lambda_handler(event, context):
+    """
+    Lambda function handler.
+
+    Args:
+        event: The event object.
+        context: The context object.
+
+    Returns:
+        A dictionary containing the status code and the response body.
+    """
+    logger.info("Lambda function started")
+
     # Initialize resources
     s3, client, db = initialize_resources()
 
