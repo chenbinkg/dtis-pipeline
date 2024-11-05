@@ -221,11 +221,8 @@ function get_station_id() {
 }
 
 upload_to_s3() {
-  # either: video, text, or image
-  local file_type=$1
   # path to a local plan file
-  local plan_file_to_read_from=$2
-
+  local plan_file_to_read_from=$1
   if [[ ! -f "${plan_file_to_read_from}" ]]; then
     echo "Error: Plan file does not exist: ${plan_file_to_read_from}" | tee -a "${error_file}"
     exit 1
@@ -234,7 +231,17 @@ upload_to_s3() {
   declare -a plan_file_as_array=()
   readarray -t plan_file_as_array < "${plan_file_to_read_from}"
 
+  # either: video, text, or image
+  local file_type=""
+
   for plan_file_line in "${plan_file_as_array[@]}"; do
+    if [[ "${plan_file_line}" =~ "The following image files passed local verification:" ]]; then
+      file_type="images"
+    elif [[ "${plan_file_line}" =~ "The following text files passed local verification:" ]]; then
+      file_type="text"
+    elif [[ "${plan_file_line}" =~ "The following video files passed local verification:" ]]; then
+      file_type="video"
+    fi
     # shellcheck disable=SC2076
     if [[ ! "${plan_file_line}" =~ "." ]] || [[ ! "${plan_file_line}" =~ ";" ]]; then
       # ignore the lines with comments
@@ -554,9 +561,7 @@ echo "----------------------------" | tee -a  "$success_file"
 echo "Uploading files to S3 - $(date)" | tee -a  "$success_file"
 echo "----------------------------" | tee -a  "$success_file"
 
-upload_to_s3 "images" "${plan_file}"
-upload_to_s3 "videos" "${plan_file}"
-upload_to_s3 "ofop" "${plan_file}"
+upload_to_s3 "${plan_file}"
 
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   echo "Exit, because dry run is set" | tee -a "$success_file"
