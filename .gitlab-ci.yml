@@ -10,4 +10,5 @@ shellcheck:
   services:
     - docker:dind
   script:
+    - chmod +x ./tasks
     - ./tasks shellcheck
