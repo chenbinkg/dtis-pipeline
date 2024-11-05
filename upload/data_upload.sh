@@ -221,47 +221,53 @@ function get_station_id() {
 }
 
 upload_to_s3() {
-  # this is either: video, text, or image
+  # either: video, text, or image
   local file_type=$1
-  # https://askubuntu.com/a/995110/665365
-  shift
-  # this is an array of local file paths
-  local files_to_be_uploaded_to_s3=("$@")
-  local station_id
+  # path to a local plan file
+  local plan_file_to_read_from=$2
 
-  for file in "${files_to_be_uploaded_to_s3[@]}"; do
-    # TODO: remove
-    station_id=""
-    get_station_id "${file}"
-    if [[ "${station_id}" != "" ]]; then
-      echo "Station ID, for the file: ${file}, is: ${station_id}" | tee -a "${success_file}"
-      file_basename=$(basename "$file")
-      s3_destination="s3://${bucket_name}/${NIWA_CRUISE_ID}/${station_id}/${file_type}/${file_basename}"
-      echo "Uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
+  if [[ ! -f "${plan_file_to_read_from}" ]]; then
+    echo "Error: Plan file does not exist: ${plan_file_to_read_from}" | tee -a "${error_file}"
+    exit 1
+  fi
 
-      # Run the upload command and capture the output
-      if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
-        # we are not really uploading anything to S3, just pretending
-        sync_output=$(echo "aws s3 cp ${file} ${s3_destination}")
+  declare -a plan_file_as_array=()
+  readarray -t plan_file_as_array < "${plan_file_to_read_from}"
+
+  for plan_file_line in "${plan_file_as_array[@]}"; do
+    if [[ ! "${plan_file_line}" =~ "." ]] || [[ ! "${plan_file_line}" =~ ";" ]]; then
+      # ignore the lines with comments
+      continue
+    fi
+    file_path=$(echo "${plan_file_line}" | awk -F ';' '{print $1}')
+    station_id=$(echo "${plan_file_line}" | awk -F ';' '{print $2}')
+    file_basename=$(basename "$file_path")
+    s3_destination="s3://${bucket_name}/${NIWA_CRUISE_ID}/${station_id}/${file_type}/${file_basename}"
+
+    # Run the upload command and capture the output
+    if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
+      echo "Pretending to be uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
+      sync_output=$(echo "aws s3 cp ${file} ${s3_destination}")
+      sync_output_exit_status=$?
+    else
+      echo "Really uploading ${file} to ${s3_destination}" | tee -a "${success_file}"
+      # real upload happens here
+      if aws s3api head-object --bucket "${bucket_name}" --key "${NIWA_CRUISE_ID}/${station_id}/${file_type}/${file_basename}" >/dev/null 2>/dev/null; then
+        sync_output="S3 object exists already, not uploading"
+        sync_output_exit_status=0
+      else
+        sync_output=$(set -x; aws s3 cp "${file}" "${s3_destination}")
         sync_output_exit_status=$?
-      else
-        # real upload happens here
-        if aws s3api head-object --bucket "${bucket_name}" --key "${NIWA_CRUISE_ID}/${station_id}/${file_type}/${file_basename}" >/dev/null 2>/dev/null; then
-          sync_output="S3 object exists already, not uploading"
-          sync_output_exit_status=0
-        else
-          sync_output=$(set -x; aws s3 cp "${file}" "${s3_destination}")
-          sync_output_exit_status=$?
-        fi
       fi
-      echo "$sync_output" | tee -a "$sync_output_file"
-      if [ ${sync_output_exit_status} -eq 0 ]; then
-          # Upload successful, write the output to the success file
-          echo "Success uploading to S3: ${file}" | tee -a "${success_file}"
-      else
-          # Upload successful, write the output to the error file
-          echo "Error uploading to S3: ${file}" | tee -a  "${error_file}"
-      fi
+    fi
+
+    echo "$sync_output" | tee -a "$sync_output_file"
+    if [ ${sync_output_exit_status} -eq 0 ]; then
+        # Upload successful, write the output to the success file
+        echo "Success uploading to S3: ${file}" | tee -a "${success_file}"
+    else
+        # Upload successful, write the output to the error file
+        echo "Error uploading to S3: ${file}" | tee -a  "${error_file}"
     fi
   done
 }
@@ -342,7 +348,6 @@ check_video_files() {
         echo "File does not match video naming convention: ${file_no_trailing_whitespace}" | tee -a "$error_file"
         continue
       fi
-
 
       if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
         # We don't want to upload video files to the git repository,
@@ -432,6 +437,7 @@ function write_validated_file_paths() {
       echo "${file};${station_id}" | tee -a "${plan_file}"
     fi
   done
+  echo "End of ${file_type} files that passed local verification" | tee -a "${plan_file}"
   echo "" | tee -a "${plan_file}"
 }
 
@@ -439,81 +445,84 @@ function write_validated_file_paths() {
 # Section: the actual run
 ##############################################
 
-##############################################
-# SubSection: Initialize the log files
-##############################################
-# 1. Cleanup the contents of the log files (truncate them)
-true > "${error_file}"
-true > "${success_file}"
-true > "${sync_output_file}"
-true > "${plan_file}"
+if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
 
-# 2. Write informative headers to the log files
-echo "File Upload Success Report - $(date)" > "$success_file"
-echo "----------------------------" >> "$success_file"
-echo "File Upload Error Report - $(date)" > "$error_file"
-echo "----------------------------" >> "$error_file"
-echo "File Sync Report - $(date)" > "$sync_output_file"
-echo "----------------------------" >> "$sync_output_file"
-echo "Data Upload Plan - $(date)" > "$plan_file"
-echo "----------------------------" >> "$plan_file"
+  ##############################################
+  # SubSection: Initialize the log files
+  ##############################################
+  # 1. Cleanup the contents of the log files (truncate them)
+  true > "${error_file}"
+  true > "${success_file}"
+  true > "${sync_output_file}"
+  true > "${plan_file}"
 
-echo "Environment Name: ${NIWA_ENVIRONMENT}" >> "$sync_output_file"
-echo "S3 Bucket Name: ${bucket_name}" >> "$sync_output_file"
-echo "Region: ${aws_region}" >> "$sync_output_file"
+  # 2. Write informative headers to the log files
+  echo "File Upload Success Report - $(date)" > "$success_file"
+  echo "----------------------------" >> "$success_file"
+  echo "File Upload Error Report - $(date)" > "$error_file"
+  echo "----------------------------" >> "$error_file"
+  echo "File Sync Report - $(date)" > "$sync_output_file"
+  echo "----------------------------" >> "$sync_output_file"
+  echo "Data Upload Plan - $(date)" > "$plan_file"
+  echo "----------------------------" >> "$plan_file"
 
-##############################################
-# SubSection: Verify the local files containing dtis data
-##############################################
+  echo "Environment Name: ${NIWA_ENVIRONMENT}" >> "$sync_output_file"
+  echo "S3 Bucket Name: ${bucket_name}" >> "$sync_output_file"
+  echo "Region: ${aws_region}" >> "$sync_output_file"
 
-##############################################
-# SubSubSection: image files
-##############################################
-# This array will contain the set of image files, which passed
-# the local verification steps
-declare -a image_files_to_copy=()
+  ##############################################
+  # SubSection: Verify the local files containing dtis data
+  ##############################################
 
-# Check Images directory for naming convention and file type
-check_image_files "$images_dir"
-# Check station ID, write which files passed all the checks into a file
-write_validated_file_paths "image" "${image_files_to_copy[@]}"
+  ##############################################
+  # SubSubSection: image files
+  ##############################################
+  # This array will contain the set of image files, which passed
+  # the local verification steps
+  declare -a image_files_to_copy=()
 
-##############################################
-# SubSubSection: video files
-##############################################
-# This array will contain the set of video files, which passed
-# the local verification steps
-declare -a video_files_to_copy=()
+  # Check Images directory for naming convention and file type
+  check_image_files "$images_dir"
+  # Check station ID, write which files passed all the checks into a file
+  write_validated_file_paths "image" "${image_files_to_copy[@]}"
 
-# Check Videos directory for naming convention and file type
-check_video_files "$videos_dir"
-# Check station ID, write which files passed all the checks into a file
-write_validated_file_paths "video" "${video_files_to_copy[@]}"
+  ##############################################
+  # SubSubSection: video files
+  ##############################################
+  # This array will contain the set of video files, which passed
+  # the local verification steps
+  declare -a video_files_to_copy=()
 
-##############################################
-# SubSubSection: text files
-##############################################
-# This array will contain the set of text files, which passed
-# the local verification steps
-declare -a text_files_to_copy=()
+  # Check Videos directory for naming convention and file type
+  check_video_files "$videos_dir"
+  # Check station ID, write which files passed all the checks into a file
+  write_validated_file_paths "video" "${video_files_to_copy[@]}"
 
-# Check text directory for naming convention and file type
-if [ -d "$ofop_dir" ]; then
-    check_ofop_files "$ofop_dir"
-else
-    echo "Text files directory: $ofop_dir does not exist." | tee -a "$error_file"
-    exit 1
+  ##############################################
+  # SubSubSection: text files
+  ##############################################
+  # This array will contain the set of text files, which passed
+  # the local verification steps
+  declare -a text_files_to_copy=()
+
+  # Check text directory for naming convention and file type
+  if [ -d "$ofop_dir" ]; then
+      check_ofop_files "$ofop_dir"
+  else
+      echo "Text files directory: $ofop_dir does not exist." | tee -a "$error_file"
+      exit 1
+  fi
+
+  # Check station ID, write which files passed all the checks into a file
+  write_validated_file_paths "text" "${text_files_to_copy[@]}"
+
+  ##############################################
+  # SubSubSection: Finish the local verification
+  ##############################################
+  echo "Local files verification completed." | tee -a "$success_file"
+  echo "Please read ${plan_file} to see which files passed local verification." | tee -a "$success_file"
+
 fi
-
-# Check station ID, write which files passed all the checks into a file
-write_validated_file_paths "text" "${text_files_to_copy[@]}"
-
-##############################################
-# SubSubSection: Finish the local verification
-##############################################
-echo "Local files verification completed." | tee -a "$success_file"
-echo "Please read ${plan_file} to see which files passed local verification." | tee -a "$success_file"
-
 ##############################################
 # SubSection: Verify the S3 bucket and local AWS CLI settings
 ##############################################
@@ -542,9 +551,9 @@ echo "----------------------------" | tee -a  "$success_file"
 echo "Uploading files to S3 - $(date)" | tee -a  "$success_file"
 echo "----------------------------" | tee -a  "$success_file"
 
-upload_to_s3 "images" "${image_files_to_copy[@]}"
-upload_to_s3 "videos" "${video_files_to_copy[@]}"
-upload_to_s3 "ofop" "${text_files_to_copy[@]}"
+upload_to_s3 "images" "${plan_file}"
+upload_to_s3 "videos" "${plan_file}"
+upload_to_s3 "ofop" "${plan_file}"
 
 if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   echo "Exit, because dry run is set" | tee -a "$success_file"
