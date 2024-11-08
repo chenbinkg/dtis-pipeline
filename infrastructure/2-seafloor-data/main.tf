@@ -45,3 +45,75 @@ resource "local_file" "raw_data_s3_bucket_name" {
   content  = aws_s3_bucket.raw_data.id
   filename = "tf_output_raw_data_s3_bucket_name.txt"
 }
+
+resource "aws_sqs_queue" "queue" {
+  name                       =   "dtis-ofop-${var.environment}"
+  # Any message that is sent to the queue remains invisible to consumers for the duration of this delay period.
+  delay_seconds              = 10
+  # It determines the duration during which a message remains invisible to other consumers after it has been retrieved by a consumer. This allows the consumer enough time to process the message before it becomes available for other consumers to retrieve.
+  visibility_timeout_seconds = 60*60*2
+  # The maximum size of the message that can be sent to the SQS queue. If a message exceeds this size, it will be rejected.
+  max_message_size           = 2048
+  # This argument sets the duration, for which messages are retained in the queue. After this duration, any messages that haven’t been processed or deleted will be automatically removed from the queue.
+  message_retention_seconds  = 86400
+  receive_wait_time_seconds  = 2
+  # enables encryption
+  sqs_managed_sse_enabled = true
+
+  tags          = local.tags
+}
+
+# SQS access policy
+data "aws_iam_policy_document" "sqs_policy" {
+  statement {
+    sid    = "sqs"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "sqs:SendMessage",
+      "sqs:ReceiveMessage"
+    ]
+    resources = [
+      aws_sqs_queue.queue.arn
+    ]
+  }
+  statement {
+    sid    = "AllowWritesFromS3"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
+    }
+
+    actions = [
+      "sqs:SendMessage"
+    ]
+    resources = [
+      aws_sqs_queue.queue.arn
+    ]
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = [aws_s3_bucket.raw_data.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+}
+
+# SQS access policy
+resource "aws_sqs_queue_policy" "sqs_policy" {
+  queue_url = aws_sqs_queue.queue.id
+  policy    = data.aws_iam_policy_document.sqs_policy.json
+}
