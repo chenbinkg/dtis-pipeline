@@ -117,3 +117,13 @@ resource "aws_sqs_queue_policy" "sqs_policy" {
   queue_url = aws_sqs_queue.queue.id
   policy    = data.aws_iam_policy_document.sqs_policy.json
 }
+
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket = aws_s3_bucket.raw_data.id
+
+  queue {
+    queue_arn     = aws_sqs_queue.queue.arn
+    # https://docs.aws.amazon.com/AmazonS3/latest/userguide/notification-how-to-event-types-and-destinations.html
+    events        = ["s3:ObjectCreated:*"]
+  }
+}
