@@ -189,7 +189,6 @@ def test_prepare_documents():
             station,
             remarks,
             file_format="original",
-            header=None,
         )
 
     assert len(documents) == 1
@@ -446,7 +445,6 @@ def test_parse_data_line_new_format(new_format_line, new_format_header, source_k
         None,
         [],
         file_format="new",
-        header=new_format_header,
     )
 
     expected_results = {
@@ -464,7 +462,7 @@ def test_parse_data_line_new_format(new_format_line, new_format_header, source_k
             "observation": "[29] OBSCURED",
             "observation2": None,
             "observation_source": "new",
-            "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=OBSCURED&marine_only=true'>Try a WORMS search for OBSCURED</a>",
+            "observationRef": "<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=OBSCURED&marine_only=true'>Try a WORMS search for OBSCURED</a>",
         },
     }
 
@@ -613,6 +611,9 @@ def test_parse_data_line_video_sequences(sequence_times, expected_duration):
 
 
 def test_parse_data_line_invalid_format():
+    """
+    Test parsing of data lines with an invalid format.
+    """
     # Arrange
     invalid_line = "12:34:56\tonly_three_fields\tfield3"
 
