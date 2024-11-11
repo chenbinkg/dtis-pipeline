@@ -677,85 +677,87 @@ def lambda_handler(event, context):
     # Initialize resources
     s3, client, db = initialize_resources()
 
-    # Extract bucket and key from the event
-    bucket_name = os.environ["S3_BUCKET_NAME"]
-    file_key = urllib.parse.unquote_plus(
-        event["Records"][0]["s3"]["object"]["key"], encoding="utf-8"
-    )
     # MongoDB (assuming connection string is in environment variable)
     collection = db[os.environ["MONGODB_COLLECTION"]]
     ingress_counter = db[os.environ["INGRESS_COLLECTION_DTIS"]]
     COUNTER_COLLECTION_NAME = ingress_counter
 
-    # Get file content from S3
-    file_content = get_file_from_s3(s3, bucket_name, file_key)
-
-    # Parse file content
-    documents = parse_file_content(file_content, file_key)
-
-    # Process the documents
-    (
-        header,
-        data_lines,
-        cruise,
-        station,
-        remarks,
-        file_format,
-    ) = documents.values()
-
-    # Get and parse the corresponding posi file
-    posi_content = get_posi_file_content(s3, bucket_name, file_key)
-    posi_data = parse_posi_file(posi_content) if posi_content else {}
+    failed_messages = []
 
     try:
-        date_created = datetime.now(timezone.utc).isoformat()
-        # Prepare documents and collect subLocation coordinates
-        out_documents, bounding_box = prepare_documents(
-            COUNTER_COLLECTION_NAME,
-            data_lines,
-            file_key,
-            posi_data,
-            cruise,
-            station,
-            remarks,
-            file_format,
-        )
+        for record in event["Records"]:
+            try:
+                # Parse SQS message body
+                message_body = json.loads(record["body"])
+                bucket_name = message_body["bucket"]
+                file_key = message_body["key"]
 
-        # number of inserted documents for summary update in ingresses collection
-        len_outdocuments = len(out_documents)
-        logger.info(f"Number of documents to be inserted: {len_outdocuments}")
+                # Get file content from S3
+                file_content = get_file_from_s3(s3, bucket_name, file_key)
 
-        # logger.info(f"Video events: {video_events}")
+                # Parse file content
+                documents = parse_file_content(file_content, file_key)
 
-        # Insert documents into MongoDB
-        inserted_ids = insert_documents_to_mongodb(collection, out_documents)
+                # Process the documents
+                (
+                    header,
+                    data_lines,
+                    cruise,
+                    station,
+                    remarks,
+                    file_format,
+                ) = documents.values()
 
-        # Update ingress counter
-        increment_ingress_id(
-            COUNTER_COLLECTION_NAME,
-            cruise,
-            station,
-            remarks,
-            bounding_box,
-            len_outdocuments,
-            date_created,
-        )
+                # Get and parse the corresponding posi file
+                posi_content = get_posi_file_content(s3, bucket_name, file_key)
+                posi_data = parse_posi_file(posi_content) if posi_content else {}
+
+                date_created = datetime.now(timezone.utc).isoformat()
+                # Prepare documents and collect subLocation coordinates
+                out_documents, bounding_box = prepare_documents(
+                    COUNTER_COLLECTION_NAME,
+                    data_lines,
+                    file_key,
+                    posi_data,
+                    cruise,
+                    station,
+                    remarks,
+                    file_format,
+                )
+
+                # number of inserted documents for summary update in ingresses collection
+                len_outdocuments = len(out_documents)
+                logger.info(f"Number of documents to be inserted: {len_outdocuments}")
+
+                # Insert documents into MongoDB
+                inserted_ids = insert_documents_to_mongodb(collection, out_documents)
+
+                # Update ingress counter
+                increment_ingress_id(
+                    COUNTER_COLLECTION_NAME,
+                    cruise,
+                    station,
+                    remarks,
+                    bounding_box,
+                    len_outdocuments,
+                    date_created,
+                )
+
+            except Exception as e:
+                logger.error(f"Error processing document: {str(e)}")
+                failed_messages.append(record["messageId"])
+
+        if failed_messages:
+            return {
+                "batchItemFailures": [
+                    {"itemIdentifier": msg_id} for msg_id in failed_messages
+                ]
+            }
+
         return {
             "statusCode": 200,
-            "body": json.dumps(
-                f"Inserted {len(inserted_ids)} documents into MongoDB. ",
-                default=datetime_handler,
-            ),
-        }
-    except Exception as e:
-        print(f"Error processing document: {str(e)}")
-        return {
-            "statusCode": 500,
-            "body": json.dumps(
-                f"Error processing file. Error: {str(e)}",
-                default=datetime_handler,
-            ),
+            "body": json.dumps("Successfully processed all messages."),
         }
     finally:
-        # Close the MongoDB connection
+        # Ensure the MongoDB connection is closed
         client.close()
