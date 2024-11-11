@@ -20,7 +20,7 @@ Requirements:
 should we use the 'pendulum' library so we're better able to deal with dates/times?
 
 
-4 November 2024 Tilmann Steinmetz
+11 November 2024 Tilmann Steinmetz
 
 """
 
@@ -29,12 +29,14 @@ import logging
 import os
 import urllib
 from datetime import datetime, time, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
 import boto3
 from botocore.exceptions import ClientError
 from bson import ObjectId
 from pymongo import MongoClient
-from pymongo.collection import ReturnDocument
+from pymongo.collection import Collection, ReturnDocument
+from pymongo.database import Database
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -206,14 +208,16 @@ def parse_header(header_text):
     return meta
 
 
+from typing import Any, Dict, List, Optional, Tuple
+
+
 def parse_data_line(
-    line,
-    source_key,
-    video_start_time=None,
-    video_events=[],
-    file_format="original",
-    header=None,
-):
+    line: str,
+    source_key: str,
+    video_start_time: Optional[datetime] = None,
+    video_events: List[Dict[str, Any]] = [],
+    file_format: str = "original",
+) -> Tuple[Optional[Dict[str, Any]], Optional[datetime], List[Dict[str, Any]]]:
     """
     Parse a line of data from either original or new rerun_XX_obs format files
     """
@@ -341,7 +345,7 @@ def parse_data_line(
     return result, video_start_time, video_events
 
 
-def get_posi_file_content(s3, bucket, key):
+def get_posi_file_content(s3: boto3.client, bucket: str, key: str) -> str:
     """
     We are using a companion _'posi.txt' file to look up date/time information:
     Lambda function uses a lookup of information from a a pair of 'companion' text files.
@@ -366,7 +370,7 @@ def get_posi_file_content(s3, bucket, key):
             response = s3.get_object(Bucket=bucket, Key=posi_key)
             content = response["Body"].read().decode("utf-8")
             logger.info(f"Found posi file: {posi_key}")
-            return content  # .splitlines()
+            return content
         except s3.exceptions.NoSuchKey:
             logger.error(f"Companion posi file not found: {posi_key}")
             raise FileNotFoundError(f"Companion posi file not found: {posi_key}")
@@ -379,6 +383,18 @@ def get_posi_file_content(s3, bucket, key):
 
 
 def parse_posi_file(content):
+    """
+    Parse the content of a posi file.
+
+    Args:
+        content: The content of the posi file as a string.
+
+    Returns:
+        A dictionary containing the parsed data.
+
+    Raises:
+        ValueError: If the content is not in the expected format.
+    """
     lines = content.split("\n")
     header = lines[0].split("\t")
     data = {}
@@ -406,7 +422,7 @@ def parse_posi_file(content):
     return data
 
 
-def initialize_resources():
+def initialize_resources() -> Tuple[boto3.client, MongoClient, Database]:
     """
     Initialize resources like MongoDB client, S3 client, etc.
     """
@@ -416,7 +432,7 @@ def initialize_resources():
     return s3_client, mongo_client, db
 
 
-def get_file_from_s3(s3_client, bucket, key):
+def get_file_from_s3(s3_client: boto3.client, bucket: str, key: str) -> str:
     """
     Retrieve file content from S3.
 
@@ -441,7 +457,7 @@ def get_file_from_s3(s3_client, bucket, key):
         raise FileNotFoundError(f"File {key} not found in bucket {bucket}")
 
 
-def parse_file_content(file_content, key):
+def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
     """
     Parse the file content.
 
@@ -506,16 +522,15 @@ def parse_file_content(file_content, key):
 
 
 def prepare_documents(
-    ingress_collection,
-    data_lines,
-    file_key,
-    posi_data,
-    cruise,
-    station,
-    remarks,
-    file_format=None,
-    header=None,
-):
+    ingress_collection: Collection,
+    data_lines: List[str],
+    file_key: str,
+    posi_data: Dict[str, Any],
+    cruise: str,
+    station: str,
+    remarks: str,
+    file_format: Optional[str] = None,
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Prepare documents for MongoDB insertion.
 
@@ -528,7 +543,6 @@ def prepare_documents(
         station: The station name.
         remarks: Any remarks.
         file_format: The file format.
-        header: The header of the file.
 
     Returns:
         A list of documents to be inserted into MongoDB.
@@ -555,12 +569,7 @@ def prepare_documents(
 
         # logger.info(f"Processing input data line {i}: {line}")
         data_point, video_start_time, video_events = parse_data_line(
-            line,
-            file_key,
-            video_start_time,
-            video_events,
-            file_format=file_format,
-            header=header,
+            line, file_key, video_start_time, video_events, file_format=file_format
         )
 
         if data_point:
@@ -630,23 +639,25 @@ def prepare_documents(
     return documents, bounding_box
 
 
-def insert_documents_to_mongodb(collection_name, documents):
+def insert_documents_to_mongodb(
+    collection: Collection, documents: List[Dict[str, Any]]
+) -> List[Any]:
     """
-    Upload new 'documents' (a.k.a records) to MongoDB Atlas
+    Upload and insert 'documents' (a.k.a records) to MongoDB Atlas
     collection.
 
     Args:
         collection_name: The MongoDB collection to insert documents into.
-        documents: The documents to be inserted.
+        documents: A list of the documents to be inserted.
 
     Returns:
         The result of the insertion operation.
     """
     try:
-        result = collection_name.insert_many(documents)
+        result = collection.insert_many(documents)
         return result.inserted_ids
     except Exception as e:
-        print(f"Error inserting documents into MongoDB: {str(e)}")
+        logger.error(f"Error inserting documents into MongoDB: {str(e)}")
         raise
 
 
@@ -708,7 +719,6 @@ def lambda_handler(event, context):
             station,
             remarks,
             file_format,
-            header,
         )
 
         # number of inserted documents for summary update in ingresses collection
