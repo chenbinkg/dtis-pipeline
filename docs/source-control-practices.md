@@ -26,3 +26,4 @@
 * one of the simplest ones is called `feature branches`. In this strategy we have:
 	* one `main` branch. It's used for integration. The `main` branch should always be in a working state (e.g. passing all the tests).
 	* multiple feature branches. Feature branches are created from the `main` branch, and developers use feature branches to add their new changes to the repository
+	* the feature branches should be short-living. It is less complicated to maintain.
