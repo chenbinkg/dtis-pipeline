@@ -14,12 +14,13 @@ To manage data operations (data upload, data processing) for the ocean floor DTI
 ### For the Scientists
 
 The intention of the `data_upload.sh` script is to upload local files to S3. The files should only pertain to one particular ship cruise (voyage).
-
+Permissions:
+- Need to have write permission to upload the data to S3 buckets `dtis-ofop-851725470721-raw-testing` and `dtis-ofop-851725470721-raw-production`
+- Need to have `InvokeFunction` access for the lambda functions `test-dtis-ofop-mongodb_sync` and `prod-dtis-ofop-mongodb_sync`
 Windows machine dependencies:
 - Need to install git first
-- Need to have putty or MobaXterm installed
 - Need to install AWS CLI version 2 (please follow the official [link](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
-- Need to set up AWS CLI credentials (please follow the section below [Setting up AWS credentials](#setting-up-aws-credentials)).
+- Need to set up AWS CLI credentials (get the access key and secret from AWS Administrator and follow the section below [Setting up AWS credentials](#setting-up-aws-credentials)).
 
 1. **Run the Bash script, with dryrun**. Start with running this Bash command:
 ```
@@ -43,8 +44,6 @@ The above command will run locally, using your files, and it will **not** intera
 Need to update bash version and install additional bash packages if encounter error like ```> bash: file: command not found```:
 ```
 apt-get update
-```
-```
 apt-get install file
 ```
 
@@ -54,6 +53,7 @@ apt-get install file
 		* `error.txt` - contains only warnings and errors
 		* `success.txt` - contains successful messages
 		* `sync_logs.txt` - contains AWS S3 upload logs
+		* `lambda_function_response.json` - contains AWS Lambda function trigger results
 
 If you are looking for an error message, it might be faster to go look for it in the `error.txt` file, rather than trying to find it in the terminal output.
 
