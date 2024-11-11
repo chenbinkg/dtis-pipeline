@@ -421,9 +421,9 @@ invoke_lambda_function() {
 
     # Check if the invocation was successful
     if [ $? -eq 0 ]; then
-        echo "Lambda function invoked successfully. Response saved to $response_file" >> "$success_file"
+        echo "Lambda function invoked successfully - $(date). Response saved to $lambda_function_response_file" >> "$success_file"
     else
-        echo "Failed to invoke Lambda function: $function_name" >> "$error_file"
+        echo "Failed to invoke Lambda function: $function_name - $(date)" >> "$error_file"
     fi
 }
 
@@ -576,11 +576,10 @@ fi
 ##############################################
 # Section: Trigger the Lambda function
 ##############################################
-
-# Trigger the Lambda function after upload completes
 # Trigger the Lambda function after upload completes
 if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
   echo "----------------------------" | tee -a  "$success_file"
+  echo "----------------------------" | tee -a  "$error_file"
   invoke_lambda_function
   exit 0
 fi
