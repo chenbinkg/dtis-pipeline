@@ -103,6 +103,9 @@ def db(mongo_client):
 
 
 def test_initialize_resources():
+    """
+    Test that resources are initialized correctly.
+    """
     s3_client, mongo_client, db = initialize_resources()
     assert s3_client is not None
     assert mongo_client is not None
@@ -110,12 +113,18 @@ def test_initialize_resources():
 
 
 def test_get_file_from_s3_success(s3_client):
+    """
+    Test successful file retrieval from S3.
+    """
     s3_client.get_object.return_value = {"Body": Mock(read=lambda: b"file content")}
     result = get_file_from_s3(s3_client, "test_bucket", "test_key")
     assert result == "file content"
 
 
 def test_get_file_from_s3_no_file(s3_client):
+    """
+    Test handling of a missing file in S3.
+    """
     s3_client.get_object.side_effect = ClientError(
         {
             "Error": {
@@ -130,6 +139,9 @@ def test_get_file_from_s3_no_file(s3_client):
 
 
 def test_parse_file_content():
+    """
+    Test parsing of file content.
+    """
     file_content = "#Date\tTime\n12.12.2020\t12:34:56\n"
     key = "cruise_station_prot.txt"
     result = parse_file_content(file_content, key)
@@ -142,6 +154,9 @@ def test_parse_file_content():
 
 
 def test_prepare_documents():
+    """
+    Test preparation of documents for MongoDB insertion.
+    """
     data_lines = [
         "06:19:45\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
     ]
@@ -194,6 +209,9 @@ def test_prepare_documents():
 
 
 def test_insert_documents_to_mongodb(db):
+    """
+    Test insertion of documents into MongoDB.
+    """
     collection = db[os.environ["MONGODB_COLLECTION"]]
     documents = [{"_id": 1}, {"_id": 2}]
     collection.insert_many.return_value = Mock(inserted_ids=[1, 2])
@@ -215,6 +233,9 @@ def test_lambda_handler(
     mock_get_file_from_s3,
     mock_initialize_resources,
 ):
+    """
+    Test the overall lambda handler function using mocks for dependencies.
+    """
     mock_initialize_resources.return_value = (Mock(), Mock(), MagicMock())
     mock_get_file_from_s3.return_value = "file content"
     mock_parse_file_content.return_value = {
@@ -247,6 +268,9 @@ def test_lambda_handler(
 
 
 def test_get_posi_file_content_success():
+    """
+    Tests the path where the posi file exists and can be retrieved successfully.
+    """
     # Arrange
     mock_s3 = Mock()
     mock_response = {"Body": Mock()}
@@ -259,7 +283,7 @@ def test_get_posi_file_content_success():
     # Assert
     assert result == "sample posi content"
     mock_s3.get_object.assert_called_once_with(
-        Bucket="test-bucket",  # Changed from "XXXXXXXXXXX" to match the input parameter
+        Bucket="test-bucket",
         Key="sample_posi.txt",
     )
 
@@ -287,6 +311,9 @@ def test_get_posi_file_content_no_file():
 
 
 def test_get_posi_file_content_file_name_transformation():
+    """
+    Test that the get_posi_file_content function correctly transforms the file name.
+    """
     # Arrange
     mock_s3 = Mock()
     mock_response = {"Body": Mock()}
@@ -311,6 +338,9 @@ def test_get_posi_file_content_file_name_transformation():
     ],
 )
 def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
+    """
+    Test that the get_posi_file_content function correctly transforms various file paths.
+    """
     # Arrange
     mock_s3 = Mock()
     mock_response = {"Body": Mock()}
@@ -360,6 +390,9 @@ def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
     ],
 )
 def test_parse_data_line(line, expected_results, source_key):
+    """
+    Test parsing of a data line.
+    """
     result, video_start, video_events = parse_data_line(line, source_key, None, [])
 
     if expected_results is None:
@@ -404,6 +437,9 @@ def test_parse_data_line(line, expected_results, source_key):
 
 
 def test_parse_data_line_new_format(new_format_line, new_format_header, source_key):
+    """
+    Test parsing of a data line in the new format (for reruns).
+    """
     result, video_start, video_events = parse_data_line(
         new_format_line,
         source_key,
@@ -482,6 +518,9 @@ def test_parse_data_line_new_format(new_format_line, new_format_header, source_k
 def test_parse_data_line_video_events(
     basic_line, source_key, observation, expected_video_state
 ):
+    """
+    Test parsing of data lines with video events.
+    """
     # Arrange
     line = basic_line.rsplit("\t", 1)[0] + "\t" + observation
     video_events = []
@@ -512,6 +551,9 @@ def test_parse_data_line_video_events(
 
 
 def time_test_cases():
+    """
+    Return test cases for time parsing.
+    """
     return [
         {"time_str": "23:59:59", "expected": "23:59:59"},
         {"time_str": "00:00:00", "expected": "00:00:00"},
@@ -521,6 +563,9 @@ def time_test_cases():
 
 @pytest.mark.parametrize("test_case", time_test_cases())
 def test_parse_data_line_time_parsing(test_case, basic_line):
+    """
+    Test parsing of data lines with different time formats.
+    """
     line = test_case["time_str"] + basic_line[8:]  # Replace time in basic line
 
     result, _, _ = parse_data_line(line, "test_key_prot.txt", None, [])
@@ -540,6 +585,9 @@ def test_parse_data_line_time_parsing(test_case, basic_line):
     ],
 )
 def test_parse_data_line_video_sequences(sequence_times, expected_duration):
+    """
+    Test parsing of data lines with video sequences.
+    """
     # Create the test lines with video events
     lines = [
         f"{time}\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\t{event}"
@@ -590,6 +638,9 @@ def test_parse_data_line_invalid_format():
 def test_parse_data_line_media_types(
     basic_line, source_key, observation, expected_media_type, expected_media_path
 ):
+    """
+    Test parsing of data lines to extract different media types (video/photo).
+    """
     # Arrange
     line = basic_line.rsplit("\t", 1)[0] + "\t" + observation
 
@@ -607,6 +658,9 @@ def test_parse_data_line_media_types(
 
 
 def test_parse_data_line_complete_video_sequence():
+    """
+    Test parsing of complete set of data lines with video sequences.
+    """
     # Arrange
     lines = [
         "12:34:00\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tvideo started",
@@ -626,9 +680,4 @@ def test_parse_data_line_complete_video_sequence():
     assert len(video_events) == 2
     assert video_events[0]["event"] == "start"
     assert video_events[1]["event"] == "stop"
-    assert video_events[1]["duration"] == str(timedelta(minutes=1))
-
-    assert video_events[1]["duration"] == str(timedelta(minutes=1))
-    assert video_events[1]["duration"] == str(timedelta(minutes=1))
-
     assert video_events[1]["duration"] == str(timedelta(minutes=1))
