@@ -35,14 +35,15 @@ Tests for refactored code (after removal of various functions from Lambda Handle
 import json
 import os
 import sys
+
+# Adjust the path to ensure the module can be imported
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from lambda_function_mongoDB_schema import (
     get_file_from_s3,
     get_posi_file_content,
@@ -51,6 +52,7 @@ from lambda_function_mongoDB_schema import (
     lambda_handler,
     parse_data_line,
     parse_file_content,
+    parse_posi_file,
     prepare_documents,
 )
 
@@ -101,6 +103,9 @@ def db(mongo_client):
 
 
 def test_initialize_resources():
+    """
+    Test that resources are initialized correctly.
+    """
     s3_client, mongo_client, db = initialize_resources()
     assert s3_client is not None
     assert mongo_client is not None
@@ -108,12 +113,18 @@ def test_initialize_resources():
 
 
 def test_get_file_from_s3_success(s3_client):
+    """
+    Test successful file retrieval from S3.
+    """
     s3_client.get_object.return_value = {"Body": Mock(read=lambda: b"file content")}
     result = get_file_from_s3(s3_client, "test_bucket", "test_key")
     assert result == "file content"
 
 
 def test_get_file_from_s3_no_file(s3_client):
+    """
+    Test handling of a missing file in S3.
+    """
     s3_client.get_object.side_effect = ClientError(
         {
             "Error": {
@@ -128,6 +139,9 @@ def test_get_file_from_s3_no_file(s3_client):
 
 
 def test_parse_file_content():
+    """
+    Test parsing of file content.
+    """
     file_content = "#Date\tTime\n12.12.2020\t12:34:56\n"
     key = "cruise_station_prot.txt"
     result = parse_file_content(file_content, key)
@@ -140,45 +154,64 @@ def test_parse_file_content():
 
 
 def test_prepare_documents():
+    """
+    Test preparation of documents for MongoDB insertion.
+    """
     data_lines = [
-        "12:34:56\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
+        "06:19:45\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
     ]
     file_key = "test_key_prot.txt"
-    posi_data = {
-        "2020-12-12T12:34:56Z": {
-            "datetime": datetime(2020, 12, 12, 12, 34, 56, tzinfo=timezone.utc),
-            "data": {},
-        }
-    }
+    posi_content = """#Date\tTime\tPC_Time\tSHIP_Lat\tSHIP_Lon\tSHIP_SOG\tSHIP_COG\tWater_Depth\tSHIP_Hdg\tSUB1_Lat\tSUB1_Lon\tREF_Lat\tREF_Lon
+04.11.2006\t06:19:45\t04.11.2006 19:19:44\t-40.0301167\t178.1399167\t1.3\t205.1\t842.1\t305.8\t0\t0\t-40.0300107\t178.1397275
+04.11.2006\t06:19:50\t04.11.2006 19:19:49\t-40.0301333\t178.1399\t1.2\t208.4\t839.8\t305\t0\t0\t-40.0300291\t178.1397086
+04.11.2006\t06:19:55\t04.11.2006 19:19:54\t-40.0301667\t178.1398833\t1.2\t205.7\t840.9\t304.2\t-40.0301828\t178.1400298\t-40.0300661\t178.1396898
+04.11.2006\t06:20:00\t04.11.2006 19:19:59\t-40.0301833\t178.1398833\t1.2\t205.3\t842.1\t303.5\t-40.0301828\t178.1400298\t-40.0300819\t178.1396898
+04.11.2006\t06:20:05\t04.11.2006 19:20:04\t-40.0302167\t178.1398667\t1.2\t199.2\t844.5\t302.7\t-40.0301828\t178.1400298\t-40.0301188\t178.1396709
+04.11.2006\t06:20:10\t04.11.2006 19:20:09\t-40.0302333\t178.1398667\t1.3\t199.8\t843.6\t302.2\t-40.0301828\t178.1400298\t-40.0301373\t178.1396692"""
+    posi_data = parse_posi_file(posi_content)
     cruise = "cruise"
     station = "station"
     remarks = "remarks"
     ingress_collection = MagicMock()
 
-    # Call the actual prepare_documents function
-    documents, sub_coordinates = prepare_documents(
-        ingress_collection,
-        data_lines,
-        file_key,
-        posi_data,
-        cruise,
-        station,
-        remarks,
-        file_format="original",
-        header=None,
-    )
+    # Mock the get_current_ingress_id function to return a real value
+    with patch(
+        "lambda_function_mongoDB_schema.get_current_ingress_id",
+        return_value="mock_ingress_id",
+    ):
+        # Call the actual prepare_documents function
+        documents, sub_coordinates = prepare_documents(
+            ingress_collection,
+            data_lines,
+            file_key,
+            posi_data,
+            cruise,
+            station,
+            remarks,
+            file_format="original",
+            header=None,
+        )
 
     assert len(documents) == 1
-    assert len(sub_coordinates) == 1
     assert "meta" in documents[0]
     assert "subLocation" in documents[0]
     assert documents[0]["meta"]["cruise"] == cruise
     assert documents[0]["meta"]["station"] == station
     assert documents[0]["meta"]["remarks"] == remarks
-    assert documents[0]["subLocation"]["coordinates"] == [-41.2345, 174.9876]
+    assert documents[0]["meta"]["ingressId"] == "mock_ingress_id"
+    assert documents[0]["subLocation"]["coordinates"] == [174.9876, -41.2345]
+    # Check that sub_coordinates is a GeoJSON polygon with 5 coordinate pairs
+    assert "type" in sub_coordinates
+    assert sub_coordinates["type"] == "Polygon"
+    assert "coordinates" in sub_coordinates
+    assert len(sub_coordinates["coordinates"]) == 1  # One polygon
+    assert len(sub_coordinates["coordinates"][0]) == 5  # Five coordinate pairs
 
 
 def test_insert_documents_to_mongodb(db):
+    """
+    Test insertion of documents into MongoDB.
+    """
     collection = db[os.environ["MONGODB_COLLECTION"]]
     documents = [{"_id": 1}, {"_id": 2}]
     collection.insert_many.return_value = Mock(inserted_ids=[1, 2])
@@ -191,13 +224,18 @@ def test_insert_documents_to_mongodb(db):
 @patch("lambda_function_mongoDB_schema.parse_file_content")
 @patch("lambda_function_mongoDB_schema.prepare_documents")
 @patch("lambda_function_mongoDB_schema.insert_documents_to_mongodb")
+@patch("lambda_function_mongoDB_schema.get_posi_file_content")
 def test_lambda_handler(
+    mock_get_posi_file_content,
     mock_insert_documents_to_mongodb,
     mock_prepare_documents,
     mock_parse_file_content,
     mock_get_file_from_s3,
     mock_initialize_resources,
 ):
+    """
+    Test the overall lambda handler function using mocks for dependencies.
+    """
     mock_initialize_resources.return_value = (Mock(), Mock(), MagicMock())
     mock_get_file_from_s3.return_value = "file content"
     mock_parse_file_content.return_value = {
@@ -210,13 +248,14 @@ def test_lambda_handler(
     }
     mock_prepare_documents.return_value = (["document"], ["sub_coordinates"])
     mock_insert_documents_to_mongodb.return_value = [1, 2]
+    mock_get_posi_file_content.return_value = "posi file content"
 
     event = {
         "Records": [
             {
                 "s3": {
                     "bucket": {"name": "test_bucket"},
-                    "object": {"key": "test_key"},
+                    "object": {"key": "TAN0313_prot.txt"},
                 }
             }
         ]
@@ -229,6 +268,9 @@ def test_lambda_handler(
 
 
 def test_get_posi_file_content_success():
+    """
+    Tests the path where the posi file exists and can be retrieved successfully.
+    """
     # Arrange
     mock_s3 = Mock()
     mock_response = {"Body": Mock()}
@@ -241,7 +283,7 @@ def test_get_posi_file_content_success():
     # Assert
     assert result == "sample posi content"
     mock_s3.get_object.assert_called_once_with(
-        Bucket="test-bucket",  # Changed from "XXXXXXXXXXX" to match the input parameter
+        Bucket="test-bucket",
         Key="sample_posi.txt",
     )
 
@@ -269,6 +311,9 @@ def test_get_posi_file_content_no_file():
 
 
 def test_get_posi_file_content_file_name_transformation():
+    """
+    Test that the get_posi_file_content function correctly transforms the file name.
+    """
     # Arrange
     mock_s3 = Mock()
     mock_response = {"Body": Mock()}
@@ -293,6 +338,9 @@ def test_get_posi_file_content_file_name_transformation():
     ],
 )
 def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
+    """
+    Test that the get_posi_file_content function correctly transforms various file paths.
+    """
     # Arrange
     mock_s3 = Mock()
     mock_response = {"Body": Mock()}
@@ -342,6 +390,9 @@ def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
     ],
 )
 def test_parse_data_line(line, expected_results, source_key):
+    """
+    Test parsing of a data line.
+    """
     result, video_start, video_events = parse_data_line(line, source_key, None, [])
 
     if expected_results is None:
@@ -386,6 +437,9 @@ def test_parse_data_line(line, expected_results, source_key):
 
 
 def test_parse_data_line_new_format(new_format_line, new_format_header, source_key):
+    """
+    Test parsing of a data line in the new format (for reruns).
+    """
     result, video_start, video_events = parse_data_line(
         new_format_line,
         source_key,
@@ -464,6 +518,9 @@ def test_parse_data_line_new_format(new_format_line, new_format_header, source_k
 def test_parse_data_line_video_events(
     basic_line, source_key, observation, expected_video_state
 ):
+    """
+    Test parsing of data lines with video events.
+    """
     # Arrange
     line = basic_line.rsplit("\t", 1)[0] + "\t" + observation
     video_events = []
@@ -494,22 +551,30 @@ def test_parse_data_line_video_events(
 
 
 def time_test_cases():
+    """
+    Return test cases for time parsing.
+    """
     return [
-        {"time_str": "23:59:59", "expected": {"hour": 23, "minute": 59, "second": 59}},
-        {"time_str": "00:00:00", "expected": {"hour": 0, "minute": 0, "second": 0}},
+        {"time_str": "23:59:59", "expected": "23:59:59"},
+        {"time_str": "00:00:00", "expected": "00:00:00"},
+        # Add more test cases as needed
     ]
 
 
 @pytest.mark.parametrize("test_case", time_test_cases())
 def test_parse_data_line_time_parsing(test_case, basic_line):
+    """
+    Test parsing of data lines with different time formats.
+    """
     line = test_case["time_str"] + basic_line[8:]  # Replace time in basic line
 
-    result, _, _ = parse_data_line(line, "test_key", None, [])
+    result, _, _ = parse_data_line(line, "test_key_prot.txt", None, [])
 
-    assert isinstance(result["time"], datetime)
-    assert result["time"].hour == test_case["expected"]["hour"]
-    assert result["time"].minute == test_case["expected"]["minute"]
-    assert result["time"].second == test_case["expected"]["second"]
+    assert isinstance(result["timestamp"], str)
+    assert result["timestamp"] == test_case["expected"]
+    # assert result["timestamp"].hour == test_case["expected"]["hour"]
+    # assert result["timestamp"].minute == test_case["expected"]["minute"]
+    # assert result["timestamp"].second == test_case["expected"]["second"]
 
 
 @pytest.mark.parametrize(
@@ -520,6 +585,9 @@ def test_parse_data_line_time_parsing(test_case, basic_line):
     ],
 )
 def test_parse_data_line_video_sequences(sequence_times, expected_duration):
+    """
+    Test parsing of data lines with video sequences.
+    """
     # Create the test lines with video events
     lines = [
         f"{time}\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\t{event}"
@@ -570,6 +638,9 @@ def test_parse_data_line_invalid_format():
 def test_parse_data_line_media_types(
     basic_line, source_key, observation, expected_media_type, expected_media_path
 ):
+    """
+    Test parsing of data lines to extract different media types (video/photo).
+    """
     # Arrange
     line = basic_line.rsplit("\t", 1)[0] + "\t" + observation
 
@@ -587,6 +658,9 @@ def test_parse_data_line_media_types(
 
 
 def test_parse_data_line_complete_video_sequence():
+    """
+    Test parsing of complete set of data lines with video sequences.
+    """
     # Arrange
     lines = [
         "12:34:00\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tvideo started",
@@ -606,9 +680,4 @@ def test_parse_data_line_complete_video_sequence():
     assert len(video_events) == 2
     assert video_events[0]["event"] == "start"
     assert video_events[1]["event"] == "stop"
-    assert video_events[1]["duration"] == str(timedelta(minutes=1))
-
-    assert video_events[1]["duration"] == str(timedelta(minutes=1))
-    assert video_events[1]["duration"] == str(timedelta(minutes=1))
-
     assert video_events[1]["duration"] == str(timedelta(minutes=1))
