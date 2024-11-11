@@ -2,6 +2,7 @@
 
 ## Merge Requests (MR)
 * enable working in small batches
+* 1 Merge Request should ideally cover 1 feature or 1 bug
 * a proposal to incorporate changes from a source branch to a target branch
 * an opportunity for another person to review the changes and leave comments
 * can be Marked as draft - this means the MR is still in progress
