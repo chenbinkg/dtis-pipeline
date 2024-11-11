@@ -234,8 +234,44 @@ def test_lambda_handler(
 ):
     """
     Test the overall lambda handler function using mocks for dependencies.
+
+    Mocking Dependencies: The test function mocks the necessary dependencies
+    (initialize_resources, get_file_from_s3, parse_file_content, prepare_documents, insert_documents_to_mongodb, and get_posi_file_content) to isolate the lambda_handler function.
+
+    Mocking SQS Message Body: The event is updated to include a body with
+      the bucket name and file key in JSON format.
+
+    Mocking MongoDB Client: The MongoDB client is mocked to ensure that the
+      client.close() method is called.
+
+    Configuring db Mock: The db mock object is configured to return a mock collection when subscripted with os.environ["MONGODB_COLLECTION"] and os.environ["INGRESS_COLLECTION_DTIS"].
+      This is necessary to simulate the behavior of the MongoDB client and collection.
+
+    Assertions: The assertions check that the lambda_handler function
+      returns a status code of 200 and that the response body contains the
+      message "Successfully processed all messages."
+
+    Additionally, the test verifies that the MongoDB connection is closed
+    by checking that mock_mongo_client.close is called once.
     """
-    mock_initialize_resources.return_value = (Mock(), Mock(), MagicMock())
+    mock_s3_client = Mock()
+    mock_mongo_client = Mock()
+    mock_db = MagicMock()
+    mock_collection = Mock()
+    mock_ingress_collection = Mock()
+
+    # Configure the db mock to return mock collections when subscripted
+    mock_db.__getitem__.side_effect = lambda name: (
+        mock_collection
+        if name == os.environ["MONGODB_COLLECTION"]
+        else mock_ingress_collection
+    )
+
+    mock_initialize_resources.return_value = (
+        mock_s3_client,
+        mock_mongo_client,
+        mock_db,
+    )
     mock_get_file_from_s3.return_value = "file content"
     mock_parse_file_content.return_value = {
         "header": "header",
@@ -245,25 +281,37 @@ def test_lambda_handler(
         "remarks": "remarks",
         "file_format": "original",
     }
-    mock_prepare_documents.return_value = (["document"], ["sub_coordinates"])
+    mock_prepare_documents.return_value = (
+        ["document"],
+        {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [174.9876, -41.2345],
+                    [174.9876, -41.2345],
+                    [174.9876, -41.2345],
+                    [174.9876, -41.2345],
+                    [174.9876, -41.2345],
+                ]
+            ],
+        },
+    )
     mock_insert_documents_to_mongodb.return_value = [1, 2]
     mock_get_posi_file_content.return_value = "posi file content"
 
     event = {
         "Records": [
-            {
-                "s3": {
-                    "bucket": {"name": "test_bucket"},
-                    "object": {"key": "TAN0313_prot.txt"},
-                }
-            }
+            {"body": json.dumps({"bucket": "test_bucket", "key": "TAN0313_prot.txt"})}
         ]
     }
     context = Mock()
 
     result = lambda_handler(event, context)
     assert result["statusCode"] == 200
-    assert "Inserted" in json.loads(result["body"])
+    assert "Successfully processed all messages." in json.loads(result["body"])
+
+    # Ensure the MongoDB connection is closed
+    mock_mongo_client.close.assert_called_once()
 
 
 def test_get_posi_file_content_success():
