@@ -20,7 +20,7 @@ Requirements:
 should we use the 'pendulum' library so we're better able to deal with dates/times?
 
 
-11 November 2024 Tilmann Steinmetz
+12 November 2024 Tilmann Steinmetz
 
 """
 
@@ -673,6 +673,8 @@ def lambda_handler(event, context):
         A dictionary containing the status code and the response body.
     """
     logger.info("Lambda function started")
+    logger.info(f"Event: {json.dumps(event)}")
+    logger.info(f"Context: {context}")
 
     # Initialize resources
     s3, client, db = initialize_resources()
@@ -692,11 +694,27 @@ def lambda_handler(event, context):
                 bucket_name = message_body["bucket"]
                 file_key = message_body["key"]
 
-                # Get file content from S3
-                file_content = get_file_from_s3(s3, bucket_name, file_key)
+                # If it's from S3 event notification
+                if "Records" in message_body:
+                    for s3_event in message_body["Records"]:
+                        bucket_name = s3_event["s3"]["bucket"]["name"]
+                        file_key = s3_event["s3"]["object"]["key"]
+                        # Process the file
+                        # Get file content from S3
+                        file_content = get_file_from_s3(s3, bucket_name, file_key)
 
-                # Parse file content
-                documents = parse_file_content(file_content, file_key)
+                        # Parse file content
+                        documents = parse_file_content(file_content, file_key)
+
+                # If it's your custom message format
+                else:
+                    bucket_name = message_body["bucket"]
+                    file_key = message_body["key"]
+                    # Get file content from S3
+                    file_content = get_file_from_s3(s3, bucket_name, file_key)
+
+                    # Parse file content
+                    documents = parse_file_content(file_content, file_key)
 
                 # Process the documents
                 (

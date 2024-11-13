@@ -1,0 +1,52 @@
+{
+  "Records": [
+    {
+      "messageId": "1a2b3c4d-5678-9101-1121-314151617181",
+      "receiptHandle": "YourReceiptHandle1",
+      "body": "{\"bucket\": \"dtis-ofop-851725470721-raw-testing\", \"key\": \"TAN2206/009/text/TAN2206_009_prot.txt\"}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1615245078574",
+        "SenderId": "123456789012",
+        "ApproximateFirstReceiveTimestamp": "1615245079574"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "9bb58f26192e4ba00f01e2e7b136bbd8",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:ap-southeast-2:123456789012:test-queue",
+      "awsRegion": "ap-southeast-2"
+    },
+    {
+      "messageId": "2b3c4d5e-6789-1011-1213-415161718192",
+      "receiptHandle": "YourReceiptHandle2",
+      "body": "{\"bucket\": \"dtis-ofop-851725470721-raw-testing\", \"key\": \"TAN2206/009/text/TAN2206_009_obser.txt\"}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1615245088574",
+        "SenderId": "123456789012",
+        "ApproximateFirstReceiveTimestamp": "1615245089574"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "3c7a5f1d9a4f4c3e8b6a2e5d7f9c1b3a",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:ap-southeast-2:123456789012:test-queue",
+      "awsRegion": "ap-southeast-2"
+    },
+    {
+      "messageId": "3c4d5e6f-7890-1121-1314-516171819202",
+      "receiptHandle": "YourReceiptHandle3",
+      "body": "{\"bucket\": \"dtis-ofop-851725470721-raw-testing\", \"key\": \"TAN2206/009/text/TAN2206_009.mts\"}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1615245098574",
+        "SenderId": "123456789012",
+        "ApproximateFirstReceiveTimestamp": "1615245099574"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "4d8e6f2g0b5k6l7m8n9o0p1q2r3s4t5u",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:ap-southeast-2:123456789012:test-queue",
+      "awsRegion": "ap-southeast-2"
+    }
+  ]
+}
