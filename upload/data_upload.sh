@@ -40,6 +40,8 @@ error_file="error.txt"
 sync_output_file="sync_logs.txt"
 plan_file="plan.txt"
 aws_region="ap-southeast-2"
+lambda_function_response_file="lambda_function_response.json"
+
 
 if [ -z "${NIWA_DRY_RUN}" ]; then
   # dry run not set, so let's set it explicitly to false
@@ -55,14 +57,14 @@ if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
   # S3 bucket details
   bucket_name="dtis-ofop-851725470721-raw-testing"
 
-  # Lambda function URL
-  lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
+  # Lambda function name
+  lambda_function_name="test-dtis-ofop-mongodb_sync"
 elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
   # S3 bucket details
   bucket_name="dtis-ofop-851725470721-raw-production"
 
-  # Lambda function URL
-  lambda_function_url=https://TODO.lambda-url.us-east-1.on.aws/
+  # Lambda function name
+  lambda_function_name="prod-dtis-ofop-mongodb_sync"
 else
   echo "Variable NIWA_ENVIRONMENT was not set to a supported value. Please set it to either testing or production"
   exit 1
@@ -262,7 +264,7 @@ upload_to_s3() {
         sync_output="S3 object exists already, not uploading"
         sync_output_exit_status=0
       else
-        sync_output=$(set -x; aws s3 cp "${file_path}" "${s3_destination}")
+        sync_output=$(set -x; aws s3 cp "${file_path}" "${s3_destination}" --storage-class "STANDARD_IA")
         sync_output_exit_status=$?
       fi
 
@@ -410,17 +412,18 @@ check_ofop_files() {
     done
 }
 
-# Trigger Lambda function via Lambda Function URL
-trigger_lambda_function() {
-    echo "Triggering Lambda function via URL..."
+# Function to invoke the Lambda function using AWS CLI
+invoke_lambda_function() {
+    echo "Invoking Lambda function: $function_name..."
 
-    # Make a POST request to the Lambda function URL
-    response=$(curl -s -w "%{http_code}" -o /dev/null -X POST "$lambda_function_url")
+    # Invoke the Lambda function and capture the response
+    aws lambda invoke --function-name "$lambda_function_name" "$lambda_function_response_file"
 
-    if [ "$response" == "200" ]; then
-        echo "Lambda function triggered successfully." >> "$success_file"
+    # Check if the invocation was successful
+    if [ $? -eq 0 ]; then
+        echo "Lambda function invoked successfully - $(date). Response saved to $lambda_function_response_file" >> "$success_file"
     else
-        echo "Failed to trigger Lambda function. HTTP response code: $response" >> "$error_file"
+        echo "Failed to invoke Lambda function: $function_name - $(date)" >> "$error_file"
     fi
 }
 
@@ -573,6 +576,10 @@ fi
 ##############################################
 # Section: Trigger the Lambda function
 ##############################################
-
 # Trigger the Lambda function after upload completes
-# trigger_lambda_function
+if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
+  echo "----------------------------" | tee -a  "$success_file"
+  echo "----------------------------" | tee -a  "$error_file"
+  invoke_lambda_function
+  exit 0
+fi
