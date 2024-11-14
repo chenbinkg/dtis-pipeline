@@ -27,7 +27,7 @@ should we use the 'pendulum' library so we're better able to deal with dates/tim
 import json
 import logging
 import os
-import urllib
+import re
 from datetime import datetime, time, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -59,11 +59,13 @@ DATE_FORMATS = [
     "%d.%m.%Y %H:%M:%S",  # e.g., "16.04.2022 23:08:06"
     "%Y-%m-%d %H:%M:%S",  # e.g., "2022-04-16 23:08:06"
     "%d/%m/%Y %H:%M:%S",  # e.g., "16/04/2022 23:08:06"
+    # "%B %d, %Y %H:%M:%S",  # e.g., "April 16, 2022 23:08:06"
 ]
 
 TIME_FORMATS = [
     "%H:%M:%S",  # e.g., "23:08:06"
     "%I:%M:%S %p",  # e.g., "11:08:06 PM"
+    # "%H:%M",  # e.g., "23:08"
 ]
 
 
@@ -120,8 +122,10 @@ def prepare_for_mongodb(document):
         return {k: prepare_for_mongodb(v) for k, v in document.items()}
     elif isinstance(document, list):
         return [prepare_for_mongodb(v) for v in document]
-    elif isinstance(document, (datetime, time)):
+    elif isinstance(document, datetime):
         return document.isoformat()
+    elif isinstance(document, time):
+        return datetime.combine(datetime.today(), document).isoformat()
     elif isinstance(document, timedelta):
         return str(document)
     return document
@@ -485,9 +489,23 @@ def initialize_resources() -> Tuple[boto3.client, MongoClient, Database]:
     Initialize resources like MongoDB client, S3 client, etc.
     """
     s3_client = boto3.client("s3")
-    mongo_client = MongoClient(os.environ["MONGODB_URI"])
-    db = mongo_client[os.environ["MONGODB_DATABASE"]]
-    return s3_client, mongo_client, db
+    mongo_uri = os.environ.get("MONGODB_URI")
+    mongo_db_name = os.environ.get("MONGODB_DATABASE")
+
+    if not mongo_uri or not mongo_db_name:
+        logger.error("MongoDB URI or Database name not set in environment variables.")
+        raise Exception("MongoDB configuration missing.")
+
+    try:
+        mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        mongo_db = mongo_client[mongo_db_name]
+        # Test connection
+        # mongo_client.admin.command("ping")
+    except Exception as e:
+        logger.error(f"Error connecting to MongoDB: {e}")
+        raise e
+
+    return s3_client, mongo_client, mongo_db
 
 
 def get_file_from_s3(s3_client: boto3.client, bucket: str, key: str) -> str:
@@ -515,6 +533,168 @@ def get_file_from_s3(s3_client: boto3.client, bucket: str, key: str) -> str:
         raise FileNotFoundError(f"File {key} not found in bucket {bucket}")
 
 
+def detect_file_format(lines: List[str]) -> str:
+    """
+    Detects the file format based on header patterns.
+
+    Args:
+        lines (List[str]): Lines from the file content.
+
+    Returns:
+        str: Format identifier ('original', 'new', 'latest', 'simple').
+    """
+    for line in lines:
+        if line.startswith("#Date\tTime\tPC_Time"):
+            return "latest"
+        elif line.startswith("#Date\tTime\tSUB1_Lon"):
+            return "simple"
+        elif re.match(r"#Date\s+Time\s+PC_Time", line):
+            return "original"
+    return "unknown"
+
+
+def parse_original_format(lines: List[str]) -> Dict[str, Any]:
+    metadata = {}
+    descriptive_text = ""
+    detailed_data_table = []
+
+    # Parse metadata
+    for idx, line in enumerate(lines):
+        if line.strip() == "":
+            start_idx = idx + 1
+            break
+        key, value = line.split(":", 1)
+        metadata[key.strip()] = value.strip()
+
+    # Parse detailed data table
+    header = lines[start_idx + 1]
+    columns = header.split("\t")
+    for line in lines[start_idx + 2 :]:
+        parts = line.split("\t")
+        if len(parts) < len(columns):
+            continue
+        record = dict(zip(columns, parts))
+        detailed_data_table.append(prepare_for_mongodb(record))
+
+    return {
+        "metadata": metadata,
+        "descriptive_text": descriptive_text,
+        "detailed_data_table": detailed_data_table,
+    }
+
+
+def parse_latest_format(lines: List[str]) -> Dict[str, Any]:
+    metadata = {}
+    descriptive_text = ""
+    task_table = []
+    detailed_data_table = []
+
+    # Parse metadata
+    for idx, line in enumerate(lines):
+        if line.strip() == "":
+            break
+        key, value = line.split(":", 1)
+        metadata[key.strip()] = value.strip()
+
+    # Identify sections
+    task_header_idx = (
+        lines.index(
+            "Task             :\tPC Date and Time\tUTC Time\tUTC Date\tSHIP Latitude\tSHIP Longitude\tSUB_1 Latitude\tSUB_1 Longitude\tWater Depth"
+        )
+        + 1
+    )
+    detailed_header_idx = (
+        lines.index(
+            "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path"
+        )
+        + 1
+    )
+
+    # Parse Task Table
+    for line in lines[task_header_idx : detailed_header_idx - 1]:
+        parts = line.split("\t")
+        if len(parts) < 9:
+            continue
+        record = {
+            "Task": parts[0],
+            "PC_Date_and_Time": parse_datetime(parts[1]),
+            "UTC_Time": parse_time_only(parts[2]),
+            "UTC_Date": parse_datetime(parts[3]),
+            "SHIP_Latitude": float(parts[4]),
+            "SHIP_Longitude": float(parts[5]),
+            "SUB_1_Latitude": float(parts[6]) if parts[6] else None,
+            "SUB_1_Longitude": float(parts[7]) if parts[7] else None,
+            "Water_Depth": float(parts[8]),
+        }
+        task_table.append(record)
+
+    # Parse Detailed Data Table
+    for line in lines[detailed_header_idx:]:
+        parts = re.split(r"\t+", line)
+        if len(parts) < 16:
+            continue
+        record = {
+            "Date": parse_datetime(parts[0]),
+            "Time": parse_time_only(parts[1]),
+            "PC_Time": parse_datetime(parts[2]),
+            "SHIP_Lon": float(parts[3]),
+            "SHIP_Lat": float(parts[4]),
+            "SHIP_SOG": float(parts[5]),
+            "SHIP_COG": float(parts[6]),
+            "SHIP_Hdg": float(parts[7]),
+            "Water_Depth": float(parts[8]),
+            "SUB1_Lon": float(parts[9]) if parts[9] else None,
+            "SUB1_Lat": float(parts[10]) if parts[10] else None,
+            "SUB1_Depth": float(parts[11]) if parts[11] else None,
+            "SUB1_Altitude": float(parts[12]) if parts[12] else None,
+            "Elapsed_video_Time": parts[13],
+            "Observations_Comments": parts[14],
+            "Image_Video_Path": parts[15] if parts[15] else None,
+        }
+        detailed_data_table.append(record)
+
+    return {
+        "metadata": metadata,
+        "descriptive_text": descriptive_text,
+        "task_table": task_table,
+        "detailed_data_table": detailed_data_table,
+    }
+
+
+def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
+    metadata = {}
+    detailed_data_table = []
+
+    # Parse metadata
+    for idx, line in enumerate(lines):
+        if line.strip() == "":
+            start_idx = idx + 1
+            break
+        key, value = line.split(":", 1)
+        metadata[key.strip()] = value.strip()
+
+    # Parse header
+    header = lines[start_idx]
+    columns = header.split("\t")
+
+    # Parse data lines
+    for line in lines[start_idx + 1 :]:
+        parts = line.split("\t")
+        if len(parts) < len(columns):
+            continue
+        record = {
+            "Date": parse_datetime(parts[0]),
+            "Time": parse_time_only(parts[1]),
+            "SUB1_Lon": float(parts[2]),
+            "SUB1_Lat": float(parts[3]),
+            "ID_Number": parts[4],
+            "ID_Name": parts[5],
+        }
+        detailed_data_table.append(prepare_for_mongodb(record))
+
+    return {"metadata": metadata, "detailed_data_table": detailed_data_table}
+
+
 def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
     """
     Parse the file content.
@@ -526,6 +706,8 @@ def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
     Returns:
         A dictionary containing the parsed data.
     """
+    documents = []
+
     # data parsing logic
     logger.info(f"file_content: {file_content}")
 
@@ -538,10 +720,91 @@ def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
     # split the file content into indivdual lines
     lines = file_content.split("\n")
 
+    # Detect file format
+    file_format = detect_file_format(lines)
+
+    if file_format == "original":
+        parsed_data = parse_original_format(lines)
+    elif file_format == "latest":
+        parsed_data = parse_latest_format(lines)
+    elif file_format == "simple":
+        parsed_data = parse_simple_format(lines)
+    else:
+        logger.error("Unknown file format")
+        return []
+
+    # Initialize variables to hold different sections
+    metadata = {}
+    descriptive_text = ""
+    task_table = []
+    detailed_data_table = []
+
+    # Patterns to identify sections
+    metadata_pattern = re.compile(r"^(Cruise|Station|Remarks)\s*:\s*(.*)$")
+    task_table_header_pattern = re.compile(r"^Task\s*:\s*.*")
+    detailed_table_header_pattern = re.compile(r"^#Date\s+Time\s+PC_Time.*")
+
+    # Flags to determine current section
+    in_metadata = True
+    in_descriptive_text = False
+    in_task_table = False
+    in_detailed_table = False
+    task_table_lines = []
+    detailed_table_lines = []
+
     # Split the file into header and data
     file_format = "original"
     # counter = 0
     for aline in lines:
+        # Strip leading/trailing whitespace
+        stripped_line = aline.strip()
+
+        # This section is used to determine which file part we are in
+        if in_metadata:
+            match = metadata_pattern.match(stripped_line)
+            if match:
+                key, value = match.groups()
+                metadata[key.strip()] = value.strip()
+                logger.info("Now in Metadata line:")
+            elif stripped_line == "":
+                # End of metadata section
+                in_metadata = False
+                in_descriptive_text = True
+            else:
+                # Unexpected line in metadata
+                logger.warning(f"Unexpected line in metadata: {stripped_line}")
+
+        elif in_descriptive_text:
+            if task_table_header_pattern.match(stripped_line):
+                in_descriptive_text = False
+                in_task_table = True
+                logger.info("Switching to task table")
+                continue
+            else:
+                descriptive_text += stripped_line + " "
+
+        elif in_task_table:
+            if stripped_line.startswith("-") or stripped_line.startswith("----"):
+                # End of task table
+                in_task_table = False
+                in_detailed_table = True
+                logger.info("Switching to detailed table")
+                continue
+            else:
+                task_table_lines.append(stripped_line)
+
+        elif in_detailed_table:
+            if detailed_table_header_pattern.match(stripped_line):
+                # Next lines are detailed data table
+                logger.info("Switching to detailed data table")
+                continue
+            elif stripped_line.startswith("----"):
+                # End of data tables
+                in_detailed_table = False
+                continue
+            else:
+                detailed_table_lines.append(stripped_line)
+
         logger.info(f"Processing input data line: {aline}")
         if aline.startswith("#Date"):  # Detect new format (rerun_XX_obs file)
             file_format = "new"
@@ -713,11 +976,16 @@ def insert_documents_to_mongodb(
         The result of the insertion operation.
     """
     try:
-        result = collection.insert_many(documents)
-        return result.inserted_ids
+        if documents:
+            result = collection.insert_many(documents)
+            logger.info(f"Inserted {len(documents)} documents into MongoDB.")
+            return result.inserted_ids
+        else:
+            logger.info("No documents to insert.")
+            return []
     except Exception as e:
         logger.error(f"Error inserting documents into MongoDB: {str(e)}")
-        raise
+        raise e
 
 
 def lambda_handler(event, context):
@@ -758,8 +1026,8 @@ def lambda_handler(event, context):
                     for s3_event in message_body["Records"]:
                         bucket_name = s3_event["s3"]["bucket"]["name"]
                         file_key = s3_event["s3"]["object"]["key"]
+
                         # Process the file
-                        # Get file content from S3
                         file_content = get_file_from_s3(s3, bucket_name, file_key)
 
                         # Parse file content
@@ -769,11 +1037,15 @@ def lambda_handler(event, context):
                 else:
                     bucket_name = message_body["bucket"]
                     file_key = message_body["key"]
+
                     # Get file content from S3
                     file_content = get_file_from_s3(s3, bucket_name, file_key)
 
                     # Parse file content
                     documents = parse_file_content(file_content, file_key)
+
+                    # # Prepare documents for MongoDB
+                    # prepared_documents = [prepare_for_mongodb(doc) for doc in documents]
 
                 # Process the documents
                 (
@@ -824,17 +1096,21 @@ def lambda_handler(event, context):
                 logger.error(f"Error processing document: {str(e)}")
                 failed_messages.append(record["messageId"])
 
-        if failed_messages:
-            return {
-                "batchItemFailures": [
-                    {"itemIdentifier": msg_id} for msg_id in failed_messages
-                ]
-            }
+    except Exception as e:
+        logger.error(f"Error processing event: {e}")
 
-        return {
-            "statusCode": 200,
-            "body": json.dumps("Successfully processed all messages."),
-        }
     finally:
         # Ensure the MongoDB connection is closed
         client.close()
+
+    if failed_messages:
+        return {
+            "batchItemFailures": [
+                {"itemIdentifier": msg_id} for msg_id in failed_messages
+            ]
+        }
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps("Successfully processed all messages."),
+    }

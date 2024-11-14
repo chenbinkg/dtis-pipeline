@@ -404,8 +404,98 @@ def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
 
 
 @pytest.mark.parametrize(
-    "line,expected_results",
+    "expected_output",
     [
+        {
+            "file_key": "KH0212_123_prot.txt",
+            "metadata": {
+                "Cruise": "Test Cruise",
+                "Station": "001",
+                "Remarks": "Test remarks",
+            },
+            "descriptive_text": "",
+            "task_table": [
+                {
+                    "Task": "Sample Task",
+                    "PC_Date_and_Time": None,
+                    "UTC_Time": "2024-04-27T06:19:45+00:00",
+                    "UTC_Date": None,
+                    "SHIP_Latitude": -41.2345,
+                    "SHIP_Longitude": 174.9876,
+                    "SUB_1_Latitude": None,
+                    "SUB_1_Longitude": None,
+                    "Water_Depth": 2.5,
+                }
+            ],
+            "detailed_data_table": [
+                {
+                    "Date": None,
+                    "Time": "2024-04-27T06:19:45+00:00",
+                    "PC_Time": None,
+                    "SHIP_Lon": -41.2345,
+                    "SHIP_Lat": 174.9876,
+                    "SHIP_SOG": 2.5,
+                    "SHIP_COG": 180.0,
+                    "SHIP_Hdg": 100.5,
+                    "Water_Depth": 45.0,
+                    "SUB1_Lon": 0.0,
+                    "SUB1_Lat": -41.2345,
+                    "SUB1_Depth": 174.9876,
+                    "SUB1_Altitude": None,
+                    "Elapsed_video_Time": "ignored",
+                    "Observations_Comments": "general observation",
+                    "Image_Video_Path": None,
+                }
+            ],
+        }
+    ],
+)
+def test_parse_detailed_data_line(basic_line, expected_output):
+    file_key = "text/KH0212_123_prot.txt"
+    file_content = "\n".join(
+        [
+            "Cruise: Test Cruise",
+            "Station: 001",
+            "Remarks: Test remarks",
+            "",
+            "Task: Sample Task",
+            "----",
+            "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed_video_Time\tObservations_Comments\tImage_Video_Path",
+            "06:19:45\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation",
+        ]
+    )
+
+    result = parse_file_content(file_content, file_key)
+    # self.assertEqual(result, expected_output)
+
+
+@pytest.mark.parametrize(
+    "line,expected_results,file_format",
+    [
+        (
+            "04/16/2022\t23:07:19\t-178.094219\t-23.995539\t[-99]\t[-99] SUB",
+            {
+                "timestamp": "04/16/2022 23:07:19",
+                "shipLocation": {
+                    "type": "Point",
+                    "coordinates": [-178.094219, -23.995539],
+                },
+                "subLocation": {
+                    "type": "Point",
+                    "coordinates": [-178.094219, -23.995539],
+                },
+                "feature": {
+                    "media": "",
+                    "mediaType": "",
+                    "mediaOffset": None,
+                    "observation": "SUB",
+                    "observation2": None,
+                    "observation_source": "new",
+                    "observationRef": "<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=SUB&marine_only=true'>Try a WORMS search for SUB</a>",
+                },
+            },
+            "new",
+        ),
         (
             "12:34:56\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation",
             {
@@ -432,15 +522,18 @@ def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
                     "observationRef": "<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=general observation&marine_only=true'>Try a WORMS search for general observation</a>",
                 },
             },
+            "original",
         ),
-        ("12:34:56\tonly_three_fields\tfield3", None),
+        ("12:34:56\tonly_three_fields\tfield3", None, "original"),
     ],
 )
-def test_parse_data_line(line, expected_results, source_key):
+def test_parse_data_line(line, expected_results, source_key, file_format):
     """
     Test parsing of a data line.
     """
-    result, video_start, video_events = parse_data_line(line, source_key, None, [])
+    result, video_start, video_events = parse_data_line(
+        line, source_key, None, [], file_format
+    )
 
     if expected_results is None:
         assert result is None
