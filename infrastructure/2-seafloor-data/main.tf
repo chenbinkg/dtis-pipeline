@@ -2,6 +2,7 @@ locals {
   tags = {
     creation_method  = "terraform"
     project_name = var.project_name
+    environment = var.environment
   }
 }
 

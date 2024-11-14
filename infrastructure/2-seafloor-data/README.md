@@ -7,8 +7,14 @@ This setup uses Terraform remote state, so it requires that code from the [1-ter
 ## How to run this?
 
 1. Make sure you are authenticated with the right AWS account. You might want to check it with `aws sts get-caller-identity`
-2. Run the following:
+2. Copy the lambda python code, so that it is available for Terraform:
 ```
+cp processing/lambda_function_mongoDB_schema.py infrastructure/2-seafloor-data/lambda_function.py
+```
+3. Run the following:
+```
+cd infrastructure/2-seafloor-data
+
 export NIWA_ENVIRONMENT=testing
 export TF_VAR_environment=${NIWA_ENVIRONMENT}
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
