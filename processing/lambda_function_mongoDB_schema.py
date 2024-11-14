@@ -548,14 +548,15 @@ def detect_file_format(lines: List[str]) -> str:
             return "latest"
         elif line.startswith("#Date\tTime\tSUB1_Lon"):
             return "simple"
-        elif re.match(r"#Date\s+Time\s+PC_Time", line):
+        elif line.startswith("UTC time\tPC time"):
             return "original"
+        elif re.match(r"#Date\s+Time\s+PC_Time", line):
+            return "new"
     return "unknown"
 
 
 def parse_original_format(lines: List[str]) -> Dict[str, Any]:
     metadata = {}
-    descriptive_text = ""
     detailed_data_table = []
 
     # Parse metadata
@@ -567,25 +568,34 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
         metadata[key.strip()] = value.strip()
 
     # Parse detailed data table
-    header = lines[start_idx + 1]
+    header = lines[start_idx]
     columns = header.split("\t")
-    for line in lines[start_idx + 2 :]:
+    for line in lines[start_idx + 1 :]:
         parts = line.split("\t")
         if len(parts) < len(columns):
             continue
         record = dict(zip(columns, parts))
-        detailed_data_table.append(prepare_for_mongodb(record))
+        # Parse and convert fields as needed
+        parsed_record = {
+            "UTC_time": parse_datetime(record.get("UTC time", "")),
+            "PC_time": parse_datetime(record.get("PC time", "")),
+            "Lat": float(record.get("Lat", 0.0)),
+            "Lon": float(record.get("Lon", 0.0)),
+            "Speed": float(record.get("Speed", 0.0)),
+            "Course": float(record.get("Course", 0.0)),
+            "Depth": float(record.get("Depth", 0.0)),
+            "Heading": float(record.get("Heading", 0.0)),
+            "Sub_Lat": float(record.get("Sub Lat", 0.0)),
+            "Sub_Lon": float(record.get("Sub Lon", 0.0)),
+            "Notes": record.get("Notes", "").strip() if "Notes" in record else None,
+        }
+        detailed_data_table.append(parsed_record)
 
-    return {
-        "metadata": metadata,
-        "descriptive_text": descriptive_text,
-        "detailed_data_table": detailed_data_table,
-    }
+    return {"metadata": metadata, "detailed_data_table": detailed_data_table}
 
 
 def parse_latest_format(lines: List[str]) -> Dict[str, Any]:
     metadata = {}
-    descriptive_text = ""
     task_table = []
     detailed_data_table = []
 
@@ -597,65 +607,75 @@ def parse_latest_format(lines: List[str]) -> Dict[str, Any]:
         metadata[key.strip()] = value.strip()
 
     # Identify sections
-    task_header_idx = (
-        lines.index(
-            "Task             :\tPC Date and Time\tUTC Time\tUTC Date\tSHIP Latitude\tSHIP Longitude\tSUB_1 Latitude\tSUB_1 Longitude\tWater Depth"
+    try:
+        task_header_idx = (
+            lines.index(
+                "Task             :\tPC Date and Time\tUTC Time\tUTC Date\tSHIP Latitude\tSHIP Longitude\tSUB_1 Latitude\tSUB_1 Longitude\tWater Depth"
+            )
+            + 1
         )
-        + 1
-    )
-    detailed_header_idx = (
-        lines.index(
-            "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path"
+    except ValueError:
+        logger.error("Task table header not found in latest format.")
+        task_header_idx = None
+
+    try:
+        detailed_header_idx = (
+            lines.index(
+                "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path"
+            )
+            + 1
         )
-        + 1
-    )
+    except ValueError:
+        logger.error("Detailed data table header not found in latest format.")
+        detailed_header_idx = None
 
     # Parse Task Table
-    for line in lines[task_header_idx : detailed_header_idx - 1]:
-        parts = line.split("\t")
-        if len(parts) < 9:
-            continue
-        record = {
-            "Task": parts[0],
-            "PC_Date_and_Time": parse_datetime(parts[1]),
-            "UTC_Time": parse_time_only(parts[2]),
-            "UTC_Date": parse_datetime(parts[3]),
-            "SHIP_Latitude": float(parts[4]),
-            "SHIP_Longitude": float(parts[5]),
-            "SUB_1_Latitude": float(parts[6]) if parts[6] else None,
-            "SUB_1_Longitude": float(parts[7]) if parts[7] else None,
-            "Water_Depth": float(parts[8]),
-        }
-        task_table.append(record)
+    if task_header_idx:
+        for line in lines[task_header_idx : detailed_header_idx - 1]:
+            parts = line.split("\t")
+            if len(parts) < 9:
+                continue
+            record = {
+                "Task": parts[0],
+                "PC_Date_and_Time": parse_datetime(parts[1]),
+                "UTC_Time": parse_time_only(parts[2]),
+                "UTC_Date": parse_datetime(parts[3]),
+                "SHIP_Latitude": float(parts[4]),
+                "SHIP_Longitude": float(parts[5]),
+                "SUB_1_Latitude": float(parts[6]) if parts[6] else None,
+                "SUB_1_Longitude": float(parts[7]) if parts[7] else None,
+                "Water_Depth": float(parts[8]),
+            }
+            task_table.append(record)
 
     # Parse Detailed Data Table
-    for line in lines[detailed_header_idx:]:
-        parts = re.split(r"\t+", line)
-        if len(parts) < 16:
-            continue
-        record = {
-            "Date": parse_datetime(parts[0]),
-            "Time": parse_time_only(parts[1]),
-            "PC_Time": parse_datetime(parts[2]),
-            "SHIP_Lon": float(parts[3]),
-            "SHIP_Lat": float(parts[4]),
-            "SHIP_SOG": float(parts[5]),
-            "SHIP_COG": float(parts[6]),
-            "SHIP_Hdg": float(parts[7]),
-            "Water_Depth": float(parts[8]),
-            "SUB1_Lon": float(parts[9]) if parts[9] else None,
-            "SUB1_Lat": float(parts[10]) if parts[10] else None,
-            "SUB1_Depth": float(parts[11]) if parts[11] else None,
-            "SUB1_Altitude": float(parts[12]) if parts[12] else None,
-            "Elapsed_video_Time": parts[13],
-            "Observations_Comments": parts[14],
-            "Image_Video_Path": parts[15] if parts[15] else None,
-        }
-        detailed_data_table.append(record)
+    if detailed_header_idx:
+        for line in lines[detailed_header_idx:]:
+            parts = re.split(r"\t+", line)
+            if len(parts) < 16:
+                continue
+            record = {
+                "Date": parse_datetime(parts[0]),
+                "Time": parse_time_only(parts[1]),
+                "PC_Time": parse_datetime(parts[2]),
+                "SHIP_Lon": float(parts[3]) if parts[3] else None,
+                "SHIP_Lat": float(parts[4]) if parts[4] else None,
+                "SHIP_SOG": float(parts[5]) if parts[5] else None,
+                "SHIP_COG": float(parts[6]) if parts[6] else None,
+                "SHIP_Hdg": float(parts[7]) if parts[7] else None,
+                "Water_Depth": float(parts[8]) if parts[8] else None,
+                "SUB1_Lon": float(parts[9]) if parts[9] else None,
+                "SUB1_Lat": float(parts[10]) if parts[10] else None,
+                "SUB1_Depth": float(parts[11]) if parts[11] else None,
+                "SUB1_Altitude": float(parts[12]) if parts[12] else None,
+                "Elapsed_video_Time": parts[13],
+                "Observations_Comments": parts[14],
+                "Image_Video_Path": parts[15] if parts[15] else None,
+            }
+            detailed_data_table.append(record)
 
     return {
         "metadata": metadata,
-        "descriptive_text": descriptive_text,
         "task_table": task_table,
         "detailed_data_table": detailed_data_table,
     }
@@ -706,7 +726,7 @@ def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
     Returns:
         A dictionary containing the parsed data.
     """
-    documents = []
+    # documents = []
 
     # data parsing logic
     logger.info(f"file_content: {file_content}")
@@ -752,8 +772,18 @@ def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
     task_table_lines = []
     detailed_table_lines = []
 
-    # Split the file into header and data
-    file_format = "original"
+    # document = {
+    #     "file_key": file_key,
+    #     "metadata": parsed_data.get("metadata", {}),
+    #     "descriptive_text": parsed_data.get("descriptive_text", ""),  # Only relevant for certain formats
+    #     "task_table": parsed_data.get("task_table", []),             # Only relevant for 'latest' format
+    #     "detailed_data_table": parsed_data.get("detailed_data_table", [])
+    # }
+
+    # return [document]
+
+    # # Split the file into header and data
+    # file_format = "original"
     # counter = 0
     for aline in lines:
         # Strip leading/trailing whitespace

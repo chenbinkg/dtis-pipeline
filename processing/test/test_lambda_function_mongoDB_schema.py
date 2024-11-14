@@ -469,6 +469,79 @@ def test_parse_detailed_data_line(basic_line, expected_output):
     # self.assertEqual(result, expected_output)
 
 
+# @pytest.mark.parametrize(
+#     "file_content", "expected_output",
+#     [
+#        (
+#            "\n".join([
+#             "Cruise :\tTAN0616",
+#             "Station :\tDTIS_4_#5",
+#             "Remarks :\tlittle nose west of slump site",
+#             "",
+#             "UTC time\tPC time\tLat\tLon\tSpeed\tCourse\tDepth\tHeading\tSub Lat\tSub Lon\t\t\t\tNotes",
+#             "14:07:27\t04.11.2006 03:07:26\t-40.04765\t178.14625\t1.4\t308.5\t1006.9\t331.9\t0\t0\t-40.04754795\t178.14616817\t\ttest"
+#         ]),
+#             "file_key": "original/TAN0616_004_prot.txt",
+#             "metadata": {
+#                 "Cruise": "TAN0616",
+#                 "Station": "DTIS_4_#5",
+#                 "Remarks": "little nose west of slump site"
+#             },
+#             "descriptive_text": "",
+#             "detailed_data_table": [{
+#                 "UTC time": "2024-04-27T14:07:27+00:00",
+#                 "PC time": "2024-04-27T04:11:00+00:00",
+#                 "Lat": -40.04765,
+#                 "Lon": 178.14625,
+#                 "Speed": 1.4,
+#                 "Course": 308.5,
+#                 "Depth": 1006.9,
+#                 "Heading": 331.9,
+#                 "Sub Lat": 0.0,
+#                 "Sub Lon": 0.0,
+#                 "Notes": "test"
+#         }]
+#         )
+#     ],
+# )
+# def test_parse_original_format(file_content, expected_output):
+#         # file_key = "original/prot.txt"
+#         # file_content = "\n".join([
+#         #     "Cruise :\tTAN0616",
+#         #     "Station :\tDTIS_4_#5",
+#         #     "Remarks :\tlittle nose west of slump site",
+#         #     "",
+#         #     "UTC time\tPC time\tLat\tLon\tSpeed\tCourse\tDepth\tHeading\tSub Lat\tSub Lon\t\t\t\tNotes",
+#         #     "14:07:27\t04.11.2006 03:07:26\t-40.04765\t178.14625\t1.4\t308.5\t1006.9\t331.9\t0\t0\t-40.04754795\t178.14616817\t\ttest"
+#         # ])
+
+#         # expected_output = [{
+#         #     "file_key": file_key,
+#         #     "metadata": {
+#         #         "Cruise": "TAN0616",
+#         #         "Station": "DTIS_4_#5",
+#         #         "Remarks": "little nose west of slump site"
+#         #     },
+#         #     "descriptive_text": "",
+#         #     "detailed_data_table": [{
+#         #         "UTC time": "2024-04-27T14:07:27+00:00",
+#         #         "PC time": "2024-04-27T04:11:00+00:00",
+#         #         "Lat": -40.04765,
+#         #         "Lon": 178.14625,
+#         #         "Speed": 1.4,
+#         #         "Course": 308.5,
+#         #         "Depth": 1006.9,
+#         #         "Heading": 331.9,
+#         #         "Sub Lat": 0.0,
+#         #         "Sub Lon": 0.0,
+#         #         "Notes": "test"
+#         #     }]
+#         # }]
+
+#         result = parse_file_content(file_content, file_key)
+#         self.assertEqual(result, expected_output)
+
+
 @pytest.mark.parametrize(
     "line,expected_results,file_format",
     [
@@ -823,3 +896,210 @@ def test_parse_data_line_complete_video_sequence():
     assert video_events[0]["event"] == "start"
     assert video_events[1]["event"] == "stop"
     assert video_events[1]["duration"] == str(timedelta(minutes=1))
+
+    def test_parse_original_format(self):
+        file_key = "original/prot.txt"
+        file_content = "\n".join(
+            [
+                "Cruise :\tTAN0616",
+                "Station :\tDTIS_4_#5",
+                "Remarks :\tlittle nose west of slump site",
+                "",
+                "UTC time\tPC time\tLat\tLon\tSpeed\tCourse\tDepth\tHeading\tSub Lat\tSub Lon\t\t\t\tNotes",
+                "14:07:27\t04.11.2006 03:07:26\t-40.04765\t178.14625\t1.4\t308.5\t1006.9\t331.9\t0\t0\t-40.04754795\t178.14616817\t\ttest",
+            ]
+        )
+
+        expected_output = [
+            {
+                "file_key": file_key,
+                "metadata": {
+                    "Cruise": "TAN0616",
+                    "Station": "DTIS_4_#5",
+                    "Remarks": "little nose west of slump site",
+                },
+                "detailed_data_table": [
+                    {
+                        "UTC_time": "2006-11-04T14:07:27+00:00",
+                        "PC_time": "2006-04-16T03:07:26+00:00",
+                        "Lat": -40.04765,
+                        "Lon": 178.14625,
+                        "Speed": 1.4,
+                        "Course": 308.5,
+                        "Depth": 1006.9,
+                        "Heading": 331.9,
+                        "Sub_Lat": 0.0,
+                        "Sub_Lon": 0.0,
+                        "Notes": "test",
+                    }
+                ],
+            }
+        ]
+
+        result = parse_file_content(file_content, file_key)
+        self.assertEqual(result, expected_output)
+
+    def test_parse_latest_format(self):
+        file_key = "latest/prot.txt"
+        file_content = "\n".join(
+            [
+                "Cruise     :\tTAN2206",
+                "Station    :\t9",
+                "Remarks    :\tFar field site 1",
+                "Sadie calling, Rob OFOP, Neill DTIS",
+                "Very flat seafloor at a depth of 2507 m. Very consistant substrate of muddy sediment with gravels, pebbles, cobbles and the occasional boulder. Fauna was sparse with a few shrimps, holothurians, hexactinellid sponges and one Umbellula se pen. ",
+                "Low numbers of fish and eels but one rattail was observed.",
+                "OFOP entries were sometimes made for for long straight objects as either sea pens/hexactinellids which were difficult to determine. But confirmed ID's were made of both groups.",
+                "Task             :\tPC Date and Time\tUTC Time\tUTC Date\tSHIP Latitude\tSHIP Longitude\tSUB_1 Latitude\tSUB_1 Longitude\tWater Depth",
+                "In the Water     :\t16/04/2022 08:41:57\t20:41:57\t16/04/2022 06:33:55\t-24.0\t-178.6\t0.0\t0.0\t2607.8",
+                "At the Bottom    :\t16/04/2022 09:26:48\t21:26:48\t16/04/2022 06:33:55\t-24.0\t-178.6\t-24.0\t-178.1\t2607.1",
+                "Off the Bottom   :\t16/04/2022 10:28:55\t22:28:55\t16/04/2022 06:33:55\t-24.0\t-178.5\t-24.0\t-178.1\t2606.3",
+                "On Deck          :\t\t\t\t\t",
+                "Gear deployed    :\t\t\t\t\t",
+                "--------------------------------------------------------------------------------------------------------------------------------------------",
+                "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path",
+                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0\t0\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                "04/16/2022\t20:41:55\t16/04/2022 08:41:55\t-178.1025627\t-24.0037027\t0.76\t194\t46.09\t2607.8\t0\t0\t0\t0\t00:00:00\t\t[-81] IN THE WATER",
+                # Add more detailed lines as needed
+            ]
+        )
+
+        expected_output = [
+            {
+                "file_key": file_key,
+                "metadata": {
+                    "Cruise": "TAN2206",
+                    "Station": "9",
+                    "Remarks": "Far field site 1",
+                },
+                "descriptive_text": "Sadie calling, Rob OFOP, Neill DTIS Very flat seafloor at a depth of 2507 m. Very consistant substrate of muddy sediment with gravels, pebbles, cobbles and the occasional boulder. Fauna was sparse with a few shrimps, holothurians, hexactinellid sponges and one Umbellula se pen. Low numbers of fish and eels but one rattail was observed. OFOP entries were sometimes made for for long straight objects as either sea pens/hexactinellids which were difficult to determine. But confirmed ID's were made of both groups.",
+                "task_table": [
+                    {
+                        "Task": "In the Water",
+                        "PC_Date_and_Time": "2022-04-16T08:41:57+00:00",
+                        "UTC_Time": "2024-04-27T20:41:57+00:00",
+                        "UTC_Date": "2022-04-16T06:33:55+00:00",
+                        "SHIP_Latitude": -24.0,
+                        "SHIP_Longitude": -178.6,
+                        "SUB_1_Latitude": 0.0,
+                        "SUB_1_Longitude": 0.0,
+                        "Water_Depth": 2607.8,
+                    },
+                    # Add more task records as needed
+                ],
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16T20:33:30+00:00",
+                        "Time": "2024-04-27T20:33:30+00:00",
+                        "PC_Time": "2022-04-16T08:33:30+00:00",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed_video_Time": "00:00:00",
+                        "Observations_Comments": "",
+                        "Image_Video_Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                    },
+                    {
+                        "Date": "2022-04-16T20:41:55+00:00",
+                        "Time": "2024-04-27T20:41:55+00:00",
+                        "PC_Time": "2022-04-16T08:41:55+00:00",
+                        "SHIP_Lon": -178.1025627,
+                        "SHIP_Lat": -24.0037027,
+                        "SHIP_SOG": 0.76,
+                        "SHIP_COG": 194.0,
+                        "SHIP_Hdg": 46.09,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed_video_Time": "00:00:00",
+                        "Observations_Comments": "[-81] IN THE WATER",
+                        "Image_Video_Path": None,
+                    },
+                    # Add more detailed records as needed
+                ],
+            }
+        ]
+
+        result = parse_file_content(file_content, file_key)
+        self.assertEqual(result, expected_output)
+
+    def test_parse_simple_format(self):
+        file_key = "simple/prot.txt"
+        file_content = "\n".join(
+            [
+                "Cruise     :\tTAN2206",
+                "Station    :\t9",
+                "Remarks    :\tFar field site 1",
+                "",
+                "#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name",
+                "04/16/2022\t20:33:30\t-178.102472\t-24.0038201666667\t[-66]\tDTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                "04/16/2022\t20:41:55\t-178.102562666667\t-24.0037026666667\t[-81]\t[-81] IN THE WATER",
+                "04/16/2022\t20:42:55\t-178.102664\t-24.003771\t[-99]\t[-99] SUB",
+                # Add more simple format lines as needed
+            ]
+        )
+
+        expected_output = [
+            {
+                "file_key": file_key,
+                "metadata": {
+                    "Cruise": "TAN2206",
+                    "Station": "9",
+                    "Remarks": "Far field site 1",
+                },
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16T20:33:30+00:00",
+                        "Time": "2024-04-27T20:33:30+00:00",
+                        "SUB1_Lon": -178.102472,
+                        "SUB1_Lat": -24.0038201666667,
+                        "ID_Number": "[-66]",
+                        "ID_Name": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",
+                    },
+                    {
+                        "Date": "2022-04-16T20:41:55+00:00",
+                        "Time": "2024-04-27T20:41:55+00:00",
+                        "SUB1_Lon": -178.102562666667,
+                        "SUB1_Lat": -24.0037026666667,
+                        "ID_Number": "[-81]",
+                        "ID_Name": "[-81] IN THE WATER",
+                    },
+                    {
+                        "Date": "2022-04-16T20:42:55+00:00",
+                        "Time": "2024-04-27T20:42:55+00:00",
+                        "SUB1_Lon": -178.102664,
+                        "SUB1_Lat": -24.003771,
+                        "ID_Number": "[-99]",
+                        "ID_Name": "[-99] SUB",
+                    },
+                    # Add more simple records as needed
+                ],
+            }
+        ]
+
+        result = parse_file_content(file_content, file_key)
+        self.assertEqual(result, expected_output)
+
+    def test_parse_unknown_format(self):
+        file_key = "unknown/prot.txt"
+        file_content = "\n".join(
+            [
+                "Some random header",
+                "Another random header",
+                "Data\tWithout\tProper\tFormat",
+            ]
+        )
+
+        expected_output = []
+
+        result = parse_file_content(file_content, file_key)
+        self.assertEqual(result, expected_output)
