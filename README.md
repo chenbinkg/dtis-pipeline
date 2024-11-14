@@ -170,3 +170,23 @@ bats ./upload/test/bats/*
 ```
 
 - running the Docker command directly - copy the command from the `tasks` script
+
+
+### Unit testing with Pytest
+
+Run it locally with:
+```
+./tasks _lambda_unit_tests
+```
+
+Or run it in Docker with:
+```
+./tasks lambda_unit_tests
+```
+
+#### Troubleshooting
+If you get a `Permission denied` error, please remove these generated files:
+```
+rm -r processing/venv/
+rm -r processing/results.xml
+```
