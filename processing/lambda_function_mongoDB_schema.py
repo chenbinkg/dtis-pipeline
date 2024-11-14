@@ -20,7 +20,7 @@ Requirements:
 should we use the 'pendulum' library so we're better able to deal with dates/times?
 
 
-12 November 2024 Tilmann Steinmetz
+14 November 2024 Tilmann Steinmetz
 
 """
 
@@ -51,6 +51,67 @@ def check_timeout():
     if elapsed_time > MAX_EXECUTION_TIME:
         logger.warning("Function approaching timeout - forcing exit")
         raise Exception("Function timeout reached")
+
+
+# Define possible date and time formats
+DATE_FORMATS = [
+    "%m/%d/%Y %H:%M:%S",  # e.g., "04/16/2022 23:08:06"
+    "%d.%m.%Y %H:%M:%S",  # e.g., "16.04.2022 23:08:06"
+    "%Y-%m-%d %H:%M:%S",  # e.g., "2022-04-16 23:08:06"
+    "%d/%m/%Y %H:%M:%S",  # e.g., "16/04/2022 23:08:06"
+]
+
+TIME_FORMATS = [
+    "%H:%M:%S",  # e.g., "23:08:06"
+    "%I:%M:%S %p",  # e.g., "11:08:06 PM"
+]
+
+
+def parse_datetime(datetime_str: str) -> Optional[str]:
+    """
+    Attempt to parse a datetime string with multiple formats.
+
+    Args:
+        datetime_str (str): The datetime string to parse.
+
+    Returns:
+        Optional[str]: ISO 8601 formatted string if parsing is successful, else None.
+    """
+    for fmt in DATE_FORMATS:
+        try:
+            parsed_date = datetime.strptime(datetime_str, fmt)
+            # Assume UTC timezone if not specified
+            parsed_date = parsed_date.replace(tzinfo=timezone.utc)
+            return parsed_date.isoformat()
+        except ValueError:
+            continue
+    logger.error(f"Failed to parse datetime: {datetime_str}")
+    return None
+
+
+def parse_time_only(time_str: str) -> Optional[str]:
+    """
+    Attempt to parse a time-only string with multiple formats and assign a default date.
+
+    Args:
+        time_str (str): The time string to parse.
+
+    Returns:
+        Optional[str]: ISO 8601 formatted string with the current date if parsing is successful, else None.
+    """
+    for fmt in TIME_FORMATS:
+        try:
+            parsed_time = datetime.strptime(time_str, fmt).time()
+            # Assign the current UTC date
+            current_date = datetime.now(timezone.utc).date()
+            combined_datetime = datetime.combine(
+                current_date, parsed_time, tzinfo=timezone.utc
+            )
+            return combined_datetime.isoformat()
+        except ValueError:
+            continue
+    logger.error(f"Failed to parse time: {time_str}")
+    return None
 
 
 def prepare_for_mongodb(document):
@@ -206,9 +267,6 @@ def parse_header(header_text):
     )
 
     return meta
-
-
-from typing import Any, Dict, List, Optional, Tuple
 
 
 def parse_data_line(
@@ -370,7 +428,7 @@ def get_posi_file_content(s3: boto3.client, bucket: str, key: str) -> str:
             response = s3.get_object(Bucket=bucket, Key=posi_key)
             content = response["Body"].read().decode("utf-8")
             logger.info(f"Found posi file: {posi_key}")
-            return content
+            return content  # .splitlines()
         except s3.exceptions.NoSuchKey:
             logger.error(f"Companion posi file not found: {posi_key}")
             raise FileNotFoundError(f"Companion posi file not found: {posi_key}")
@@ -405,7 +463,7 @@ def parse_posi_file(content):
             date = fields[0].strip()
             time = fields[1].strip()
             try:
-                dt = datetime.strptime(f"{date} {time}", "%d.%m.%Y %H:%M:%S")
+                dt = datetime.strptime(f"{date} {time}", "%m/%d/%Y %H:%M:%S")
                 dt_utc = dt.replace(tzinfo=timezone.utc)  # Make it timezone-aware
                 data[dt_utc.isoformat()] = {
                     "datetime": dt_utc,  # This should be a full datetime object
@@ -482,6 +540,7 @@ def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
 
     # Split the file into header and data
     file_format = "original"
+    # counter = 0
     for aline in lines:
         logger.info(f"Processing input data line: {aline}")
         if aline.startswith("#Date"):  # Detect new format (rerun_XX_obs file)
@@ -648,7 +707,7 @@ def insert_documents_to_mongodb(
 
     Args:
         collection_name: The MongoDB collection to insert documents into.
-        documents: A list of the documents to be inserted.
+        documents: The documents to be inserted.
 
     Returns:
         The result of the insertion operation.
