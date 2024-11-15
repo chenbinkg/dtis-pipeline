@@ -55,6 +55,7 @@ def check_timeout():
 
 # Define possible date and time formats
 DATE_FORMATS = [
+    "%m/%d/%Y",  # e.g., "04/16/2022"
     "%m/%d/%Y %H:%M:%S",  # e.g., "04/16/2022 23:08:06"
     "%d.%m.%Y %H:%M:%S",  # e.g., "16.04.2022 23:08:06"
     "%Y-%m-%d %H:%M:%S",  # e.g., "2022-04-16 23:08:06"
@@ -356,7 +357,7 @@ def parse_data_line(
             voyage_station = source_key.split("_obser.txt")[0]
 
         # voyage_station = source_key.split("_prot.txt")[0]
-        feature["media"] = f"/images/{voyage_station}/{voyage_station}_12.jpg"
+        feature["media"] = f"/images/{voyage_station}/{voyage_station}.jpg"
 
     # Handle video observations
     if isinstance(video_start_time, str):
@@ -467,7 +468,7 @@ def parse_posi_file(content):
             date = fields[0].strip()
             time = fields[1].strip()
             try:
-                dt = datetime.strptime(f"{date} {time}", "%m/%d/%Y %H:%M:%S")
+                dt = datetime.strptime(f"{date} {time}", "%m.%d.%Y %H:%M:%S")
                 dt_utc = dt.replace(tzinfo=timezone.utc)  # Make it timezone-aware
                 data[dt_utc.isoformat()] = {
                     "datetime": dt_utc,  # This should be a full datetime object
@@ -544,139 +545,491 @@ def detect_file_format(lines: List[str]) -> str:
         str: Format identifier ('original', 'new', 'latest', 'simple').
     """
     for line in lines:
-        if line.startswith("#Date\tTime\tPC_Time"):
-            return "latest"
-        elif line.startswith("#Date\tTime\tSUB1_Lon"):
-            return "simple"
-        elif line.startswith("UTC time\tPC time"):
+        if line.startswith("Cruise :"):
             return "original"
+        elif line.startswith("#Date\tTime\tPC_Time"):
+            return "latest"
+        elif line.startswith("#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name"):
+            return "simple"
         elif re.match(r"#Date\s+Time\s+PC_Time", line):
+            logger.info("New file type detected")
             return "new"
     return "unknown"
 
 
 def parse_original_format(lines: List[str]) -> Dict[str, Any]:
+    """
+    Parses files adhering to the "original" format.
+
+    Args:
+        lines (List[str]): Lines from the file content.
+
+    Returns:
+        Dict[str, Any]: Structured data suitable for MongoDB insertion.
+    """
     metadata = {}
     detailed_data_table = []
+    headers = []
+    header_found = False
+    data_start_idx = 0
 
-    # Parse metadata
+    # Updated delimiter pattern to match lines with any number of dashes
+    delimiter_pattern = re.compile(
+        r"^-+\s*$"
+    )  # Matches lines with only dashes and optional trailing whitespace
+
+    logger.info("Starting to parse 'original' format file.")
+
+    # Phase 1: Parse Metadata and Detect Delimiter Line
     for idx, line in enumerate(lines):
-        if line.strip() == "":
-            start_idx = idx + 1
-            break
-        key, value = line.split(":", 1)
-        metadata[key.strip()] = value.strip()
+        stripped_line = line.strip()
 
-    # Parse detailed data table
-    header = lines[start_idx]
-    columns = header.split("\t")
-    for line in lines[start_idx + 1 :]:
-        parts = line.split("\t")
-        if len(parts) < len(columns):
+        # Skip empty lines
+        if not stripped_line:
             continue
-        record = dict(zip(columns, parts))
-        # Parse and convert fields as needed
-        parsed_record = {
-            "UTC_time": parse_datetime(record.get("UTC time", "")),
-            "PC_time": parse_datetime(record.get("PC time", "")),
-            "Lat": float(record.get("Lat", 0.0)),
-            "Lon": float(record.get("Lon", 0.0)),
-            "Speed": float(record.get("Speed", 0.0)),
-            "Course": float(record.get("Course", 0.0)),
-            "Depth": float(record.get("Depth", 0.0)),
-            "Heading": float(record.get("Heading", 0.0)),
-            "Sub_Lat": float(record.get("Sub Lat", 0.0)),
-            "Sub_Lon": float(record.get("Sub Lon", 0.0)),
-            "Notes": record.get("Notes", "").strip() if "Notes" in record else None,
-        }
-        detailed_data_table.append(parsed_record)
 
+        # Check if the line is the delimiter line
+        if delimiter_pattern.match(stripped_line):
+            logger.debug(f"Delimiter line found at line {idx}: {line}")
+            data_start_idx = idx + 1
+            break  # Proceed to Phase 2
+
+        # Check if the line contains a key-value pair separated by a tab
+        if "\t" in stripped_line:
+            parts = stripped_line.split("\t", 1)
+            if len(parts) == 2:
+                key, value = parts
+                metadata_key = key.strip().rstrip(":")
+                metadata_value = value.strip()
+                metadata[metadata_key] = metadata_value
+                logger.debug(f"Parsed metadata - {metadata_key}: {metadata_value}")
+            else:
+                logger.warning(f"Malformed metadata line at line {idx}: {line}")
+        else:
+            # Line does not contain a tab and is not a delimiter; ignore or log as needed
+            logger.debug(
+                f"Ignoring non-metadata, non-delimiter line at line {idx}: {line}"
+            )
+            continue
+
+    # Phase 1 Completion Check
+    if data_start_idx == 0:
+        logger.error("Delimiter not found. Cannot proceed to parse data.")
+        logger.error("Returning metadata only.")
+        return {"metadata": metadata, "detailed_data_table": detailed_data_table}
+
+    # Phase 2: Detect Header Line
+    for idx in range(data_start_idx, len(lines)):
+        line = lines[idx].strip()
+
+        # Skip empty lines and irrelevant sections
+        if not line:
+            continue
+
+        # Identify the header line based on known header patterns
+        # Updated to match the new header starting with "UTC time"
+        if (
+            line.startswith("UTC time")
+            or line.startswith("Date")
+            or line.startswith("#Date")
+        ):
+            headers = line.lstrip("#").split("\t")
+            headers = [
+                header.strip() for header in headers
+            ]  # Remove any surrounding whitespace
+            header_found = True
+            logger.info(f"Data table headers found at line {idx}: {headers}")
+            data_start_idx = idx + 1
+            break
+
+    # Phase 2 Completion Check
+    if not header_found:
+        logger.error("No header found in 'original' format file.")
+        logger.error("Returning metadata only.")
+        return {"metadata": metadata, "detailed_data_table": detailed_data_table}
+
+    # Phase 3: Parse Data Rows
+    for data_idx, data_line in enumerate(lines[data_start_idx:], start=data_start_idx):
+        stripped_data_line = data_line.strip()
+
+        # Skip empty lines
+        if not stripped_data_line:
+            continue
+
+        # Skip footer or unexpected sections
+        if stripped_data_line.startswith("#") or delimiter_pattern.match(
+            stripped_data_line
+        ):
+            logger.debug(f"Skipping non-data line at line {data_idx}: {data_line}")
+            continue
+
+        # Split the data line based on tabs
+        fields = stripped_data_line.split("\t")
+
+        if len(fields) != len(headers):
+            logger.warning(
+                f"Data line does not match header count at line {data_idx}: {data_line}"
+            )
+            continue
+
+        record = dict(zip(headers, fields))
+        parsed_record = {}
+
+        # Convert and assign fields
+        for header in headers:
+            value = record.get(header, "").strip()
+
+            if header.lower() == "date" or "date" in header.lower():
+                # Parse date field (adjust format as needed)
+                try:
+                    parsed_value = (
+                        datetime.strptime(value, "%d.%m.%Y").date().isoformat()
+                    )
+                except ValueError:
+                    try:
+                        parsed_value = (
+                            datetime.strptime(value, "%m/%d/%Y").date().isoformat()
+                        )
+                    except ValueError:
+                        logger.warning(
+                            f"Failed to parse Date at line {data_idx}: {value}"
+                        )
+                        parsed_value = value  # Keep as string if parsing fails
+                parsed_record[header] = parsed_value
+            elif header.lower() == "utc time" or header.lower() == "time":
+                # Parse time field
+                try:
+                    parsed_value = (
+                        datetime.strptime(value, "%H:%M:%S").time().isoformat()
+                    )
+                except ValueError:
+                    logger.warning(f"Failed to parse Time at line {data_idx}: {value}")
+                    parsed_value = value  # Keep as string if parsing fails
+                parsed_record[header] = parsed_value
+            elif header.lower() in ["pc time", "pc_time"]:
+                # Parse PC Time field
+                try:
+                    parsed_value = datetime.strptime(
+                        value, "%d.%m.%Y %H:%M:%S"
+                    ).isoformat()
+                except ValueError:
+                    try:
+                        parsed_value = datetime.strptime(
+                            value, "%m/%d/%Y %H:%M:%S"
+                        ).isoformat()
+                    except ValueError:
+                        logger.warning(
+                            f"Failed to parse PC_Time at line {data_idx}: {value}"
+                        )
+                        parsed_value = value
+                parsed_record[header] = parsed_value
+            elif any(
+                sub in header.lower()
+                for sub in ["lon", "lat", "speed", "course", "depth", "heading"]
+            ):
+                # Convert numeric fields to floats
+                # Handle cases where values might have colons instead of dots (e.g., -39:28.509)
+                value = value.replace(":", ".")
+                try:
+                    parsed_record[header] = float(value)
+                except ValueError:
+                    logger.warning(
+                        f"Non-numeric value for '{header}' at line {data_idx}: {value}"
+                    )
+                    parsed_record[header] = None
+            else:
+                # Keep other fields as strings
+                parsed_record[header] = value
+
+        detailed_data_table.append(parsed_record)
+        logger.debug(f"Parsed data record at line {data_idx}: {parsed_record}")
+
+    logger.info(
+        f"Finished parsing 'original' format file. Total records: {len(detailed_data_table)}"
+    )
     return {"metadata": metadata, "detailed_data_table": detailed_data_table}
 
 
+# Following should work equally well for the 'latest' format:
+# e.g. TAN2206/009/text/TAN2206_009_prot.txt
+# check whether we can use it
+
+# def parse_lastest_format(lines: List[str]) -> Dict[str, Any]:
+#     """
+#     Parses files adhering to the "original" format.
+
+#     Args:
+#         lines (List[str]): Lines from the file content.
+
+#     Returns:
+#         Dict[str, Any]: Structured data suitable for MongoDB insertion.
+#     """
+#     metadata = {}
+#     detailed_data_table = []
+#     headers = []
+#     header_found = False
+#     data_start_idx = 0
+#     skip_until_delimiter = False
+
+#     delimiter_pattern = re.compile(r"^-+$")  # Matches lines with only dashes
+
+#     logger.info("Starting to parse 'original' format file.")
+
+#     # Phase 1: Parse Metadata
+#     for idx, line in enumerate(lines):
+#         stripped_line = line.strip()
+
+#         # Skip empty lines
+#         if not stripped_line:
+#             continue
+
+#         # Check if the line contains a key-value pair separated by a tab
+#         if "\t" in stripped_line:
+#             parts = stripped_line.split("\t", 1)
+#             if len(parts) == 2:
+#                 key, value = parts
+#                 metadata_key = key.strip().rstrip(":")
+#                 metadata_value = value.strip()
+#                 metadata[metadata_key] = metadata_value
+#                 logger.debug(f"Parsed metadata - {metadata_key}: {metadata_value}")
+#             else:
+#                 logger.warning(f"Malformed metadata line at line {idx}: {line}")
+#         else:
+#             # If a line doesn't contain a tab, check if it's the start of the Task table
+#             if stripped_line.startswith("Task"):
+#                 logger.debug(f"Task table encountered at line {idx}: {line}")
+#                 skip_until_delimiter = True
+#                 continue
+#             if skip_until_delimiter:
+#                 # Skip lines until the delimiter line is found
+#                 if delimiter_pattern.match(stripped_line):
+#                     logger.debug(f"Delimiter line found at line {idx}: {line}")
+#                     skip_until_delimiter = False
+#                     data_start_idx = idx + 1
+#                     break
+#                 else:
+#                     logger.debug(f"Skipping Task table line at line {idx}: {line}")
+#                     continue
+#             else:
+#                 # Non-metadata and non-task lines are ignored
+#                 logger.debug(
+#                     f"Non-metadata, non-task line encountered at line {idx}: {line}"
+#                 )
+#                 continue
+
+#     # Phase 2: Detect Header Line
+#     if data_start_idx <= 0:
+#         logger.error("Delimiter not found. Cannot proceed to parse data.")
+#         logger.error("Returning metadata only.")
+#         return {"metadata": metadata, "detailed_data_table": detailed_data_table}
+
+#     for idx in range(data_start_idx, len(lines)):
+#         line = lines[idx].strip()
+
+#         # Skip empty lines and irrelevant sections
+#         if not line or line.startswith("Gear deployed"):
+#             continue
+
+#         # Identify the header line based on known header patterns
+#         if line.startswith("#Date") or line.startswith("Date"):
+#             headers = line.lstrip("#").split("\t")
+#             headers = [
+#                 header.strip() for header in headers
+#             ]  # Remove any surrounding whitespace
+#             header_found = True
+#             logger.info(f"Data table headers found at line {idx}: {headers}")
+#             data_start_idx = idx + 1
+#             break
+
+#     if not header_found:
+#         logger.error("No header found in 'original' format file.")
+#         logger.error("Returning metadata only.")
+#         return {"metadata": metadata, "detailed_data_table": detailed_data_table}
+
+#     # Phase 3: Parse Data Rows
+#     for data_idx, data_line in enumerate(lines[data_start_idx:], start=data_start_idx):
+#         stripped_data_line = data_line.strip()
+
+#         # Skip empty lines
+#         if not stripped_data_line:
+#             continue
+
+#         # Skip footer or unexpected sections
+#         if stripped_data_line.startswith("#") or delimiter_pattern.match(
+#             stripped_data_line
+#         ):
+#             logger.debug(f"Skipping non-data line at line {data_idx}: {data_line}")
+#             continue
+
+#         # Split the data line based on tabs
+#         fields = stripped_data_line.split("\t")
+
+#         if len(fields) != len(headers):
+#             logger.warning(
+#                 f"Data line does not match header count at line {data_idx}: {data_line}"
+#             )
+#             continue
+
+#         record = dict(zip(headers, fields))
+#         parsed_record = {}
+
+#         # Convert and assign fields
+#         for header in headers:
+#             value = record.get(header, "").strip()
+
+#             if header == "Date":
+#                 # Parse date field
+#                 try:
+#                     parsed_value = (
+#                         datetime.strptime(value, "%m/%d/%Y").date().isoformat()
+#                     )
+#                 except ValueError:
+#                     logger.warning(f"Failed to parse Date at line {data_idx}: {value}")
+#                     parsed_value = value  # Keep as string if parsing fails
+#                 parsed_record[header] = parsed_value
+#             elif header == "Time":
+#                 # Parse time field
+#                 try:
+#                     parsed_value = (
+#                         datetime.strptime(value, "%H:%M:%S").time().isoformat()
+#                     )
+#                 except ValueError:
+#                     logger.warning(f"Failed to parse Time at line {data_idx}: {value}")
+#                     parsed_value = value  # Keep as string if parsing fails
+#                 parsed_record[header] = parsed_value
+#             elif any(
+#                 sub in header.lower()
+#                 for sub in ["lon", "lat", "sog", "cog", "hdg", "depth"]
+#             ):
+#                 # Convert numeric fields to floats
+#                 # Handle cases where values might have colons instead of dots (e.g., -24:0.222)
+#                 value = value.replace(":", ".")
+#                 try:
+#                     parsed_record[header] = float(value)
+#                 except ValueError:
+#                     logger.warning(
+#                         f"Non-numeric value for '{header}' at line {data_idx}: {value}"
+#                     )
+#                     parsed_record[header] = None
+#             else:
+#                 # Keep other fields as strings
+#                 parsed_record[header] = value
+
+#         detailed_data_table.append(parsed_record)
+#         logger.debug(f"Parsed data record at line {data_idx}: {parsed_record}")
+
+#     logger.info(
+#         f"Finished parsing 'original' format file. Total records: {len(detailed_data_table)}"
+#     )
+#     return {"metadata": metadata, "detailed_data_table": detailed_data_table}
+
+
 def parse_latest_format(lines: List[str]) -> Dict[str, Any]:
+    """
+    Parses files adhering to the "latest" format.
+
+    Args:
+        lines (List[str]): Lines from the file content.
+
+    Returns:
+        Dict[str, Any]: Structured data suitable for MongoDB insertion.
+    """
     metadata = {}
-    task_table = []
+    tasks = []
     detailed_data_table = []
+    header_found = False
+    headers = []
 
-    # Parse metadata
     for idx, line in enumerate(lines):
-        if line.strip() == "":
-            break
-        key, value = line.split(":", 1)
-        metadata[key.strip()] = value.strip()
+        stripped_line = line.strip()
 
-    # Identify sections
-    try:
-        task_header_idx = (
-            lines.index(
-                "Task             :\tPC Date and Time\tUTC Time\tUTC Date\tSHIP Latitude\tSHIP Longitude\tSUB_1 Latitude\tSUB_1 Longitude\tWater Depth"
-            )
-            + 1
-        )
-    except ValueError:
-        logger.error("Task table header not found in latest format.")
-        task_header_idx = None
+        if not stripped_line:
+            continue
 
-    try:
-        detailed_header_idx = (
-            lines.index(
-                "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path"
-            )
-            + 1
-        )
-    except ValueError:
-        logger.error("Detailed data table header not found in latest format.")
-        detailed_header_idx = None
-
-    # Parse Task Table
-    if task_header_idx:
-        for line in lines[task_header_idx : detailed_header_idx - 1]:
-            parts = line.split("\t")
-            if len(parts) < 9:
+        if not header_found:
+            if stripped_line.startswith("Cruise"):
+                if "\t" in stripped_line:
+                    parts = stripped_line.split("\t", 1)
+                    if len(parts) == 2:
+                        key, value = parts
+                        metadata[key.strip().rstrip(":")] = value.strip()
+                    else:
+                        logger.warning(f"Malformed metadata line at line {idx}: {line}")
+                else:
+                    logger.warning(
+                        f"No tab found in metadata line at line {idx}: {line}"
+                    )
+            elif stripped_line.startswith("#Date"):
+                headers = stripped_line.lstrip("#").split("\t")
+                header_found = True
+            elif stripped_line.startswith("Task"):
+                # Optionally parse task lines if needed
                 continue
-            record = {
-                "Task": parts[0],
-                "PC_Date_and_Time": parse_datetime(parts[1]),
-                "UTC_Time": parse_time_only(parts[2]),
-                "UTC_Date": parse_datetime(parts[3]),
-                "SHIP_Latitude": float(parts[4]),
-                "SHIP_Longitude": float(parts[5]),
-                "SUB_1_Latitude": float(parts[6]) if parts[6] else None,
-                "SUB_1_Longitude": float(parts[7]) if parts[7] else None,
-                "Water_Depth": float(parts[8]),
-            }
-            task_table.append(record)
-
-    # Parse Detailed Data Table
-    if detailed_header_idx:
-        for line in lines[detailed_header_idx:]:
-            parts = re.split(r"\t+", line)
-            if len(parts) < 16:
+            else:
+                # Skip other descriptive lines
                 continue
-            record = {
-                "Date": parse_datetime(parts[0]),
-                "Time": parse_time_only(parts[1]),
-                "PC_Time": parse_datetime(parts[2]),
-                "SHIP_Lon": float(parts[3]) if parts[3] else None,
-                "SHIP_Lat": float(parts[4]) if parts[4] else None,
-                "SHIP_SOG": float(parts[5]) if parts[5] else None,
-                "SHIP_COG": float(parts[6]) if parts[6] else None,
-                "SHIP_Hdg": float(parts[7]) if parts[7] else None,
-                "Water_Depth": float(parts[8]) if parts[8] else None,
-                "SUB1_Lon": float(parts[9]) if parts[9] else None,
-                "SUB1_Lat": float(parts[10]) if parts[10] else None,
-                "SUB1_Depth": float(parts[11]) if parts[11] else None,
-                "SUB1_Altitude": float(parts[12]) if parts[12] else None,
-                "Elapsed_video_Time": parts[13],
-                "Observations_Comments": parts[14],
-                "Image_Video_Path": parts[15] if parts[15] else None,
-            }
-            detailed_data_table.append(record)
+        else:
+            if stripped_line.startswith("#"):
+                # Skip footer or other sections
+                continue
+            fields = stripped_line.split("\t")
+            if len(fields) < len(headers):
+                logger.warning(
+                    f"Insufficient fields in data line at line {idx}: {line}"
+                )
+                continue
+            record = dict(zip(headers, fields))
+            parsed_record = {}
+
+            for header in headers:
+                parsed_record[header] = record.get(header, "").strip()
+
+            # Example parsing logic (adjust as per actual requirements)
+            try:
+                parsed_record["Date"] = datetime.strptime(
+                    parsed_record["Date"], "%m/%d/%Y"
+                ).isoformat()
+                parsed_record["Time"] = (
+                    datetime.strptime(parsed_record["Time"], "%H:%M:%S")
+                    .time()
+                    .isoformat()
+                )
+                parsed_record["PC_Time"] = datetime.strptime(
+                    parsed_record["PC_Time"], "%d/%m/%Y %H:%M:%S"
+                ).isoformat()
+            except ValueError as ve:
+                logger.error(f"Date parsing error at line {idx}: {ve}")
+                parsed_record["Date"] = None
+                parsed_record["Time"] = None
+                parsed_record["PC_Time"] = None
+
+            # Convert numeric fields
+            numeric_fields = [
+                "SHIP_Lon",
+                "SHIP_Lat",
+                "SHIP_SOG",
+                "SHIP_COG",
+                "SHIP_Hdg",
+                "Water_Depth",
+                "SUB1_Lon",
+                "SUB1_Lat",
+                "SUB1_Depth",
+                "SUB1_Altitude",
+            ]
+            for field in numeric_fields:
+                try:
+                    parsed_record[field] = float(parsed_record[field])
+                except ValueError:
+                    logger.warning(
+                        f"Invalid numeric value for '{field}' at line {idx}: {parsed_record[field]}"
+                    )
+                    parsed_record[field] = None
+
+            detailed_data_table.append(parsed_record)
 
     return {
         "metadata": metadata,
-        "task_table": task_table,
+        "tasks": tasks,
         "detailed_data_table": detailed_data_table,
     }
 
@@ -684,14 +1037,27 @@ def parse_latest_format(lines: List[str]) -> Dict[str, Any]:
 def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
     metadata = {}
     detailed_data_table = []
-
+    start_idx = 0
     # Parse metadata
     for idx, line in enumerate(lines):
-        if line.strip() == "":
-            start_idx = idx + 1
-            break
-        key, value = line.split(":", 1)
-        metadata[key.strip()] = value.strip()
+        stripped_line = line.strip()
+
+        if not stripped_line:
+            continue
+
+        logger.debug(f"Processing line {idx}: {stripped_line}")
+        # if line.strip() == "":
+        #     start_idx = idx + 1
+        #     break
+        if ":" in stripped_line:
+            parts = stripped_line.split("\t", 1)
+            if len(parts) == 2:
+                key, value = parts
+                metadata[key.strip().rstrip(":")] = value.strip()
+            else:
+                logger.warning(f"Unexpected metadata line format at line {idx}: {line}")
+        else:
+            logger.info(f"Skipping non-key-value line at line {idx}: {line}")
 
     # Parse header
     header = lines[start_idx]
@@ -715,7 +1081,10 @@ def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
     return {"metadata": metadata, "detailed_data_table": detailed_data_table}
 
 
-def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
+def parse_file_content(file_content: str, key: str) -> Tuple[
+    Dict[str, Any],
+    str,
+]:
     """
     Parse the file content.
 
@@ -724,17 +1093,22 @@ def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
         key: The S3 object key.
 
     Returns:
-        A dictionary containing the parsed data.
+        A dictionary containing the parsed data,
+        file_format (from detection algorithm).
     """
-    # documents = []
-
-    # data parsing logic
     logger.info(f"file_content: {file_content}")
 
-    # split the key into cruise and station:
-    cruise_from_name, station_from_name = key.split("_")[0:2]
+    try:
+        cruise_from_name, station_from_name = key.split("_")[0:2]
+        cruise_from_name = cruise_from_name.split("/")[0]
+    except ValueError:
+        logger.error(f"Invalid key format: {key}")
+        return {}
+
     logger.info(
-        f"From file name we know - cruise: {cruise_from_name}, station: {station_from_name}"
+        "From file name we know - cruise: %s, station: %s",
+        cruise_from_name,
+        station_from_name,
     )
 
     # split the file content into indivdual lines
@@ -742,6 +1116,7 @@ def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
 
     # Detect file format
     file_format = detect_file_format(lines)
+    logger.info("Detected file format: %s", file_format)
 
     if file_format == "original":
         parsed_data = parse_original_format(lines)
@@ -753,124 +1128,39 @@ def parse_file_content(file_content: str, key: str) -> Dict[str, Any]:
         logger.error("Unknown file format")
         return []
 
-    # Initialize variables to hold different sections
-    metadata = {}
-    descriptive_text = ""
-    task_table = []
-    detailed_data_table = []
+    # # Initialize variables to hold different sections
+    # metadata = {}
+    # descriptive_text = ""
+    # task_table = []
+    # detailed_data_table = []
 
-    # Patterns to identify sections
-    metadata_pattern = re.compile(r"^(Cruise|Station|Remarks)\s*:\s*(.*)$")
-    task_table_header_pattern = re.compile(r"^Task\s*:\s*.*")
-    detailed_table_header_pattern = re.compile(r"^#Date\s+Time\s+PC_Time.*")
+    # # Patterns to identify sections
+    # metadata_pattern = re.compile(r"^(Cruise|Station|Remarks)\s*:\s*(.*)$")
+    # task_table_header_pattern = re.compile(r"^Task\s*:\s*.*")
+    # detailed_table_header_pattern = re.compile(r"^#Date\s+Time\s+PC_Time.*")
 
-    # Flags to determine current section
-    in_metadata = True
-    in_descriptive_text = False
-    in_task_table = False
-    in_detailed_table = False
-    task_table_lines = []
-    detailed_table_lines = []
+    # # Flags to determine current section
+    # in_metadata = True
+    # in_descriptive_text = False
+    # in_task_table = False
+    # in_detailed_table = False
+    # task_table_lines = []
+    # detailed_table_lines = []
 
-    # document = {
-    #     "file_key": file_key,
-    #     "metadata": parsed_data.get("metadata", {}),
-    #     "descriptive_text": parsed_data.get("descriptive_text", ""),  # Only relevant for certain formats
-    #     "task_table": parsed_data.get("task_table", []),             # Only relevant for 'latest' format
-    #     "detailed_data_table": parsed_data.get("detailed_data_table", [])
-    # }
-
-    # return [document]
-
-    # # Split the file into header and data
-    # file_format = "original"
-    # counter = 0
-    for aline in lines:
-        # Strip leading/trailing whitespace
-        stripped_line = aline.strip()
-
-        # This section is used to determine which file part we are in
-        if in_metadata:
-            match = metadata_pattern.match(stripped_line)
-            if match:
-                key, value = match.groups()
-                metadata[key.strip()] = value.strip()
-                logger.info("Now in Metadata line:")
-            elif stripped_line == "":
-                # End of metadata section
-                in_metadata = False
-                in_descriptive_text = True
-            else:
-                # Unexpected line in metadata
-                logger.warning(f"Unexpected line in metadata: {stripped_line}")
-
-        elif in_descriptive_text:
-            if task_table_header_pattern.match(stripped_line):
-                in_descriptive_text = False
-                in_task_table = True
-                logger.info("Switching to task table")
-                continue
-            else:
-                descriptive_text += stripped_line + " "
-
-        elif in_task_table:
-            if stripped_line.startswith("-") or stripped_line.startswith("----"):
-                # End of task table
-                in_task_table = False
-                in_detailed_table = True
-                logger.info("Switching to detailed table")
-                continue
-            else:
-                task_table_lines.append(stripped_line)
-
-        elif in_detailed_table:
-            if detailed_table_header_pattern.match(stripped_line):
-                # Next lines are detailed data table
-                logger.info("Switching to detailed data table")
-                continue
-            elif stripped_line.startswith("----"):
-                # End of data tables
-                in_detailed_table = False
-                continue
-            else:
-                detailed_table_lines.append(stripped_line)
-
-        logger.info(f"Processing input data line: {aline}")
-        if aline.startswith("#Date"):  # Detect new format (rerun_XX_obs file)
-            file_format = "new"
-            logger.info(f"File format: {file_format}")
-            header = aline
-            data_lines = lines[1:]
-
-            # if the file is a rerun file, cruise and station name are derive from file name:
-            cruise = cruise_from_name
-            station = station_from_name
-            remarks = None
-            break  # Exit the loop once we've identified the format
-
-    if file_format == "original":
-        # Only for the original observations file:
-        logger.info(f"File format: {file_format}")
-        header = lines[:12]  # Adjust based on your actual header size
-        data_lines = lines[13:]
-
-        # Parse the header
-        meta = parse_header(header)
-        cruise = meta.get("cruise", "")
-        station = meta.get("station", "")
-        remarks = meta.get("remarks", "")
-
-    # return parsing results
-    logger.info(f"Returning parsed results for header: {header}")
-
-    return {
-        "header": header,
-        "data_lines": data_lines,
-        "cruise": cruise,
-        "station": station,
-        "remarks": remarks,
-        "file_format": file_format,
+    document = {
+        "file_key": key,
+        "metadata": parsed_data.get("metadata", {}),
+        "tasks": parsed_data.get("tasks", []),
+        # "descriptive_text": parsed_data.get(
+        #     "descriptive_text", ""
+        # ),  # Only relevant for certain formats
+        # "task_table": parsed_data.get(
+        #     "task_table", []
+        # ),  # Only relevant for 'latest' format
+        "detailed_data_table": parsed_data.get("detailed_data_table", []),
     }
+
+    return document, file_format
 
 
 def prepare_documents(
@@ -921,40 +1211,53 @@ def prepare_documents(
 
         # logger.info(f"Processing input data line {i}: {line}")
         data_point, video_start_time, video_events = parse_data_line(
-            line, file_key, video_start_time, video_events, file_format=file_format
+            line,
+            file_key,
+            video_start_time,
+            video_events,
+            file_format=file_format,
         )
 
         if data_point:
             prot_time = datetime.strptime(data_point["timestamp"], "%H:%M:%S").time()
 
-            # Find the closest matching timestamp in posi_data
-            logger.info("Finding closest matching timestamp in posi: %s", prot_time)
-            closest_posi_entry = min(
-                posi_data.values(),
-                key=lambda x: abs(
-                    (
-                        datetime.combine(x["datetime"].date(), prot_time).replace(
-                            tzinfo=timezone.utc
-                        )
-                        - x["datetime"]
-                    ).total_seconds()
-                ),
-                default=None,
-            )
-            # logger.info(f"Found matching timestamp in posi")
-
-            if closest_posi_entry:
-                # Use the date from the posi file and time from the prot file
-                timestamp = closest_posi_entry["datetime"].replace(
-                    hour=prot_time.hour,
-                    minute=prot_time.minute,
-                    second=prot_time.second,
+            if file_format == "original" and posi_data:
+                # Find the closest matching timestamp in posi_data
+                logger.info("Finding closest matching timestamp in posi: %s", prot_time)
+                closest_posi_entry = min(
+                    posi_data.values(),
+                    key=lambda x: abs(
+                        (
+                            datetime.combine(x["datetime"].date(), prot_time).replace(
+                                tzinfo=timezone.utc
+                            )
+                            - x["datetime"]
+                        ).total_seconds()
+                    ),
+                    default=None,
                 )
+                # logger.info(f"Found matching timestamp in posi")
+
+                if closest_posi_entry:
+                    # Use the date from the posi file and time from the prot file
+                    timestamp = closest_posi_entry["datetime"].replace(
+                        hour=prot_time.hour,
+                        minute=prot_time.minute,
+                        second=prot_time.second,
+                    )
+
+                else:
+                    raise ValueError("No matching timestamp found in posi_data.")
+
+                data_point["timestamp"] = timestamp.isoformat()
 
             else:
-                raise ValueError("No matching timestamp found in posi_data.")
-
-            data_point["timestamp"] = timestamp.isoformat()
+                logger.warning(
+                    "No posi data found. Using comb. of datetime.now & timestamp."
+                )
+                data_point["timestamp"] = datetime.combine(
+                    datetime.now(timezone.utc).date(), prot_time
+                ).isoformat()
 
             doc = {
                 "_id": ObjectId(),
@@ -1058,10 +1361,17 @@ def lambda_handler(event, context):
                         file_key = s3_event["s3"]["object"]["key"]
 
                         # Process the file
-                        file_content = get_file_from_s3(s3, bucket_name, file_key)
+                        file_content = get_file_from_s3(
+                            s3,
+                            bucket_name,
+                            file_key,
+                        )
 
                         # Parse file content
-                        documents = parse_file_content(file_content, file_key)
+                        document, file_format = parse_file_content(
+                            file_content,
+                            file_key,
+                        )
 
                 # If it's your custom message format
                 else:
@@ -1069,65 +1379,92 @@ def lambda_handler(event, context):
                     file_key = message_body["key"]
 
                     # Get file content from S3
-                    file_content = get_file_from_s3(s3, bucket_name, file_key)
+                    file_content = get_file_from_s3(
+                        s3,
+                        bucket_name,
+                        file_key,
+                    )
 
-                    # Parse file content
-                    documents = parse_file_content(file_content, file_key)
+                    # Parse the file content
+                    document, file_format = parse_file_content(
+                        file_content,
+                        file_key,
+                    )
 
-                    # # Prepare documents for MongoDB
-                    # prepared_documents = [prepare_for_mongodb(doc) for doc in documents]
+                # Extract metadata
+                metadata = document.get("metadata", {})
+                cruise = metadata.get("Cruise")
+                station = metadata.get("Station")
+                remarks = metadata.get("Remarks")
 
-                # Process the documents
-                (
-                    header,
-                    data_lines,
-                    cruise,
-                    station,
-                    remarks,
-                    file_format,
-                ) = documents.values()
+                # Extract detailed data lines
+                data_lines = document.get("detailed_data_table", [])
 
-                # Get and parse the corresponding posi file
-                posi_content = get_posi_file_content(s3, bucket_name, file_key)
-                posi_data = parse_posi_file(posi_content) if posi_content else {}
+                # Proceed with processing
+                try:
+                    if file_format == "original":
+                        logger.info("Processing original format file")
+                        # Get and parse the corresponding posi file
+                        posi_content = get_posi_file_content(
+                            s3,
+                            bucket_name,
+                            file_key,
+                        )
+                        posi_data = (
+                            parse_posi_file(posi_content) if posi_content else {}
+                        )
+                    else:
+                        posi_data = None
+                        logger.info(
+                            "File format not 'original' (%s is %s). Skipping posi lookup.",
+                            file_key,
+                            file_format,
+                        )
 
-                date_created = datetime.now(timezone.utc).isoformat()
-                # Prepare documents and collect subLocation coordinates
-                out_documents, bounding_box = prepare_documents(
-                    COUNTER_COLLECTION_NAME,
-                    data_lines,
-                    file_key,
-                    posi_data,
-                    cruise,
-                    station,
-                    remarks,
-                    file_format,
-                )
+                    date_created = datetime.now(timezone.utc).isoformat()
+                    logger.info("Date created: %s", date_created)
 
-                # number of inserted documents for summary update in ingresses collection
-                len_outdocuments = len(out_documents)
-                logger.info(f"Number of documents to be inserted: {len_outdocuments}")
+                    # Prepare documents and collect subLocation coordinates
+                    out_documents, bounding_box = prepare_documents(
+                        COUNTER_COLLECTION_NAME,
+                        data_lines,
+                        file_key,
+                        posi_data,
+                        cruise,
+                        station,
+                        remarks,
+                        file_format,
+                    )
 
-                # Insert documents into MongoDB
-                inserted_ids = insert_documents_to_mongodb(collection, out_documents)
+                    # Number of inserted documents for summary update in ingresses collection
+                    len_outdocuments = len(out_documents)
+                    logger.info(
+                        "Number of documents to be inserted: %s",
+                        len_outdocuments,
+                    )
 
-                # Update ingress counter
-                increment_ingress_id(
-                    COUNTER_COLLECTION_NAME,
-                    cruise,
-                    station,
-                    remarks,
-                    bounding_box,
-                    len_outdocuments,
-                    date_created,
-                )
+                    # Insert documents into MongoDB
+                    inserted_ids = insert_documents_to_mongodb(
+                        collection, out_documents
+                    )
+
+                    # Update ingress counter
+                    increment_ingress_id(
+                        COUNTER_COLLECTION_NAME,
+                        cruise,
+                        station,
+                        remarks,
+                        bounding_box,
+                        len_outdocuments,
+                        date_created,
+                    )
+
+                except Exception as e:
+                    logger.error(f"Error processing document: {str(e)}")
+                    failed_messages.append(record["messageId"])
 
             except Exception as e:
-                logger.error(f"Error processing document: {str(e)}")
-                failed_messages.append(record["messageId"])
-
-    except Exception as e:
-        logger.error(f"Error processing event: {e}")
+                logger.error(f"Error processing event: {e}")
 
     finally:
         # Ensure the MongoDB connection is closed
