@@ -1,15 +1,121 @@
-# Based on: https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Docker.gitlab-ci.yml
+stages:
+  - security-scan
+  - lint
+  - unit-test
+  - integration-test
+  - package
+  - deploy
+  - system-test
 
+variables:
+  NIWA_DTIS_DATA_PLATFORM_CHECKOV_VERSION: "3.2.74"
+  NIWA_DTIS_DATA_PLATFORM_CHECKOV_IMAGE: "bridgecrew/checkov:$NIWA_DTIS_DATA_PLATFORM_CHECKOV_VERSION"
+  NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_VERSION: "27.3.1"
+  NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_IMAGE: "docker:$NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_VERSION-cli"
+  NIWA_DTIS_DATA_PLATFORM_PYTHON_VERSION: "3.9.20"
+  NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE: "python:$NIWA_DTIS_DATA_PLATFORM_PYTHON_VERSION"
+  NIWA_DTIS_DATA_PLATFORM_TERRAFORM_VERSION: "1.9.8"
+  NIWA_DTIS_DATA_PLATFORM_TERRAFORM_IMAGE: "hashicorp/terraform:$NIWA_DTIS_DATA_PLATFORM_TERRAFORM_VERSION"
 
-shellcheck:
+infra-checkov:
+  stage: security-scan
   tags:
     - docker
-  # Use the official docker image.
-  image: docker:cli
-  stage: test
+  image: $NIWA_DTIS_DATA_PLATFORM_CHECKOV_IMAGE
   services:
     - docker:dind
+  before_script:
+    - chmod +x ./tasks
   script:
+    - bash -c "./tasks checkov"
+
+scripts-shellcheck:
+  stage: lint
+  tags:
+    - docker
+  image: $NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_IMAGE
+  services:
+    - docker:dind
+  before_script:
     - apk add -U bash
     - chmod +x ./tasks
+  script:
     - bash -c "./tasks shellcheck"
+
+scripts-unit-tests:
+  stage: unit-test
+  needs: [scripts-shellcheck]
+  tags:
+    - docker
+  image: $NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_IMAGE
+  services:
+    - docker:dind
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - bash -c "./tasks bats"
+
+scripts-package:
+  stage: package
+  needs: [scripts-unit-tests]
+  tags:
+    - docker
+  image: $NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_IMAGE
+  services:
+    - docker:dind
+  before_script:
+    - echo "TODO - before_image - scripts-package"
+  script:
+    - echo "TODO - before_image - scripts-package"
+
+lambda-unit-tests:
+  stage: unit-test
+  tags:
+    - docker
+  image: $NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE
+  services:
+    - docker:dind
+  before_script:
+    - echo "TODO - before_image - lambda-unit-tests"
+  script:
+    - echo "TODO - before_image - lambda-unit-tests"
+
+lambda-integration-tests:
+  stage: integration-test
+  needs: [lambda-unit-tests]
+  tags:
+    - docker
+  image: $NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE
+  services:
+    - docker:dind
+  before_script:
+    - echo "TODO - before_image - lambda-integration-tests"
+  script:
+    - echo "TODO - before_image - lambda-integration-tests"
+
+lambda-deployment:
+  stage: deploy
+  needs: [infra-checkov, lambda-integration-tests]
+  tags:
+    - docker
+  image: $NIWA_DTIS_DATA_PLATFORM_TERRAFORM_IMAGE
+  services:
+    - docker:dind
+  before_script:
+    - echo "TODO - before_image - lambda-deployment"
+  script:
+    - echo "TODO - before_image - lambda-deployment"
+
+system-tests:
+  stage: system-test
+  needs: [scripts-unit-tests, lambda-deployment]
+  tags:
+    - docker
+  image: $NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE
+  services:
+    - docker:dind
+  before_script:
+    - echo "TODO - before_image - system-tests"
+  script:
+    - echo "TODO - before_image - system-tests"
