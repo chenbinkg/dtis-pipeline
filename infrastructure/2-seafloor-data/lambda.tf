@@ -24,7 +24,7 @@ data "aws_iam_policy_document" "dtis_lambda_logging" {
 }
 
 resource "aws_iam_policy" "dtis_lambda_logging" {
-  name        = "dtis_lambda_logging_${var.environment}"
+  name        = "dtis-lambda-logging-${var.environment}"
   path        = "/"
   description = "IAM policy for logging from a lambda"
   policy      = data.aws_iam_policy_document.dtis_lambda_logging.json
@@ -52,9 +52,49 @@ data "aws_iam_policy_document" "dtis_lambda_assume_role" {
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name               = "iam_for_lambda"
+  name               = "dtis-lambda-execution-${var.environment}"
   assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
   tags          = local.tags
+}
+
+data "aws_iam_policy_document" "dtis_lambda_sqs_permissions" {
+  statement {
+    effect = "Allow"
+    resources = [ aws_sqs_queue.queue.arn ]
+    actions = ["sqs:*"]
+  }
+}
+
+resource "aws_iam_policy" "dtis_lambda_sqs_permissions" {
+  name        = "dtis-lambda-sqs-${var.environment}"
+  path        = "/"
+  policy      = data.aws_iam_policy_document.dtis_lambda_sqs_permissions.json
+  tags          = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_sqs_role_policy" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.dtis_lambda_sqs_permissions.arn
+}
+
+data "aws_iam_policy_document" "dtis_lambda_s3_permissions" {
+  statement {
+    effect = "Allow"
+    resources = [ "${aws_s3_bucket.raw_data.arn}/*" ]
+    actions = ["s3:GetObject", "s3:GetObjectTagging"]
+  }
+}
+
+resource "aws_iam_policy" "dtis_lambda_s3_permissions" {
+  name        = "dtis-lambda-s3-${var.environment}"
+  path        = "/"
+  policy      = data.aws_iam_policy_document.dtis_lambda_s3_permissions.json
+  tags          = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_s3_role_policy" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.dtis_lambda_s3_permissions.arn
 }
 
 ## use this if we want Terraform to generate the zip file (instead of us
@@ -100,6 +140,8 @@ resource "aws_lambda_function" "dtis" {
 			MONGODB_DATABASE = "TODO"
 			MONGODB_COLLECTION = "TODO"
 			INGRESS_COLLECTION_DTIS = "TODO"
+      # TODO
+      SQS_QUEUE_NAME = "dtis-ofop-testing"
     }
   }
   tags          = local.tags
@@ -107,4 +149,10 @@ resource "aws_lambda_function" "dtis" {
 
 
 # TODO: make it work with checkov security scanning
-# TODO: does logging work?
+
+### SQS event source mapping to Lambda
+resource "aws_lambda_event_source_mapping" "dtis" {
+  event_source_arn = aws_sqs_queue.queue.arn
+  function_name    = aws_lambda_function.dtis.arn
+  enabled = true
+}

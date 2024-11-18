@@ -691,8 +691,6 @@ def lambda_handler(event, context):
             try:
                 # Parse SQS message body
                 message_body = json.loads(record["body"])
-                bucket_name = message_body["bucket"]
-                file_key = message_body["key"]
 
                 # If it's from S3 event notification
                 if "Records" in message_body:
@@ -763,8 +761,13 @@ def lambda_handler(event, context):
                     date_created,
                 )
 
+            except JSONDecodeError as e:
+                # TODO: test this
+                logger.exception(f"Error decoding JSON: {str(e)}")
+                failed_messages.append(record["messageId"])
             except Exception as e:
                 logger.error(f"Error processing document: {str(e)}")
+                logger.exception(f"Error processing document: {str(e)}")
                 failed_messages.append(record["messageId"])
 
         if failed_messages:
