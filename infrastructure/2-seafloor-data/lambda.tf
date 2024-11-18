@@ -132,16 +132,15 @@ resource "aws_lambda_function" "dtis" {
 
   # TODO bump it for batching
   reserved_concurrent_executions = 1
+  # defaults to 3 (seconds)
+  timeout = 15
 
   environment {
     variables = {
-      #  S3_BUCKET_NAME = "${data.aws_s3_bucket.raw_data.id}"
 			MONGODB_URI = "TODO"
 			MONGODB_DATABASE = "TODO"
 			MONGODB_COLLECTION = "TODO"
 			INGRESS_COLLECTION_DTIS = "TODO"
-      # TODO
-      SQS_QUEUE_NAME = "dtis-ofop-testing"
     }
   }
   tags          = local.tags

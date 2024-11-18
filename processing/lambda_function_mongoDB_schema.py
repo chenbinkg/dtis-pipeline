@@ -761,10 +761,10 @@ def lambda_handler(event, context):
                     date_created,
                 )
 
-            except JSONDecodeError as e:
-                # TODO: test this
-                logger.exception(f"Error decoding JSON: {str(e)}")
-                failed_messages.append(record["messageId"])
+            # except json.JSONDecodeError as e:
+            #     # TODO: test this
+            #     logger.exception(f"Error decoding JSON: {str(e)}")
+            #     failed_messages.append(record["messageId"])
             except Exception as e:
                 logger.error(f"Error processing document: {str(e)}")
                 logger.exception(f"Error processing document: {str(e)}")
