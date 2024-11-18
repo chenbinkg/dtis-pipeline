@@ -30,6 +30,15 @@ Tests for refactored code (after removal of various functions from Lambda Handle
 * insert_documents_to_mongodb: Tests insertion of documents into MongoDB.
 * lambda_handler: Tests the overall lambda handler function using mocks for dependencies.
 
+
+Summary of new Tests for re-factored code:
+
+test_parse_metadata: Tests the parse_metadata function.
+test_detect_header_line: Tests the detect_header_line function.
+test_parse_tasks: Tests the parse_tasks function.
+test_parse_data_rows: Tests the parse_data_rows function.
+test_parse_latest_format: Tests the parse_latest_format function, which combines all the smaller functions.
+
 """
 
 import json
@@ -46,16 +55,31 @@ import pytest
 from botocore.exceptions import ClientError
 from lambda_function_mongoDB_schema import (
     detect_file_format,
+    detect_header_line,
     get_file_from_s3,
     get_posi_file_content,
     initialize_resources,
     insert_documents_to_mongodb,
     lambda_handler,
     parse_data_line,
+    parse_data_rows,
     parse_file_content,
+    parse_latest_format,
+    parse_metadata,
     parse_posi_file,
+    parse_tasks,
     prepare_documents,
 )
+
+"""
+Summary of new Tests for re-factored code:
+
+test_parse_metadata: Tests the parse_metadata function.
+test_detect_header_line: Tests the detect_header_line function.
+test_parse_tasks: Tests the parse_tasks function.
+test_parse_data_rows: Tests the parse_data_rows function.
+test_parse_latest_format: Tests the parse_latest_format function, which combines all the smaller functions.
+"""
 
 
 @pytest.fixture
@@ -999,9 +1023,9 @@ Gear deployed    :	  :  :
                 "tasks": [
                     {
                         "Task": "In the Water",
-                        "PC Date and Time": "16/04/2022 08:41:57",
+                        "PC Date and Time": "2022-04-16T08:41:57",
                         "UTC Time": "20:41:57",
-                        "UTC Date": "16/04/2022 06:33:55",
+                        "UTC Date": "16/04/2022",
                         "SHIP Latitude": -24.0,  # Example conversion
                         "SHIP Longitude": -178.6,  # Example conversion
                         "SUB_1 Latitude": 0.0,
@@ -1081,8 +1105,8 @@ def test_parse_latest_format(file_key, file_content, expected_output):
                         "SUB1_Depth": 0.0,
                         "SUB1_Altitude": 0.0,
                         "Elapsed video Time": "00:00:00",
-                        "Observations/Comments": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",
-                        "Image-Video Path": "",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",
                     },
                     # Add more data entries as needed...
                 ],
@@ -1186,3 +1210,269 @@ def test_detect_file_format(lines, expected_format):
     """
     result = detect_file_format(lines)
     assert result == expected_format
+
+
+"""
+Summary of new Tests for re-factored code:
+
+test_parse_metadata: Tests the parse_metadata function.
+test_detect_header_line: Tests the detect_header_line function.
+test_parse_tasks: Tests the parse_tasks function.
+test_parse_data_rows: Tests the parse_data_rows function.
+test_parse_latest_format: Tests the parse_latest_format function, which combines all the smaller functions.
+"""
+
+
+@pytest.mark.parametrize(
+    "lines, expected_metadata, expected_data_start_idx",
+    [
+        (
+            [
+                "Cruise : TAN2206",
+                "Station : 9",
+                "Remarks : Far field site 1",
+                "--------------------------------",
+                "#Date\tTime\tPC_Time\tSHIP_Lon",
+            ],
+            {"Cruise": "TAN2206", "Station": "9", "Remarks": "Far field site 1"},
+            4,
+        ),
+        (
+            [
+                "Cruise : TAN0616",
+                "Station : DTIS_4_#5",
+                "Remarks : little nose west of slump site",
+                "In the water : PC 04.11.2006 03:08:55 / UTC-time 14:08:56",
+                "--------------------------------",
+                "UTC time\tPC time\tLat\tLon\tSpeed\tCourse\tDepth\tHeading\tSub Lat\tSub Lon",
+            ],
+            {
+                "Cruise": "TAN0616",
+                "Station": "DTIS_4_#5",
+                "Remarks": "little nose west of slump site",
+                "In the water": "PC 04.11.2006 03:08:55 / UTC-time 14:08:56",
+            },
+            5,
+        ),
+    ],
+)
+def test_parse_metadata(lines, expected_metadata, expected_data_start_idx):
+    metadata, data_start_idx = parse_metadata(lines)
+    assert metadata == expected_metadata
+    assert data_start_idx == expected_data_start_idx
+
+
+@pytest.mark.parametrize(
+    "lines, start_idx, expected_headers, expected_next_idx",
+    [
+        (
+            ["--------------------------------", "#Date\tTime\tPC_Time\tSHIP_Lon"],
+            1,
+            ["Date", "Time", "PC_Time", "SHIP_Lon"],
+            2,
+        )
+    ],
+)
+def test_detect_header_line(lines, start_idx, expected_headers, expected_next_idx):
+    headers, next_idx = detect_header_line(lines, start_idx)
+    assert headers == expected_headers
+    assert next_idx == expected_next_idx
+
+
+@pytest.mark.parametrize(
+    "lines, start_idx, expected_tasks",
+    [
+        (
+            [
+                "Task\tPC Date and Time\tUTC Time\tUTC Date\tSHIP Latitude\tSHIP Longitude\tSUB_1 Latitude\tSUB_1 Longitude\tWater Depth",
+                "In the Water     :\t	16/04/2022 08:41:57	\t20:41:57\t	16/04/2022 06:33:55	\t-24:0.222\t-178:6.154\t0:00.0000\t0:00.0000\t2607.8",
+            ],
+            0,
+            [
+                {
+                    "Task": "In the Water",
+                    "PC Date and Time": "2022-04-16T08:41:57",
+                    "UTC Time": "20:41:57",
+                    "UTC Date": "16/04/2022",
+                    "SHIP Latitude": "-24:0.222",
+                    "SHIP Longitude": "-178:6.154",
+                    "SUB_1 Latitude": "0:00.0000",
+                    "SUB_1 Longitude": "0:00.0000",
+                    "Water Depth": "2607.8",
+                }
+            ],
+        )
+    ],
+)
+def test_parse_tasks(lines, start_idx, expected_tasks):
+    tasks = parse_tasks(lines, start_idx)
+    assert tasks == expected_tasks
+
+
+@pytest.mark.parametrize(
+    "lines, start_idx, headers, expected_data_rows",
+    [
+        (
+            [
+                "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path",
+                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0\t0\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
+            ],
+            1,
+            [
+                "Date",
+                "Time",
+                "PC_Time",
+                "SHIP_Lon",
+                "SHIP_Lat",
+                "SHIP_SOG",
+                "SHIP_COG",
+                "SHIP_Hdg",
+                "Water_Depth",
+                "SUB1_Lon",
+                "SUB1_Lat",
+                "SUB1_Depth",
+                "SUB1_Altitude",
+                "Elapsed video Time",
+                "Observations/Comments",
+                "Image-Video Path",
+            ],
+            [
+                {
+                    "Date": "2022-04-16",
+                    "Time": "20:33:30",
+                    "PC_Time": "2022-04-16T08:33:30",
+                    "SHIP_Lon": -178.102472,
+                    "SHIP_Lat": -24.0038202,
+                    "SHIP_SOG": 0.45,
+                    "SHIP_COG": 239.99,
+                    "SHIP_Hdg": 25.03,
+                    "Water_Depth": 2607.8,
+                    "SUB1_Lon": 0.0,
+                    "SUB1_Lat": 0.0,
+                    "SUB1_Depth": 0.0,
+                    "SUB1_Altitude": 0.0,
+                    "Elapsed video Time": "00:00:00",
+                    "Observations/Comments": "",
+                    "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",
+                }
+            ],
+        )
+    ],
+)
+def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
+    data_rows = parse_data_rows(lines, start_idx, headers)
+    assert data_rows == expected_data_rows
+
+
+@pytest.mark.parametrize(
+    "lines, expected_output",
+    [
+        (
+            [
+                "Cruise     :\t	TAN2206",
+                "Station :\t 9",
+                "Remarks :\t Far field site 1",
+                "Sadie calling, Rob OFOP, Neill DTIS",
+                "Very flat seafloor at a depth of 2507 m. Very consistant substrate of muddy sediment with gravels, pebbles, cobbles and the occasional boulder. Fauna was sparse with a few shrimps, holothurians, hexactinellid sponges and one Umbellula se pen.",
+                "Low numbers of fish and eels but one rattail was observed.",
+                "OFOP entries were sometimes made for for long straight objects as either sea pens/hexactinellids which were difficult to determine. But confirmed ID's were made of both groups.",
+                "    ",
+                "Task             :\t PC Date and Time\t UTC Time\t UTC Date\t SHIP Latitude\t SHIP Longitude\t SUB_1 Latitude\t SUB_1 Longitude\t Water Depth",
+                "In the Water     :\t 16/04/2022 08:41:57\t 20:41:57\t 16/04/2022 06:33:55\t -24:0.222\t -178:6.154\t 0:00.0000\t 0:00.0000\t 2607.8",
+                "At the Bottom    :\t 16/04/2022 09:26:48\t 21:26:48\t 16/04/2022 06:33:55\t -24:0.155\t -178:6.113\t -24:00.2055\t -178:06.1496\t 2607.1",
+                "Off the Bottom   :\t 16/04/2022 10:28:55\t 22:28:55\t 16/04/2022 06:33:55\t -23:59.713\t -178:5.635\t -23:59.8844\t -178:05.7859\t 2606.3",
+                "On Deck          :\t 16/04/2022 11:09:01\t 23:09:01\t 16/04/2022 06:33:55\t -23:59.723\t -178:5.649\t -23:59.7294\t -178:05.6544\t 2606.3",
+                "Gear deployed    :\t  :  :  ",
+                "--------------------------------",
+                "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path",
+                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0\t0\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
+            ],
+            {
+                "metadata": {
+                    "Cruise": "TAN2206",
+                    "Station": "9",
+                    "Remarks": "Far field site 1",
+                },
+                "tasks": {
+                    "Task": "In the Water",
+                    "PC Date and Time": "2022-04-16T08:41:57",
+                    "UTC Time": "20:41:57",
+                    "UTC Date": "16/04/2022",
+                    "SHIP Latitude": "-24:0.222",
+                    "SHIP Longitude": "-178:6.154",
+                    "SUB_1 Latitude": "0:00.0000",
+                    "SUB_1 Longitude": "0:00.0000",
+                    "Water Depth": "2607.8",
+                },
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",
+                    }
+                ],
+            },
+        ),
+        (
+            [
+                "Cruise     :\t	TAN2206",
+                "Station :\t 9",
+                "Remarks :\t Far field site 1",
+                "--------------------------------",
+                "#Date\tTime\tPC_Time\tSHIP_Lon",
+                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0\t0\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
+            ],
+            {
+                "metadata": {
+                    "Cruise": "TAN2206",
+                    "Station": "9",
+                    "Remarks": "Far field site 1",
+                },
+                "tasks": [],
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",
+                    }
+                ],
+            },
+        ),
+    ],
+    ids=[
+        "test_case_with_tasks",
+        "test_case_without_tasks",
+    ],
+)
+def test_parse_latest_format(lines, expected_output):
+    output = parse_latest_format(lines)
+    assert output["metadata"] == expected_output["metadata"]
+    assert output["tasks"] == expected_output["tasks"]
+    assert output["detailed_data_table"] == expected_output["detailed_data_table"]
+    assert output == expected_output
