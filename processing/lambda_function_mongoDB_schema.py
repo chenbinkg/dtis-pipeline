@@ -3,12 +3,12 @@ DataPlatform Lambda Function for ingesting text-file-based DTIS/OFOP content int
 
 * Text files on S3 are parsed by this function and the relevant content converted to MongoDB collections.
 * File format is expected to conform to the specifications used in/created by OFOP software for DTIS (prot and rerun files).
-* Folders that contain video and image files are being referenced in the output collection by adding links to those folders. 
+* Folders that contain video and image files are being referenced in the output collection by adding links to those folders.
 
 Requirements:
 * PyMongo needs to be available to the Lambda process Python 3 environment (can be added via a Lambda layer)
-* Define environment variables for 
-* MongoDB connection string, e.g. MONGODB_URI, 
+* Define environment variables for
+* MongoDB connection string, e.g. MONGODB_URI,
 * and the name of the MongoDB database, e.g. MONGODB_DATABASE
 * Define environment variable for the name of the MongoDB collection used for observations, e.g. MONGODB__COLLECTION
 * Define environment variable for the name of the MongoDB collection used for overview, e.g. INGRESS_COLLECTION_DTIS
@@ -702,6 +702,7 @@ def lambda_handler(event, context):
                         # Process the file
                         # Get file content from S3
                         file_content = get_file_from_s3(s3, bucket_name, file_key)
+                        logger.info(f"Processing file: s3://{bucket_name}/{file_key}")
 
                         # Parse file content
                         documents = parse_file_content(file_content, file_key)
@@ -712,6 +713,7 @@ def lambda_handler(event, context):
                     file_key = message_body["key"]
                     # Get file content from S3
                     file_content = get_file_from_s3(s3, bucket_name, file_key)
+                    logger.info(f"Processing file: s3://{bucket_name}/{file_key}")
 
                     # Parse file content
                     documents = parse_file_content(file_content, file_key)

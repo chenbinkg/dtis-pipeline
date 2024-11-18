@@ -57,11 +57,17 @@ resource "aws_iam_role" "iam_for_lambda" {
   tags          = local.tags
 }
 
+## use this if we want Terraform to generate the zip file (instead of us
+## doing it in Bash):
 # data "archive_file" "lambda" {
 #   type        = "zip"
 #   source_file = "lambda_function.py"
 #   output_path = "lambda_function.zip"
 # }
+
+data "local_file" "lambda_function_zip" {
+  filename = "lambda_function.zip"
+}
 
 resource "aws_lambda_function" "dtis" {
 	depends_on = [
@@ -76,8 +82,11 @@ resource "aws_lambda_function" "dtis" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "lambda_function_mongoDB_schema.lambda_handler"
 
-  # TODO - this is needed for the lambda package to get updated in aws:
+  ## use this if we want Terraform to generate the zip file (instead of us
+  ## doing it in Bash):
   # source_code_hash = data.archive_file.lambda.output_base64sha256
+
+  source_code_hash = data.local_file.lambda_function_zip.content_sha256
 
   runtime = "python3.9"
 
@@ -98,3 +107,4 @@ resource "aws_lambda_function" "dtis" {
 
 
 # TODO: make it work with checkov security scanning
+# TODO: does logging work?
