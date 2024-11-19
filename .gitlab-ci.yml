@@ -1,5 +1,6 @@
 stages:
   - check
+  - lint
   - unit-test
   - integration-test
   - deploy
@@ -18,7 +19,7 @@ infra-checkov:
     - echo "TODO - infra-checkov"
 
 scripts-shellcheck:
-  stage: check
+  stage: lint
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
