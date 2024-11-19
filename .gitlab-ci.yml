@@ -22,8 +22,9 @@ variables:
 infra-checkov:
   stage: security-scan
   before_script:
-    - pip install --upgrade pip && pip3 install --upgrade setuptools
-    - pip install checkov
+    - apk add --no-cache python3 py3-pip
+    - pip3 install --upgrade pip && pip3 install --upgrade setuptools
+    - pip3 install checkov
   script:
     - checkov --directory /tmp/niwa/infrastructure
 
