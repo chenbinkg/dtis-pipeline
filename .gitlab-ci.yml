@@ -25,6 +25,7 @@ infra-checkov:
     - docker
   image: $NIWA_DTIS_DATA_PLATFORM_CHECKOV_IMAGE
   script:
+    - echo "Executing checkov..."
     - checkov --directory /tmp/niwa/infrastructure
 
 scripts-shellcheck:
