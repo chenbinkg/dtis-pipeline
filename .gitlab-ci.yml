@@ -3,8 +3,8 @@ stages:
   - lint
   - unit-test
   - integration-test
-  - deploy
   - package
+  - deploy
   - system-test
 
 # Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
@@ -72,9 +72,20 @@ lambda-integration-tests:
     - sleep 13
     - echo "TODO - lambda-integration-tests"
 
+lambda-package:
+  stage: package
+  needs: [lambda-integration-tests]
+  before_script:
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - sleep 15
+    - echo "TODO - lambda-package"
+
 lambda-deployment:
   stage: deploy
-  needs: [lambda-integration-tests, infra-checkov]
+  needs: [lambda-package, infra-checkov]
   before_script:
   before_script:
     - apk add -U bash
