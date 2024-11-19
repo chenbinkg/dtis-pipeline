@@ -51,19 +51,7 @@ if [ -z "${NIWA_ENVIRONMENT}" ]; then
   exit 1
 fi
 
-if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
-  # S3 bucket details
-  bucket_name="dtis-ofop-851725470721-raw-testing"
-
-  # Lambda function name
-  lambda_function_name="dtis-ofop-testing"
-elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
-  # S3 bucket details
-  bucket_name="dtis-ofop-851725470721-raw-production"
-
-  # Lambda function name
-  lambda_function_name="dtis-ofop-production"
-else
+if [ "${NIWA_ENVIRONMENT}" != "testing" ] && [ "${NIWA_ENVIRONMENT}" != "production" ]; then
   echo "Variable NIWA_ENVIRONMENT was not set to a supported value. Please set it to either testing or production"
   exit 1
 fi
@@ -499,6 +487,7 @@ if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   check_image_files "$images_dir"
   # Check station ID, write which files passed all the checks into a file
   write_validated_file_paths "image" "${image_files_to_copy[@]}"
+  echo ""
 
   ##############################################
   # SubSubSection: video files
@@ -511,6 +500,7 @@ if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   check_video_files "$videos_dir"
   # Check station ID, write which files passed all the checks into a file
   write_validated_file_paths "video" "${video_files_to_copy[@]}"
+  echo ""
 
   ##############################################
   # SubSubSection: text files
@@ -544,9 +534,6 @@ fi
 ##############################################
 
 if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
-  # Verify the S3 bucket
-  verify_s3_bucket
-
   # Set AWS configurations in the script (for S3 specifically)
   echo "Setting AWS configurations"
   aws configure set region "${aws_region}"
@@ -559,6 +546,21 @@ if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
   aws configure set s3.use_accelerate_endpoint false
   aws configure set s3.addressing_style virtual
   echo "Finished setting AWS configurations"
+
+  AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+  if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
+    bucket_name="dtis-ofop-${AWS_ACCOUNT_ID}-raw-testing"
+    lambda_function_name="dtis-ofop-testing"
+  elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
+    bucket_name="dtis-ofop-${AWS_ACCOUNT_ID}-raw-production"
+    lambda_function_name="dtis-ofop-production"
+  else
+    echo "Variable NIWA_ENVIRONMENT was not set to a supported value. Please set it to either testing or production"
+    exit 1
+  fi
+
+  # Verify the S3 bucket
+  verify_s3_bucket
 fi
 
 ##############################################
