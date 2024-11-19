@@ -23,6 +23,8 @@ infra-checkov:
   stage: security-scan
   before_script:
     - apk add --no-cache python3 py3-pip
+    - python3 -m venv venv
+    - . venv/bin/activate
     - pip3 install --upgrade pip && pip3 install --upgrade setuptools
     - pip3 install checkov
   script:
