@@ -14,6 +14,7 @@ cp processing/lambda_function.zip infrastructure/2-seafloor-data/
 ```
 
 3. Run the following:
+
 ```
 cd infrastructure/2-seafloor-data
 
