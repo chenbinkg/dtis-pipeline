@@ -12,7 +12,8 @@ function alpine_python_install (
   pip3 install --upgrade pip && pip3 install --upgrade setuptools
 )
 
-function alpine_python_checkov_install_an_run (
+function alpine_python_checkov_install_and_run (
+  . venv/bin/activate
   pip3 install checkov
   checkov $checkov_args
 )
@@ -30,7 +31,7 @@ case "${command}" in
       ;;
   checkov_alpine)
       alpine_python_install
-      alpine_python_checkov_install_an_run
+      alpine_python_checkov_install_and_run
       ;;
   shellcheck)
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck -e SC2181 /tmp/niwa/upload/data_upload.sh"
