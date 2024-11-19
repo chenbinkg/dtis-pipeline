@@ -1,15 +1,16 @@
-#stages:
-#  - check
-#  - lint
-#  - unit-test
-#  - integration-test
-#  - deploy
-#  - package
-#  - system-test
+stages:
+  - check
+  - lint
+  - unit-test
+  - integration-test
+  - deploy
+  - package
+  - system-test
 
 # Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
 infra-checkov:
-  #stage: check
+  stage: check
+  needs: []
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
@@ -19,7 +20,8 @@ infra-checkov:
     - echo "TODO - infra-checkov"
 
 scripts-shellcheck:
-  #stage: lint
+  stage: lint
+  needs: []
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
@@ -29,7 +31,7 @@ scripts-shellcheck:
     - echo "TODO - scripts-shellcheck"
 
 scripts-unit-tests:
-  #stage: unit-test
+  stage: unit-test
   needs: [scripts-shellcheck]
   before_script:
     - apk add -U bash
@@ -40,7 +42,7 @@ scripts-unit-tests:
     - echo "TODO - scripts-unit-tests"
 
 scripts-package:
-  #stage: package
+  stage: package
   needs: [scripts-unit-tests]
   before_script:
     - apk add -U bash
@@ -50,7 +52,8 @@ scripts-package:
     - echo "TODO - scripts-package"
 
 lambda-unit-tests:
-  #stage: unit-test
+  stage: unit-test
+  needs: []
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
@@ -59,7 +62,7 @@ lambda-unit-tests:
     - echo "TODO - lambda-unit-tests"
 
 lambda-integration-tests:
-  #stage: integration-test
+  stage: integration-test
   needs: [lambda-unit-tests]
   before_script:
   before_script:
@@ -70,7 +73,7 @@ lambda-integration-tests:
     - echo "TODO - lambda-integration-tests"
 
 lambda-deployment:
-  #stage: deploy
+  stage: deploy
   needs: [lambda-integration-tests, infra-checkov]
   before_script:
   before_script:
@@ -81,7 +84,7 @@ lambda-deployment:
     - echo "TODO - lambda-deployment"
 
 system-tests:
-  #stage: system-test
+  stage: system-test
   needs: [scripts-unit-tests, lambda-deployment]
   before_script:
   before_script:
