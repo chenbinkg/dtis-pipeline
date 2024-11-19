@@ -1,115 +1,85 @@
-#stages:
-#  - security-scan
-#  - lint
-#  - unit-test
-#  - integration-test
-#  - package
-#  - deploy
-#  - system-test
-
-variables:
-  NIWA_DTIS_DATA_PLATFORM_CHECKOV_VERSION: "3.2.74"
-  NIWA_DTIS_DATA_PLATFORM_CHECKOV_IMAGE: "bridgecrew/checkov:$NIWA_DTIS_DATA_PLATFORM_CHECKOV_VERSION"
-  NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_VERSION: "27.3.1"
-  NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_IMAGE: "docker:$NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_VERSION-cli"
-  NIWA_DTIS_DATA_PLATFORM_DOCKER_DIND_VERSION: "27.3.1"
-  NIWA_DTIS_DATA_PLATFORM_DOCKER_DIND_IMAGE: "docker:$NIWA_DTIS_DATA_PLATFORM_DOCKER_DIND_VERSION-dind"
-  NIWA_DTIS_DATA_PLATFORM_PYTHON_VERSION: "3.9.20"
-  NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE: "python:$NIWA_DTIS_DATA_PLATFORM_PYTHON_VERSION"
-  NIWA_DTIS_DATA_PLATFORM_TERRAFORM_VERSION: "1.9.8"
-  NIWA_DTIS_DATA_PLATFORM_TERRAFORM_IMAGE: "hashicorp/terraform:$NIWA_DTIS_DATA_PLATFORM_TERRAFORM_VERSION"
+stages:
+  - check
+  #- initial-checks-and-tests
+  - unit-test
+  #- secondary-tests
+  - integration-test
+  - deployment-and-packaging
+  - system-test
 
 # Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
 infra-checkov:
-  #stage: security-scan
+  stage: check
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - bash -c "./tasks checkov_alpine"
+    # - bash -c "./tasks checkov_alpine"
+    - echo "TODO - infra-checkov"
 
 scripts-shellcheck:
-  #stage: lint
+  stage: check
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - bash -c "./tasks shellcheck_alpine"
+    # - bash -c "./tasks shellcheck_alpine"
+    - echo "TODO - scripts-shellcheck"
 
 scripts-unit-tests:
-  #stage: unit-test
+  stage: unit-test
   needs: [scripts-shellcheck]
-  tags:
-    - docker
-  image: $NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_IMAGE
-  services:
-    - docker:dind
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - bash -c "./tasks bats"
+    # - bash -c "./tasks bats"
+    - echo "TODO - scripts-unit-tests"
 
 scripts-package:
-  #stage: package
+  stage: deployment-and-packaging
   needs: [scripts-unit-tests]
-  tags:
-    - docker
-  image: $NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_IMAGE
-  services:
-    - docker:dind
   before_script:
-    - echo "TODO - before_image - scripts-package"
+    - apk add -U bash
+    - chmod +x ./tasks
   script:
-    - echo "TODO - before_image - scripts-package"
+    - echo "TODO - scripts-package"
 
 lambda-unit-tests:
-  #stage: unit-test
-  tags:
-    - docker
-  image: $NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE
-  services:
-    - docker:dind
+  stage: unit-test
   before_script:
-    - echo "TODO - before_image - lambda-unit-tests"
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
   script:
-    - echo "TODO - before_image - lambda-unit-tests"
+    - echo "TODO - lambda-unit-tests"
 
 lambda-integration-tests:
-  #stage: integration-test
+  stage: integration-test
   needs: [lambda-unit-tests]
-  tags:
-    - docker
-  image: $NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE
-  services:
-    - docker:dind
   before_script:
-    - echo "TODO - before_image - lambda-integration-tests"
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
   script:
-    - echo "TODO - before_image - lambda-integration-tests"
+    - echo "TODO - lambda-integration-tests"
 
 lambda-deployment:
-  #stage: deploy
+  stage: deployment-and-packaging
   needs: [infra-checkov, lambda-integration-tests]
-  tags:
-    - docker
-  image: $NIWA_DTIS_DATA_PLATFORM_TERRAFORM_IMAGE
-  services:
-    - docker:dind
   before_script:
-    - echo "TODO - before_image - lambda-deployment"
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
   script:
-    - echo "TODO - before_image - lambda-deployment"
+    - echo "TODO - lambda-deployment"
 
 system-tests:
-  #stage: system-test
+  stage: system-test
   needs: [scripts-unit-tests, lambda-deployment]
-  tags:
-    - docker
-  image: $NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE
-  services:
-    - docker:dind
   before_script:
-    - echo "TODO - before_image - system-tests"
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
   script:
     - echo "TODO - before_image - system-tests"
