@@ -19,16 +19,14 @@ variables:
   NIWA_DTIS_DATA_PLATFORM_TERRAFORM_VERSION: "1.9.8"
   NIWA_DTIS_DATA_PLATFORM_TERRAFORM_IMAGE: "hashicorp/terraform:$NIWA_DTIS_DATA_PLATFORM_TERRAFORM_VERSION"
 
+# Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
 infra-checkov:
   stage: security-scan
   before_script:
-    - apk add --no-cache python3 py3-pip
-    - python3 -m venv venv
-    - . venv/bin/activate
-    - pip3 install --upgrade pip && pip3 install --upgrade setuptools
-    - pip3 install checkov
+    - apk add -U bash
+    - chmod +x ./tasks
   script:
-    - checkov --directory infrastructure
+    - bash -c "./tasks checkov_alpine"
 
 scripts-shellcheck:
   stage: lint

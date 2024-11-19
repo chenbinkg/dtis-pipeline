@@ -5,18 +5,32 @@ set -Eeuo pipefail
 checkov_image_name="bridgecrew/checkov:3.2.74"
 checkov_args="--directory /tmp/niwa/infrastructure"
 
+function alpine_python_install (
+  apk add --no-cache python3 py3-pip
+  python3 -m venv venv
+  . venv/bin/activate
+  pip3 install --upgrade pip && pip3 install --upgrade setuptools
+)
+
+function alpine_python_checkov_install_an_run (
+  pip3 install checkov
+  checkov $checkov_args
+)
+
+
 command="$1"
 set +u
 case "${command}" in
   checkov)
       docker run --rm -v $PWD:/tmp/niwa $checkov_image_name $checkov_args
       ;;
-  _checkov)
-      checkov $checkov_args
-      ;;
   checkov_i)
       # interactive
       docker run --rm --entrypoint=/bin/bash -v $PWD:/tmp/niwa -ti $checkov_image_name -c /bin/bash
+      ;;
+  checkov_alpine)
+      alpine_python_install
+      alpine_python_checkov_install_an_run
       ;;
   shellcheck)
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck -e SC2181 /tmp/niwa/upload/data_upload.sh"
