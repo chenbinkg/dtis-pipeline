@@ -21,9 +21,6 @@ variables:
 
 infra-checkov:
   stage: security-scan
-  tags:
-    - docker
-  image: $NIWA_DTIS_DATA_PLATFORM_CHECKOV_IMAGE
   script:
     - echo "Executing checkov..."
     - checkov --directory /tmp/niwa/infrastructure
