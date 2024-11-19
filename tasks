@@ -3,12 +3,16 @@
 set -Eeuo pipefail
 
 checkov_image_name="bridgecrew/checkov:3.2.74"
+checkov_args="--directory /tmp/niwa/infrastructure"
 
 command="$1"
 set +u
 case "${command}" in
   checkov)
-      docker run --rm -v $PWD:/tmp/niwa $checkov_image_name --directory /tmp/niwa/infrastructure
+      docker run --rm -v $PWD:/tmp/niwa $checkov_image_name $checkov_args
+      ;;
+  _checkov)
+      checkov $checkov_args
       ;;
   checkov_i)
       # interactive
