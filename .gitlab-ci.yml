@@ -96,6 +96,8 @@ lambda-deployment:
 
 system-tests:
   stage: system-test
+  # We really should use the `scripts-package` artefact to test upload is funtioning.
+  # Just use successful `scripts-unit-tests` stage dependency for now.
   needs: [scripts-unit-tests, lambda-deployment]
   before_script:
   before_script:
