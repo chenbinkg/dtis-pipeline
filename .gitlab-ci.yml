@@ -1,10 +1,9 @@
 stages:
   - check
-  #- initial-checks-and-tests
   - unit-test
-  #- secondary-tests
   - integration-test
-  - deployment-and-packaging
+  - deploy
+  - package
   - system-test
 
 # Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
@@ -40,7 +39,7 @@ scripts-unit-tests:
     - echo "TODO - scripts-unit-tests"
 
 scripts-package:
-  stage: deployment-and-packaging
+  stage: package
   needs: [scripts-unit-tests]
   before_script:
     - apk add -U bash
@@ -70,8 +69,8 @@ lambda-integration-tests:
     - echo "TODO - lambda-integration-tests"
 
 lambda-deployment:
-  stage: deployment-and-packaging
-  needs: [infra-checkov, lambda-integration-tests]
+  stage: deploy
+  needs: [lambda-integration-tests, infra-checkov]
   before_script:
   before_script:
     - apk add -U bash
