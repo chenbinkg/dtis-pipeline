@@ -3,7 +3,6 @@
 set -Eeuo pipefail
 
 checkov_image_name="bridgecrew/checkov:3.2.74"
-checkov_args="--directory /tmp/niwa/infrastructure"
 
 function alpine_python_install (
   apk add --no-cache python3 py3-pip
@@ -12,18 +11,18 @@ function alpine_python_install (
   pip3 install --upgrade pip && pip3 install --upgrade setuptools
 )
 
+# TODO: Generate report Gitlab can consume.
 function alpine_python_checkov_install_and_run (
   . venv/bin/activate
   pip3 install checkov
-  checkov $checkov_args
+  checkov --directory infrastructure
 )
-
 
 command="$1"
 set +u
 case "${command}" in
   checkov)
-      docker run --rm -v $PWD:/tmp/niwa $checkov_image_name $checkov_args
+      docker run --rm -v $PWD:/tmp/niwa $checkov_image_name --directory /tmp/niwa/infrastructure
       ;;
   checkov_i)
       # interactive
