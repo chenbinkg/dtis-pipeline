@@ -3,6 +3,11 @@
 set -Eeuo pipefail
 
 checkov_image_name="bridgecrew/checkov:3.2.74"
+docker_cli_image_name="docker:27.3.1-cli"
+docker_dind_image_name="docker:27.3.1-dind"
+python_image_name="python:3.9.20"
+terraform_upstream_image_name="hashicorp/terraform:1.9.8"
+terraform_image_name="hashicorp/terraform:1.9.8"
 
 function alpine_python_install (
   apk add --no-cache python3 py3-pip
