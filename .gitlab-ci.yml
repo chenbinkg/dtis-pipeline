@@ -1,11 +1,11 @@
-stages:
-  - security-scan
-  - lint
-  - unit-test
-  - integration-test
-  - package
-  - deploy
-  - system-test
+#stages:
+#  - security-scan
+#  - lint
+#  - unit-test
+#  - integration-test
+#  - package
+#  - deploy
+#  - system-test
 
 variables:
   NIWA_DTIS_DATA_PLATFORM_CHECKOV_VERSION: "3.2.74"
@@ -21,7 +21,7 @@ variables:
 
 # Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
 infra-checkov:
-  stage: security-scan
+  #stage: security-scan
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
@@ -29,20 +29,15 @@ infra-checkov:
     - bash -c "./tasks checkov_alpine"
 
 scripts-shellcheck:
-  stage: lint
-  tags:
-    - docker
-  image: $NIWA_DTIS_DATA_PLATFORM_DOCKER_CLI_IMAGE
-  services:
-    - docker:dind
+  #stage: lint
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - bash -c "./tasks shellcheck"
+    - bash -c "./tasks shellcheck_alpine"
 
 scripts-unit-tests:
-  stage: unit-test
+  #stage: unit-test
   needs: [scripts-shellcheck]
   tags:
     - docker
@@ -56,7 +51,7 @@ scripts-unit-tests:
     - bash -c "./tasks bats"
 
 scripts-package:
-  stage: package
+  #stage: package
   needs: [scripts-unit-tests]
   tags:
     - docker
@@ -69,7 +64,7 @@ scripts-package:
     - echo "TODO - before_image - scripts-package"
 
 lambda-unit-tests:
-  stage: unit-test
+  #stage: unit-test
   tags:
     - docker
   image: $NIWA_DTIS_DATA_PLATFORM_PYTHON_IMAGE
@@ -81,7 +76,7 @@ lambda-unit-tests:
     - echo "TODO - before_image - lambda-unit-tests"
 
 lambda-integration-tests:
-  stage: integration-test
+  #stage: integration-test
   needs: [lambda-unit-tests]
   tags:
     - docker
@@ -94,7 +89,7 @@ lambda-integration-tests:
     - echo "TODO - before_image - lambda-integration-tests"
 
 lambda-deployment:
-  stage: deploy
+  #stage: deploy
   needs: [infra-checkov, lambda-integration-tests]
   tags:
     - docker
@@ -107,7 +102,7 @@ lambda-deployment:
     - echo "TODO - before_image - lambda-deployment"
 
 system-tests:
-  stage: system-test
+  #stage: system-test
   needs: [scripts-unit-tests, lambda-deployment]
   tags:
     - docker
