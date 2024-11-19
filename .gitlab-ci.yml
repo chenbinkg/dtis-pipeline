@@ -28,7 +28,7 @@ infra-checkov:
     - pip3 install --upgrade pip && pip3 install --upgrade setuptools
     - pip3 install checkov
   script:
-    - checkov --directory /tmp/niwa/infrastructure
+    - checkov --directory infrastructure
 
 scripts-shellcheck:
   stage: lint
