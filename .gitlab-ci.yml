@@ -24,12 +24,8 @@ infra-checkov:
   tags:
     - docker
   image: $NIWA_DTIS_DATA_PLATFORM_CHECKOV_IMAGE
-  services:
-    - docker:dind
-  before_script:
-    - chmod +x ./tasks
   script:
-    - bash -c "./tasks _checkov"
+    - checkov --directory /tmp/niwa/infrastructure
 
 scripts-shellcheck:
   stage: lint
