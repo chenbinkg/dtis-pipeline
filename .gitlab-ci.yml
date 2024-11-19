@@ -15,6 +15,7 @@ infra-checkov:
     - chmod +x ./tasks
   script:
     # - bash -c "./tasks checkov_alpine"
+    - sleep 10
     - echo "TODO - infra-checkov"
 
 scripts-shellcheck:
@@ -24,6 +25,7 @@ scripts-shellcheck:
     - chmod +x ./tasks
   script:
     # - bash -c "./tasks shellcheck_alpine"
+    - sleep 15
     - echo "TODO - scripts-shellcheck"
 
 scripts-unit-tests:
@@ -34,6 +36,7 @@ scripts-unit-tests:
     - chmod +x ./tasks
   script:
     # - bash -c "./tasks bats"
+    - sleep 17
     - echo "TODO - scripts-unit-tests"
 
 scripts-package:
@@ -43,15 +46,16 @@ scripts-package:
     - apk add -U bash
     - chmod +x ./tasks
   script:
+    - sleep 13
     - echo "TODO - scripts-package"
 
 lambda-unit-tests:
   stage: unit-test
   before_script:
-  before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
+    - sleep 17
     - echo "TODO - lambda-unit-tests"
 
 lambda-integration-tests:
@@ -62,6 +66,7 @@ lambda-integration-tests:
     - apk add -U bash
     - chmod +x ./tasks
   script:
+    - sleep 13
     - echo "TODO - lambda-integration-tests"
 
 lambda-deployment:
@@ -72,6 +77,7 @@ lambda-deployment:
     - apk add -U bash
     - chmod +x ./tasks
   script:
+    - sleep 15
     - echo "TODO - lambda-deployment"
 
 system-tests:
@@ -82,4 +88,5 @@ system-tests:
     - apk add -U bash
     - chmod +x ./tasks
   script:
+    - sleep 17
     - echo "TODO - before_image - system-tests"
