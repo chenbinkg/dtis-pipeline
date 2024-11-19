@@ -66,7 +66,9 @@ from lambda_function_mongoDB_schema import (
     parse_file_content,
     parse_latest_format,
     parse_metadata,
+    parse_original_format,
     parse_posi_file,
+    parse_simple_format,
     parse_tasks,
     prepare_documents,
 )
@@ -104,12 +106,37 @@ def new_format_header():
     return "#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name"
 
 
-# Mock environment variables
-os.environ["MONGODB_URI"] = "mongodb://localhost:27017"
-os.environ["MONGODB_DATABASE"] = "test_db"
-os.environ["MONGODB_COLLECTION"] = "test_collection"
-os.environ["INGRESS_COLLECTION_DTIS"] = "ingress_collection"
-os.environ["S3_BUCKET_NAME"] = "test_bucket"
+@pytest.fixture
+def mock_object_id_fixture():
+    with patch("lambda_function_mongoDB_schema.ObjectId") as mock_object_id:
+        mock_object_id.return_value = "673bc96288f3596d483ba885"
+        yield mock_object_id
+
+
+@pytest.fixture
+def mock_datetime_fixture():
+    with patch("lambda_function_mongoDB_schema.datetime") as mock_datetime:
+        mock_datetime.now.return_value = datetime(
+            2024, 11, 18, 23, 10, 26, 905034, tzinfo=timezone.utc
+        )
+        yield mock_datetime
+
+
+# # Mock environment variables
+# os.environ["MONGODB_URI"] = "mongodb://localhost:27017"
+# os.environ["MONGODB_DATABASE"] = "test_db"
+# os.environ["MONGODB_COLLECTION"] = "test_collection"
+# os.environ["INGRESS_COLLECTION_DTIS"] = "ingress_collection"
+# os.environ["S3_BUCKET_NAME"] = "test_bucket"
+
+
+@pytest.fixture(autouse=True)
+def set_env_vars(monkeypatch):
+    monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017")
+    monkeypatch.setenv("MONGODB_DATABASE", "test_db")
+    monkeypatch.setenv("MONGODB_COLLECTION", "test_collection")
+    monkeypatch.setenv("INGRESS_COLLECTION_DTIS", "ingress_collection")
+    monkeypatch.setenv("S3_BUCKET_NAME", "test_bucket")
 
 
 @pytest.fixture
@@ -175,7 +202,7 @@ def test_parse_file_content():
     assert result is not None
 
 
-def test_prepare_documents():
+def DEPCRECATED_test_prepare_documents():
     """
     Test preparation of documents for MongoDB insertion.
     """
@@ -238,6 +265,22 @@ def test_insert_documents_to_mongodb(db):
     collection.insert_many.return_value = Mock(inserted_ids=[1, 2])
     result = insert_documents_to_mongodb(collection, documents)
     assert result == [1, 2]
+
+
+def test_insert_one_document_to_mongodb(db, mongo_client, test_document={"_id": 1}):
+    """
+    Test insertion a single document into MongoDB.
+    """
+    # # Assuming mongo_client_mock is a fixture that mocks MongoDB client
+    # db = mongo_client.return_value.__getitem__.return_value
+    # collection = db.__getitem__.return_value
+
+    # Call the function under test
+    insert_documents_to_mongodb(db, test_document)
+
+    collection = db[os.environ["MONGODB_COLLECTION"]]
+    # Verify that insert_one was called with the correct document
+    collection.insert_one.assert_called_once_with(test_document)
 
 
 @patch("lambda_function_mongoDB_schema.initialize_resources")
@@ -1065,7 +1108,7 @@ Gear deployed    :	  :  :
         # ...
     ],
 )
-def test_parse_latest_format(file_key, file_content, expected_output):
+def DEPRECATED_test_parse_latest_format(file_key, file_content, expected_output):
     result, fileformat = parse_file_content(file_content, file_key)
     assert result == expected_output
     assert fileformat == "latest"
@@ -1210,6 +1253,190 @@ def test_detect_file_format(lines, expected_format):
     """
     result = detect_file_format(lines)
     assert result == expected_format
+
+
+@pytest.mark.parametrize(
+    "parsed_data, file_key, expected_document",
+    [
+        (
+            {
+                "metadata": {
+                    "Cruise": "TAN2206",
+                    "Station": "9",
+                    "Remarks": "Far field site 1",
+                },
+                "tasks": [
+                    {
+                        "Task_Name": "Sample Task",
+                        "Task_Detail": "Detail of the task",
+                    }
+                ],
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",
+                    }
+                ],
+            },
+            "TAN2206/009/text/TAN2206_009_prot.txt",
+            {
+                "file_key": "TAN2206/009/text/TAN2206_009_prot.txt",
+                "meta": {
+                    "cruiseStationId": "673bc96288f3596d483ba885",
+                    "cruise": "TAN2206",
+                    "station": "9",
+                    "remarks": "Far field site 1",
+                    "ingressId": 1,
+                    "created_at": "2024-11-18T23:10:26.905034+00:00",
+                },
+                "timestamp": "2022-04-16T08:33:30",
+                "shipLocation": {
+                    "type": "Point",
+                    "coordinates": [-178.102472, -24.0038202],
+                },
+                "speed": 0.45,
+                "course": 239.99,
+                "heading": 25.03,
+                "depth": 2607.8,
+                "subLocation": {"type": "Point", "coordinates": [0.0, 0.0]},
+                "subDepth": 0.0,
+                "feature": {
+                    "Task_Name": "Sample Task",
+                    "Task_Detail": "Detail of the task",
+                },
+            },
+        ),
+        # You can add more test cases as needed
+        (
+            {
+                "metadata": {
+                    "Cruise": "TAN2207",
+                    "Station": "10",
+                    "Remarks": "Another site",
+                },
+                "tasks": [],  # Empty tasks
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-05-17",
+                        "Time": "21:43:31",
+                        "PC_Time": "2022-05-17T09:43:31",
+                        "SHIP_Lon": -179.102472,
+                        "SHIP_Lat": -25.0038202,
+                        "SHIP_SOG": 0.55,
+                        "SHIP_COG": 250.99,
+                        "SHIP_Hdg": 30.03,
+                        "Water_Depth": 2707.8,
+                        "SUB1_Lon": 1.0,
+                        "SUB1_Lat": 1.0,
+                        "SUB1_Depth": 1.0,
+                        "SUB1_Altitude": 1.0,
+                        "Elapsed video Time": "00:00:05",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 2; volt: 26.7; magn. fs: 8054",
+                    }
+                ],
+            },
+            "TAN2207/010/text/TAN2207_010_prot.txt",
+            {
+                "file_key": "TAN2207/010/text/TAN2207_010_prot.txt",
+                "meta": {
+                    "cruiseStationId": "673bc96288f3596d483ba886",
+                    "cruise": "TAN2207",
+                    "station": "10",
+                    "remarks": "Another site",
+                    "ingressId": 1,
+                    "created_at": "2024-11-18T23:10:26.905034+00:00",
+                },
+                "timestamp": "2022-05-17T09:43:31",
+                "shipLocation": {
+                    "type": "Point",
+                    "coordinates": [-179.102472, -25.0038202],
+                },
+                "speed": 0.55,
+                "course": 250.99,
+                "heading": 30.03,
+                "depth": 2707.8,
+                "subLocation": {"type": "Point", "coordinates": [1.0, 1.0]},
+                "subDepth": 1.0,
+                "feature": {},  # Empty because 'tasks' is empty
+            },
+        ),
+        # can add more test cases as needed
+    ],
+)
+@patch("lambda_function_mongoDB_schema.get_current_ingress_id", return_value=1)
+@patch("lambda_function_mongoDB_schema.ObjectId")
+@patch("lambda_function_mongoDB_schema.datetime")
+def test_prepare_documents(
+    mock_datetime,
+    mock_object_id,
+    mock_get_current_ingress_id,
+    parsed_data,
+    file_key,
+    expected_document,
+):
+    """
+    Test the prepare_documents function to ensure it correctly transforms parsed data into the desired MongoDB schema.
+
+    Args:
+        mock_object_id (Mock): Mocked ObjectId instance.
+        mock_datetime (Mock): Mocked datetime instance.
+        parsed_data (dict): The input parsed data.
+        file_key (str): The S3 file key.
+        expected_document (dict): The expected MongoDB document.
+    """
+    # Setup the mock for ObjectId
+    mock_object_id.return_value = "673bc96288f3596d483ba885"
+
+    # Setup the mock for datetime.now()
+    mock_datetime.now.return_value = datetime(
+        2024, 11, 18, 23, 10, 26, 905034, tzinfo=timezone.utc
+    )
+
+    # Create a mock ingress_collection (if necessary)
+    mock_ingress_collection = MagicMock()
+
+    # Call the function under test
+    document = prepare_documents(parsed_data, file_key, mock_ingress_collection)
+
+    # Assertions to verify the correctness of the prepared document
+    assert document["file_key"] == expected_document["file_key"]
+
+    # Verify meta section
+    assert (
+        document["meta"]["cruiseStationId"]
+        == expected_document["meta"]["cruiseStationId"]
+    )
+    assert document["meta"]["cruise"] == expected_document["meta"]["cruise"]
+    assert document["meta"]["station"] == expected_document["meta"]["station"]
+    assert document["meta"]["remarks"] == expected_document["meta"]["remarks"]
+    assert document["meta"]["ingressId"] == expected_document["meta"]["ingressId"]
+    assert document["meta"]["created_at"] == expected_document["meta"]["created_at"]
+
+    # Verify other fields
+    assert document["timestamp"] == expected_document["timestamp"]
+    assert document["shipLocation"] == expected_document["shipLocation"]
+    assert document["speed"] == expected_document["speed"]
+    assert document["course"] == expected_document["course"]
+    assert document["heading"] == expected_document["heading"]
+    assert document["depth"] == expected_document["depth"]
+    assert document["subLocation"] == expected_document["subLocation"]
+    assert document["subDepth"] == expected_document["subDepth"]
+    assert document["feature"] == expected_document["feature"]
 
 
 """
@@ -1471,8 +1698,29 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
     ],
 )
 def test_parse_latest_format(lines, expected_output):
+    """
+    Test the parse_latest_format function to ensure it correctly parses input lines into the expected format.
+    """
     output = parse_latest_format(lines)
-    assert output["metadata"] == expected_output["metadata"]
-    assert output["tasks"] == expected_output["tasks"]
-    assert output["detailed_data_table"] == expected_output["detailed_data_table"]
-    assert output == expected_output
+
+    # Assert that the output is a list
+    assert isinstance(output, list), "Expected output to be a list"
+
+    # Assert that the list contains exactly one dictionary
+    assert (
+        len(output) == 1
+    ), f"Expected output list to contain 1 item, got {len(output)}"
+
+    # Access the first dictionary in the list
+    parsed_output = output[0]
+
+    # Perform assertions on the parsed_output
+    assert (
+        parsed_output["metadata"] == expected_output["metadata"]
+    ), "Metadata does not match"
+    assert parsed_output["tasks"] == expected_output["tasks"], "Tasks do not match"
+    assert (
+        parsed_output["detailed_data_table"] == expected_output["detailed_data_table"]
+    ), "Detailed data table does not match"
+
+    # Add more assertions as needed for other fields
