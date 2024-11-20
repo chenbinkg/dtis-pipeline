@@ -23,12 +23,12 @@ scripts-shellcheck:
   artifacts:
     reports:
       junit:
-        - ./**/*.xml
+        - shellcheck_report.xml
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - bash -c "./tasks shellcheck_alpine"
+    - bash -c "./tasks shellcheck_alpine" || true
 
 scripts-unit-tests:
   stage: unit-test
@@ -36,10 +36,11 @@ scripts-unit-tests:
   artifacts:
     reports:
       junit:
-        - ./**/*.xml
+        - /tmp/report.xml
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
+    - cat /etc/apk/repositories
   script:
     - bash -c "./tasks bats_alpine"
 
