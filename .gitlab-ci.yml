@@ -7,15 +7,15 @@ stages:
   - deploy
   - system-test
 
-debug-pipeline-dev:
-  stage: check
-  needs: []
-  before_script:
-    - apk add -U bash
-    - chmod +x ./tasks
-  script:
-    - cat /etc/os-release
-    - docker image ls
+#debug-pipeline-dev:
+#  stage: check
+#  needs: []
+#  before_script:
+#    - apk add -U bash
+#    - chmod +x ./tasks
+#  script:
+#    - cat /etc/os-release
+#    - docker image ls
 
 # Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
 infra-checkov:
@@ -70,12 +70,15 @@ scripts-package:
 lambda-unit-tests:
   stage: unit-test
   needs: []
+  artifacts:
+    reports:
+      junit:
+        - processing/report.xml
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - sleep 17
-    - echo "TODO - lambda-unit-tests"
+    - bash -c "./tasks pytest_unit_test_alpine"
 
 lambda-integration-tests:
   stage: integration-test
