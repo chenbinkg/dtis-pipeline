@@ -44,11 +44,25 @@ function bats_remove_log_files (
 )
 
 function alpine_bats_install_and_run (
+  # We need to download the individual bats packages because the supplied runner version of Alpine does not have them in the repository.
+  # https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-1.11.0-r1.apk
+  # https://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/bats-core-1.11.0-r0.apk
+  # https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-assert-2.1.0-r0.apk
+  # https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-file-0.4.0-r0.apk
+  # https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-support-0.3.0-r0.apk
+  apk --update-cache --no-cache add file ca-certificates wget
+  update-ca-certificates
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-1.11.0-r1.apk
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/bats-core-1.11.0-r0.apk
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-assert-2.1.0-r0.apk
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-file-0.4.0-r0.apk
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-support-0.3.0-r0.apk
+  apk --update-cache --no-cache add --allow-untrusted bats-1.11.0-r1.apk bats-core-1.11.0-r0.apk bats-assert-2.1.0-r0.apk bats-file-0.4.0-r0.apk bats-support-0.3.0-r0.apk
+
   # remove the log files first
   bats_remove_log_files
   cd upload/test/bats/
-  apk --update-cache --no-cache add file bats bats-core bats-support bats-assert bats-file
-  bats --report-formatter junit ./* --output /tmp
+  bats --report-formatter junit test-data-upload.sh
 )
 
 command="$1"

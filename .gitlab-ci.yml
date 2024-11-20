@@ -36,11 +36,10 @@ scripts-unit-tests:
   artifacts:
     reports:
       junit:
-        - /tmp/report.xml
+        - upload/test/bats/report.xml
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
-    - cat /etc/apk/repositories
   script:
     - bash -c "./tasks bats_alpine"
 
