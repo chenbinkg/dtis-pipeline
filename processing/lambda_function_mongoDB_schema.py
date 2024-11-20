@@ -60,35 +60,40 @@ DATE_FORMATS = [
     "%d.%m.%Y %H:%M:%S",  # e.g., "16.04.2022 23:08:06"
     "%Y-%m-%d %H:%M:%S",  # e.g., "2022-04-16 23:08:06"
     "%d/%m/%Y %H:%M:%S",  # e.g., "16/04/2022 23:08:06"
-    # "%B %d, %Y %H:%M:%S",  # e.g., "April 16, 2022 23:08:06"
+    "%B %d, %Y %H:%M:%S",  # e.g., "April 16, 2022 23:08:06"
 ]
 
 TIME_FORMATS = [
     "%H:%M:%S",  # e.g., "23:08:06"
     "%I:%M:%S %p",  # e.g., "11:08:06 PM"
-    # "%H:%M",  # e.g., "23:08"
+    "%H:%M",  # e.g., "23:08"
 ]
 
 
 def parse_datetime(datetime_str: str) -> Optional[str]:
     """
     Attempt to parse a datetime string with multiple formats.
+    Parses a datetime string and returns it in ISO 8601 format.
 
     Args:
         datetime_str (str): The datetime string to parse.
 
     Returns:
-        Optional[str]: ISO 8601 formatted string if parsing is successful, else None.
+        Optional[str]: The ISO formatted datetime string or None if parsing fails.
     """
     for fmt in DATE_FORMATS:
         try:
+            if datetime_str is None:
+                return None
             parsed_date = datetime.strptime(datetime_str, fmt)
             # Assume UTC timezone if not specified
             parsed_date = parsed_date.replace(tzinfo=timezone.utc)
             # logger.debug("Parsed datetime: %s", parsed_date)
             return parsed_date.isoformat()
         except ValueError:
+            logger.warning(f"Invalid datetime format: {datetime_str}")
             continue
+
     logger.error(f"Failed to parse datetime: {datetime_str}")
     return None
 
@@ -107,12 +112,14 @@ def parse_time_only(time_str: str) -> Optional[str]:
         try:
             parsed_time = datetime.strptime(time_str, fmt).time()
             # Assign the current UTC date
-            current_date = datetime.now(timezone.utc).date()
-            combined_datetime = datetime.combine(
-                current_date, parsed_time, tzinfo=timezone.utc
-            )
-            return combined_datetime.isoformat()
+            # current_date = datetime.now(timezone.utc).date()
+            # combined_datetime = datetime.combine(
+            #     current_date, parsed_time, tzinfo=timezone.utc
+            # )
+            # return combined_datetime.isoformat()
+            return parsed_time.isoformat()
         except ValueError:
+            logger.warning(f"Invalid time format: {time_str}")
             continue
     logger.error(f"Failed to parse time: {time_str}")
     return None
@@ -936,7 +943,7 @@ def detect_header_line(lines: List[str], start_idx: int) -> Tuple[List[str], int
     headers = []
     header_found = False
 
-    task_start_idx = -1
+    # task_start_idx = -1
     for idx in range(start_idx, len(lines)):
         line = lines[idx].strip()
 
@@ -948,6 +955,7 @@ def detect_header_line(lines: List[str], start_idx: int) -> Tuple[List[str], int
             or line.startswith("Date")
             or line.startswith("#Date")
         ):
+            logger.debug("Line content at idx: %s", line)
             headers = line.lstrip("#").split("\t")
             headers = [header.strip() for header in headers]
             header_found = True
@@ -983,7 +991,13 @@ def parse_tasks(lines: List[str], start_idx: int) -> List[Dict[str, str]]:
     ]
 
     # Compile regex patterns for matching task lines
-    task_pattern = re.compile(r"^(Task|Tasks)\s*:\s*(.+)", re.IGNORECASE)
+    task_pattern = re.compile(r"^(Task|Tasks)[ \t]*:[ \t]*(.+)", re.IGNORECASE)
+    # Pattern Breakdown:
+    # ^(Task|Tasks): Asserts that the line starts with either "Task" or "Tasks".
+    # [ \t]*: Matches zero or more spaces or tabs. This ensures that any combination of spaces and tabs between "Task(s)" and the colon is accounted for.
+    # :: Matches the colon character.
+    # [ \t]*: Matches zero or more spaces or tabs after the colon.
+    # (.+): Captures the rest of the line after the colon. This is the task description.
 
     task_start_idx = -1
     for idx in range(start_idx, len(lines)):
@@ -1002,29 +1016,42 @@ def parse_tasks(lines: List[str], start_idx: int) -> List[Dict[str, str]]:
                 break  # Assume tasks end before "Gear deployed"
 
             # Split based on two or more spaces or tabs
-            fields = re.split(r"\s{2,}|\t+", line)
+            fields = re.split(r"[ \t]{2,}", line)
+            # Pattern: [ \t]{2,}
+            # Splits the line based on two or more spaces or tabs. This ensures
+            # that fields are correctly separated even if there's inconsistent spacing.
             if len(fields) != len(task_headers):
                 logger.warning(f"Skipping malformed task line {idx}: {line}")
                 continue
 
             task = dict(zip(task_headers, fields))
 
-            # Parse and format datetime fields
+            # Parse and format datetime fields using helper functions
             if "PC Date and Time" in task:
-                try:
-                    task["PC Date and Time"] = datetime.strptime(
-                        task["PC Date and Time"], "%d/%m/%Y %H:%M:%S"
-                    ).isoformat()
-                except ValueError:
-                    logger.warning(
-                        f"Invalid PC Date and Time format in line {idx}: {task['PC Date and Time']}"
-                    )
-                    task["PC Date and Time"] = task[
-                        "PC Date and Time"
-                    ]  # Keep as string if parsing fails
+                task["PC Date and Time"] = parse_datetime(task["PC Date and Time"])
+
+            if "UTC Time" in task:
+                task["UTC Time"] = parse_time_only(task["UTC Time"])
+
+            if "UTC Date" in task:
+                task["UTC Date"] = parse_datetime(task["UTC Date"])
+
+            # # Parse and format datetime fields
+            # if "PC Date and Time" in task:
+            #     try:
+            #         task["PC Date and Time"] = datetime.strptime(
+            #             task["PC Date and Time"], "%d/%m/%Y %H:%M:%S"
+            #         ).isoformat()
+            #     except ValueError:
+            #         logger.warning(
+            #             f"Invalid PC Date and Time format in line {idx}: {task['PC Date and Time']}"
+            #         )
+            #         task["PC Date and Time"] = task[
+            #             "PC Date and Time"
+            #         ]  # Keep as string if parsing fails
 
             tasks.append(task)
-            logger.debug(f"Parsed task at line {idx}: {task}")
+            logger.info(f"Parsed task at line {idx}: {task}")
     else:
         logger.error("Task section not found in the file.")
 

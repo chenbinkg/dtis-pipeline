@@ -63,6 +63,7 @@ from lambda_function_mongoDB_schema import (
     lambda_handler,
     parse_data_line,
     parse_data_rows,
+    parse_datetime,
     parse_file_content,
     parse_latest_format,
     parse_metadata,
@@ -70,6 +71,7 @@ from lambda_function_mongoDB_schema import (
     parse_posi_file,
     parse_simple_format,
     parse_tasks,
+    parse_time_only,
     prepare_documents,
 )
 
@@ -869,6 +871,52 @@ def test_parse_data_line_time_parsing(test_case, basic_line):
 
 
 @pytest.mark.parametrize(
+    "input_str, expected_output",
+    [
+        # Valid time strings
+        ("08:41:57", "08:41:57"),
+        ("00:00:00", "00:00:00"),
+        ("23:59:59", "23:59:59"),
+        # Invalid time formats
+        ("8:41:57", None),  # Leading zero missing
+        ("08:41", None),  # Seconds missing
+        ("24:00:00", None),  # Invalid hour
+        ("12:60:00", None),  # Invalid minute
+        ("12:00:60", None),  # Invalid second
+        ("", None),
+        (None, None),
+        # Edge cases
+        ("12:34:56", "12:34:56"),
+        ("01:01:01", "01:01:01"),
+    ],
+)
+def test_parse_time_only(input_str, expected_output):
+    assert parse_time_only(input_str) == expected_output
+
+
+@pytest.mark.parametrize(
+    "input_str, expected_output",
+    [
+        # Valid datetime strings with timezone
+        ("16/04/2022 08:41:57", "2022-04-16T08:41:57+00:00"),
+        ("01/01/2023 00:00:00", "2023-01-01T00:00:00+00:00"),
+        ("31/12/2021 23:59:59", "2021-12-31T23:59:59+00:00"),
+        # Invalid datetime formats
+        ("2022-04-16 08:41:57", None),
+        ("16-04-2022 08:41", None),
+        ("16/04/22 08:41:57", None),
+        ("", None),
+        (None, None),
+        # Edge cases - we are converting the times with timezone information for UTC
+        ("29/02/2020 12:00:00", "2020-02-29T12:00:00+00:00"),  # Leap year
+        ("31/04/2022 10:30:00", None),  # Invalid date (April has 30 days)
+    ],
+)
+def test_parse_datetime(input_str, expected_output):
+    assert parse_datetime(input_str) == expected_output
+
+
+@pytest.mark.parametrize(
     "sequence_times,expected_duration",
     [
         (["12:34:00", "12:34:30", "12:35:00"], timedelta(minutes=1)),
@@ -1245,6 +1293,31 @@ Gear deployed    :	  :  :
         (["#Date\tTime\tPC_Time\tSHIP_Lon"], "latest"),
         (["#Date\sTime\sPC_Time"], "unknown"),
         (["Some random text"], "unknown"),
+        # New test case for 'latest' format
+        (
+            [
+                "Cruise     :\tTAN2206",
+                "Station    :\t9",
+                "Remarks    :\tFar field site 1",
+                "Sadie calling, Rob OFOP, Neill DTIS",
+                "Very flat seafloor at a depth of 2507 m. Very consistant substrate of muddy sediment with gravels, pebbles, cobbles and the occasional boulder. Fauna was sparse with a few shrimps, holothurians, hexactinellid sponges and one Umbellula se pen. ",
+                "Low numbers of fish and eels but one rattail was observed.",
+                "OFOP entries were sometimes made for for long straight objects as either sea pens/hexactinellids which were difficult to determine. But confirmed ID's were made of both groups. ",
+                "",
+                "Task             :\tPC Date and Time    \tUTC Time\tUTC Date\tSHIP Latitude\tSHIP Longitude\tSUB_1 Latitude\tSUB_1 Longitude\tWater Depth",
+                "In the Water     :\t16/04/2022 08:41:57\t20:41:57\t16/04/2022 06:33:55\t-24:0.222\t-178:6.154\t0:00.0000\t0:00.0000\t2607.8",
+                "At the Bottom    :\t16/04/2022 09:26:48\t21:26:48\t16/04/2022 06:33:55\t-24:0.155\t-178:6.113\t-24:00.2055\t-178:06.1496\t2607.1",
+                "Off the Bottom   :\t16/04/2022 10:28:55\t22:28:55\t16/04/2022 06:33:55\t-23:59.713\t-178:5.635\t-23:59.8844\t-178:05.7859\t2606.3",
+                "On Deck          :\t16/04/2022 11:09:01\t23:09:01\t16/04/2022 06:33:55\t-23:59.723\t-178:5.649\t-23:59.7294\t-178:05.6544\t2606.3",
+                "Gear deployed    :\t  :  :  ",
+                "--------------------------------------------------------------------------------------------------------------------------------------------",
+                "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path",
+                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0\t0\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                "04/16/2022\t20:41:55\t16/04/2022 08:41:55\t-178.1025627\t-24.0037027\t0.76\t194\t46.09\t2607.8\t0\t0\t0\t0\t00:00:00\t\t[-81] IN THE WATER",
+            ],
+            "latest",
+        ),
+        # You can add more test cases here
     ],
 )
 def test_detect_file_format(lines, expected_format):
@@ -1253,6 +1326,79 @@ def test_detect_file_format(lines, expected_format):
     """
     result = detect_file_format(lines)
     assert result == expected_format
+
+
+def test_parse_tasks_latest_format():
+    lines = [
+        "Cruise     :\tTAN2206",
+        "Station    :\t9",
+        "Remarks    :\tFar field site 1",
+        "Sadie calling, Rob OFOP, Neill DTIS",
+        "Very flat seafloor at a depth of 2507 m. Very consistant substrate of muddy sediment with gravels, pebbles, cobbles and the occasional boulder. Fauna was sparse with a few shrimps, holothurians, hexactinellid sponges and one Umbellula se pen. ",
+        "Low numbers of fish and eels but one rattail was observed.",
+        "OFOP entries were sometimes made for for long straight objects as either sea pens/hexactinellids which were difficult to determine. But confirmed ID's were made of both groups. ",
+        "",
+        "Task             :\tPC Date and Time    \tUTC Time\tUTC Date\tSHIP Latitude\tSHIP Longitude\tSUB_1 Latitude\tSUB_1 Longitude\tWater Depth",
+        "In the Water     :\t16/04/2022 08:41:57\t20:41:57\t16/04/2022 06:33:55\t-24:0.222\t-178:6.154\t0:00.0000\t0:00.0000\t2607.8",
+        "At the Bottom    :\t16/04/2022 09:26:48\t21:26:48\t16/04/2022 06:33:55\t-24:0.155\t-178:6.113\t-24:00.2055\t-178:06.1496\t2607.1",
+        "Off the Bottom   :\t16/04/2022 10:28:55\t22:28:55\t16/04/2022 06:33:55\t-23:59.713\t-178:5.635\t-23:59.8844\t-178:05.7859\t2606.3",
+        "On Deck          :\t16/04/2022 11:09:01\t23:09:01\t16/04/2022 06:33:55\t-23:59.723\t-178:5.649\t-23:59.7294\t-178:05.6544\t2606.3",
+        "Gear deployed    :\t  :  :  ",
+        "--------------------------------------------------------------------------------------------------------------------------------------------",
+        "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path",
+        "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0\t0\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+        "04/16/2022\t20:41:55\t16/04/2022 08:41:55\t-178.1025627\t-24.0037027\t0.76\t194\t46.09\t2607.8\t0\t0\t0\t0\t00:00:00\t\t[-81] IN THE WATER",
+    ]
+    start_idx = 0  # Adjust based on where tasks start in the actual implementation
+    expected_tasks = [
+        {
+            "Task": "In the Water",
+            "PC Date and Time": "2022-04-16T08:41:57",
+            "UTC Time": "20:41:57",
+            "UTC Date": "2022-04-16T06:33:55",
+            "SHIP Latitude": "-24:0.222",
+            "SHIP Longitude": "-178:6.154",
+            "SUB_1 Latitude": "0:00.0000",
+            "SUB_1 Longitude": "0:00.0000",
+            "Water Depth": "2607.8",
+        },
+        {
+            "Task": "At the Bottom",
+            "PC Date and Time": "2022-04-16T09:26:48",
+            "UTC Time": "21:26:48",
+            "UTC Date": "2022-04-16T06:33:55",
+            "SHIP Latitude": "-24:0.155",
+            "SHIP Longitude": "-178:6.113",
+            "SUB_1 Latitude": "-24:00.2055",
+            "SUB_1 Longitude": "-178:06.1496",
+            "Water Depth": "2607.1",
+        },
+        {
+            "Task": "Off the Bottom",
+            "PC Date and Time": "2022-04-16T10:28:55",
+            "UTC Time": "22:28:55",
+            "UTC Date": "2022-04-16T06:33:55",
+            "SHIP Latitude": "-23:59.713",
+            "SHIP Longitude": "-178:5.635",
+            "SUB_1 Latitude": "-23:59.8844",
+            "SUB_1 Longitude": "-178:05.7859",
+            "Water Depth": "2606.3",
+        },
+        {
+            "Task": "On Deck",
+            "PC Date and Time": "2022-04-16T11:09:01",
+            "UTC Time": "23:09:01",
+            "UTC Date": "2022-04-16T06:33:55",
+            "SHIP Latitude": "-23:59.723",
+            "SHIP Longitude": "-178:5.649",
+            "SUB_1 Latitude": "-23:59.7294",
+            "SUB_1 Longitude": "-178:05.6544",
+            "Water Depth": "2606.3",
+        },
+    ]
+
+    parsed_tasks = parse_tasks(lines, start_idx)
+    assert parsed_tasks == expected_tasks
 
 
 @pytest.mark.parametrize(
@@ -1715,12 +1861,12 @@ def test_parse_latest_format(lines, expected_output):
     parsed_output = output[0]
 
     # Perform assertions on the parsed_output
+
+    assert (
+        parsed_output["detailed_data_table"] == expected_output["detailed_data_table"]
+    ), "Detailed data table does not match"
     assert (
         parsed_output["metadata"] == expected_output["metadata"]
     ), "Metadata does not match"
     assert parsed_output["tasks"] == expected_output["tasks"], "Tasks do not match"
-    assert (
-        parsed_output["detailed_data_table"] == expected_output["detailed_data_table"]
-    ), "Detailed data table does not match"
-
     # Add more assertions as needed for other fields
