@@ -7,6 +7,16 @@ stages:
   - deploy
   - system-test
 
+debug-pipeline-dev:
+  stage: check
+  needs: []
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - cat /etc/os-release
+    - docker image ls
+
 # Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
 infra-checkov:
   stage: check
@@ -71,7 +81,6 @@ lambda-integration-tests:
   stage: integration-test
   needs: [lambda-unit-tests]
   before_script:
-  before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
@@ -82,7 +91,6 @@ lambda-package:
   stage: package
   needs: [lambda-integration-tests]
   before_script:
-  before_script:
     - apk add -U bash
     - chmod +x ./tasks
   script:
@@ -92,7 +100,6 @@ lambda-package:
 lambda-deployment:
   stage: deploy
   needs: [lambda-package, infra-checkov]
-  before_script:
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
@@ -105,7 +112,6 @@ system-tests:
   # We really should use the `scripts-package` artefact to test upload is funtioning.
   # Just use successful `scripts-unit-tests` stage dependency for now.
   needs: [scripts-unit-tests, lambda-deployment]
-  before_script:
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
