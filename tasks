@@ -43,13 +43,12 @@ function bats_remove_log_files (
   rm -f ./upload/test/bats/plan.txt
 )
 
-# TODO: Report for Gitlab
 function alpine_bats_install_and_run (
   # remove the log files first
   bats_remove_log_files
   cd upload/test/bats/
   apk --update-cache --no-cache add file bats
-  bats ./*
+  bats --report-formatter junit ./* --output ../../../bats_report.xml
 )
 
 command="$1"
