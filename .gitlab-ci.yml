@@ -87,8 +87,8 @@ lambda-integration-tests:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - sleep 13
     - echo "TODO - lambda-integration-tests"
+    - exit 1
 
 lambda-package:
   stage: package
@@ -97,8 +97,8 @@ lambda-package:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - sleep 15
     - echo "TODO - lambda-package"
+    - exit 1
 
 lambda-deployment:
   stage: deploy
@@ -107,8 +107,8 @@ lambda-deployment:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - sleep 15
     - echo "TODO - lambda-deployment"
+    - exit 1
 
 system-tests:
   stage: system-test
@@ -119,5 +119,5 @@ system-tests:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - sleep 17
-    - echo "TODO - before_image - system-tests"
+    - echo "TODO - system-tests"
+    - exit 1
