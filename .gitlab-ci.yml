@@ -20,6 +20,10 @@ infra-checkov:
 scripts-shellcheck:
   stage: lint
   needs: []
+  artifacts:
+    reports:
+      junit:
+        - ./**/*.xml
   before_script:
     - apk add -U bash
     - chmod +x ./tasks
@@ -42,8 +46,8 @@ scripts-package:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - sleep 13
-    - echo "TODO - scripts-package"
+    - echo "TODO - Package Upload Script"
+    - exit 1
 
 lambda-unit-tests:
   stage: unit-test

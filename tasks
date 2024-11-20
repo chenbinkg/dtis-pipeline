@@ -24,10 +24,15 @@ function alpine_python_checkov_install_and_run (
   checkov --directory infrastructure
 )
 
-# TODO: generate report Gitlab can consume.
 function alpine_shellcheck_install_and_run (
-  apk --update-cache --no-cache add shellcheck
-  shellcheck -e SC2181 upload/data_upload.sh
+  apk --update-cache --no-cache add shellcheck xmlstarlet
+  # Unfortunately shellcheck can only display checkstyle or tty outputs - not both.
+  # See here for more details: https://github.com/koalaman/shellcheck/wiki/checkstyle2text
+  # First lets run shellcheck in default tty mode (and ignore any errors).
+  shellcheck -e SC2181 upload/data_upload.sh || true
+  # And again run Shellcheck in checkstyle mode to generate a JUnitXML report.
+  # See https://github.com/koalaman/shellcheck/wiki/JUnit for JUnit encoding.
+  shellcheck -f checkstyle -e SC2181 upload/data_upload.sh | xmlstarlet tr misc/checkstyle/checkstyle2junit.xslt > shellcheck_report.xml
 )
 
 function bats_remove_log_files (
