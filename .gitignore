@@ -20,3 +20,4 @@ success.txt
 sync_logs.txt
 plan.txt
 **/results.xml
+infrastructure/2-seafloor-data/*.py
