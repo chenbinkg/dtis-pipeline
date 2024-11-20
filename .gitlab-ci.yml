@@ -15,9 +15,7 @@ infra-checkov:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    # - bash -c "./tasks checkov_alpine"
-    - sleep 10
-    - echo "TODO - infra-checkov"
+    - bash -c "./tasks checkov_alpine"
 
 scripts-shellcheck:
   stage: lint
@@ -26,9 +24,7 @@ scripts-shellcheck:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    # - bash -c "./tasks shellcheck_alpine"
-    - sleep 15
-    - echo "TODO - scripts-shellcheck"
+    - bash -c "./tasks shellcheck_alpine"
 
 scripts-unit-tests:
   stage: unit-test
@@ -37,9 +33,7 @@ scripts-unit-tests:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    # - bash -c "./tasks bats"
-    - sleep 17
-    - echo "TODO - scripts-unit-tests"
+    - bash -c "./tasks bats_alpine"
 
 scripts-package:
   stage: package

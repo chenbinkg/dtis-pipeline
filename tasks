@@ -9,8 +9,9 @@ python_image_name="python:3.9.20"
 terraform_upstream_image_name="hashicorp/terraform:1.9.8"
 terraform_image_name="hashicorp/terraform:1.9.8"
 
+# TODO: Install specific python vesion 3.9.20 using pyenv.
 function alpine_python_install (
-  apk add --no-cache python3 py3-pip
+  apk --update-cache --no-cache add python3 py3-pip
   python3 -m venv venv
   . venv/bin/activate
   pip3 install --upgrade pip && pip3 install --upgrade setuptools
@@ -21,6 +22,29 @@ function alpine_python_checkov_install_and_run (
   . venv/bin/activate
   pip3 install checkov
   checkov --directory infrastructure
+)
+
+# TODO: generate report Gitlab can consume.
+function alpine_shellcheck_install_and_run (
+  apk --update-cache --no-cache add shellcheck
+  shellcheck -e SC2181 upload/data_upload.sh
+)
+
+function bats_remove_log_files (
+  # remove the log files first
+  rm -f ./upload/test/bats/error.txt
+  rm -f ./upload/test/bats/success.txt
+  rm -f ./upload/test/bats/sync_logs.txt
+  rm -f ./upload/test/bats/plan.txt
+)
+
+# TODO: Report for Gitlab
+function alpine_bats_install_and_run (
+  # remove the log files first
+  bats_remove_log_files
+  cd upload/test/bats/
+  apk --update-cache --no-cache add file bats
+  bats ./*
 )
 
 command="$1"
@@ -40,16 +64,19 @@ case "${command}" in
   shellcheck)
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck -e SC2181 /tmp/niwa/upload/data_upload.sh"
       ;;
+  shellcheck_alpine)
+      alpine_shellcheck_install_and_run
+      ;;
   bats)
       # remove the log files first
-      rm -f ./upload/test/bats/error.txt
-      rm -f ./upload/test/bats/success.txt
-      rm -f ./upload/test/bats/sync_logs.txt
-      rm -f ./upload/test/bats/plan.txt
+      bats_remove_log_files
 
       # We need the 'file' command for the data upload script. That command
       # is not installed in the docker image. Therefore, we install it below.
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa bats/bats:1.11.0 -c "cd /tmp/niwa/upload/test/bats/ && apk add -U file && bats ./*"
+      ;;
+  bats_alpine)
+      alpine_bats_install_and_run
       ;;
   *)
       echo "Invalid command: '${command}'"
