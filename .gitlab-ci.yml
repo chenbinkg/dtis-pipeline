@@ -11,6 +11,10 @@ stages:
 infra-checkov:
   stage: check
   needs: []
+  artifacts:
+    reports:
+      junit:
+        - results.xml
   before_script:
     - apk add -U bash
     - chmod +x ./tasks

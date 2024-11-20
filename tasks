@@ -21,7 +21,7 @@ function alpine_python_install (
 function alpine_python_checkov_install_and_run (
   . venv/bin/activate
   pip3 install checkov
-  checkov --directory infrastructure
+  checkov --directory infrastructure --output cli --output junitxml --output-file-path console,results.xml
 )
 
 function alpine_shellcheck_install_and_run (
