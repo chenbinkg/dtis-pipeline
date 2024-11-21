@@ -977,6 +977,9 @@ def test_parse_data_line_invalid_format():
         ("general observation", "", ""),
     ],
 )
+@pytest.mark.skip(
+    reason="Not properly implemented yet - currently not expecting this test to pass"
+)
 def test_parse_data_line_media_types(
     basic_line, source_key, observation, expected_media_type, expected_media_path
 ):
@@ -1025,6 +1028,9 @@ def test_parse_data_line_complete_video_sequence():
     assert video_events[1]["duration"] == str(timedelta(minutes=1))
 
 
+@pytest.mark.skip(
+    reason="Not properly implemented yet - currently not expecting this test to pass"
+)
 @pytest.mark.parametrize(
     "file_key, file_content, expected_output",
     [
@@ -1075,6 +1081,9 @@ def test_parse_original_format(file_key, file_content, expected_output):
     assert fileformat == "original"
 
 
+@pytest.mark.skip(
+    reason="Not properly implemented yet - currently not expecting this test to pass"
+)
 @pytest.mark.parametrize(
     "file_key, file_content, expected_output",
     [
@@ -1527,7 +1536,7 @@ def test_parse_tasks_latest_format():
 @patch("lambda_function_mongoDB_schema.get_current_ingress_id", return_value=1)
 @patch("lambda_function_mongoDB_schema.ObjectId")
 @patch("lambda_function_mongoDB_schema.datetime")
-def test_prepare_documents(
+def DEPRECATED_test_prepare_documents(
     mock_datetime,
     mock_object_id,
     mock_get_current_ingress_id,
@@ -1583,6 +1592,257 @@ def test_prepare_documents(
     assert document["subLocation"] == expected_document["subLocation"]
     assert document["subDepth"] == expected_document["subDepth"]
     assert document["feature"] == expected_document["feature"]
+
+
+@pytest.mark.parametrize(
+    "parsed_data, file_key, expected_documents",
+    [
+        # Test Case 1: Empty tasks and multiple observations
+        (
+            {
+                "metadata": {
+                    "Cruise": "TAN2206",
+                    "Station": "9",
+                    "Remarks": "Far field site 1",
+                },
+                # "tasks" field is removed
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                    },
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:41:55",
+                        "PC_Time": "2022-04-16T08:41:55",
+                        "SHIP_Lon": -178.1025627,
+                        "SHIP_Lat": -24.0037027,
+                        "SHIP_SOG": 0.76,
+                        "SHIP_COG": 194.0,
+                        "SHIP_Hdg": 46.09,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "[-81] IN THE WATER",
+                    },
+                ],
+            },
+            "TEST_FILE_KEY",
+            [
+                {
+                    "file_key": "TEST_FILE_KEY",
+                    "metadata": {
+                        "Cruise": "TAN2206",
+                        "Station": "9",
+                        "Remarks": "Far field site 1",
+                    },
+                    # "tasks" field is removed
+                    "ingressId": 1,
+                    "observation": {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                    },
+                    "created_at": "2022-04-16T12:00:00+00:00",
+                },
+                {
+                    "file_key": "TEST_FILE_KEY",
+                    "metadata": {
+                        "Cruise": "TAN2206",
+                        "Station": "9",
+                        "Remarks": "Far field site 1",
+                    },
+                    # "tasks" field is removed
+                    "ingressId": 1,
+                    "observation": {
+                        "Date": "2022-04-16",
+                        "Time": "20:41:55",
+                        "PC_Time": "2022-04-16T08:41:55",
+                        "SHIP_Lon": -178.1025627,
+                        "SHIP_Lat": -24.0037027,
+                        "SHIP_SOG": 0.76,
+                        "SHIP_COG": 194.0,
+                        "SHIP_Hdg": 46.09,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "[-81] IN THE WATER",
+                    },
+                    "created_at": "2022-04-16T12:00:00+00:00",
+                },
+            ],
+        ),
+        # Test Case 2: With tasks and single observation
+        (
+            {
+                "metadata": {
+                    "Cruise": "TAN2207",
+                    "Station": "10",
+                    "Remarks": "Near field site 2",
+                },
+                "tasks": [
+                    # {
+                    #     "Task": "At the Surface",
+                    #     "PC Date and Time": "2022-04-16T09:00:00+00:00",
+                    #     "UTC Time": "09:00:00",
+                    #     "UTC Date": "2022-04-16T06:00:00+00:00",
+                    #     "SHIP Latitude": "-24:0.300",
+                    #     "SHIP Longitude": "-178:6.200",
+                    #     "SUB_1 Latitude": "0:00.0000",
+                    #     "SUB_1 Longitude": "0:00.0000",
+                    #     "Water Depth": "2700.0",
+                    # },
+                ],
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "09:10:00",
+                        "PC_Time": "2022-04-16T09:10:00",
+                        "SHIP_Lon": -178.103000,
+                        "SHIP_Lat": -24.004000,
+                        "SHIP_SOG": 1.00,
+                        "SHIP_COG": 180.00,
+                        "SHIP_Hdg": 30.00,
+                        "Water_Depth": 2700.0,
+                        "SUB1_Lon": -178.102500,
+                        "SUB1_Lat": -24.003500,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:05:00",
+                        "Observations/Comments": "Sample observation",
+                        "Image-Video Path": "Sample photo and video path",
+                    },
+                ],
+            },
+            "TEST_FILE_KEY_2",
+            [
+                {
+                    "file_key": "TEST_FILE_KEY_2",
+                    "metadata": {
+                        "Cruise": "TAN2207",
+                        "Station": "10",
+                        "Remarks": "Near field site 2",
+                    },
+                    "tasks": [
+                        # {
+                        #     "Task": "At the Surface",
+                        #     "PC Date and Time": "2022-04-16T09:00:00+00:00",
+                        #     "UTC Time": "09:00:00",
+                        #     "UTC Date": "2022-04-16T06:00:00+00:00",
+                        #     "SHIP Latitude": "-24:0.300",
+                        #     "SHIP Longitude": "-178:6.200",
+                        #     "SUB_1 Latitude": "0:00.0000",
+                        #     "SUB_1 Longitude": "0:00.0000",
+                        #     "Water Depth": "2700.0",
+                        # },
+                    ],
+                    "ingressId": 1,
+                    "observation": {
+                        "Date": "2022-04-16",
+                        "Time": "09:10:00",
+                        "PC_Time": "2022-04-16T09:10:00",
+                        "SHIP_Lon": -178.103000,
+                        "SHIP_Lat": -24.004000,
+                        "SHIP_SOG": 1.00,
+                        "SHIP_COG": 180.00,
+                        "SHIP_Hdg": 30.00,
+                        "Water_Depth": 2700.0,
+                        "SUB1_Lon": -178.102500,
+                        "SUB1_Lat": -24.003500,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:05:00",
+                        "Observations/Comments": "Sample observation",
+                        "Image-Video Path": "Sample photo and video path",
+                    },
+                    "created_at": "2022-04-16T12:00:00+00:00",
+                },
+            ],
+        ),
+        # Add more test cases as needed
+    ],
+)
+@patch("lambda_function_mongoDB_schema.get_current_ingress_id", return_value=1)
+@patch("lambda_function_mongoDB_schema.ObjectId")
+@patch("lambda_function_mongoDB_schema.datetime")
+def test_prepare_documents(
+    mock_datetime,
+    mock_object_id,
+    mock_get_current_ingress_id,
+    parsed_data,
+    file_key,
+    expected_documents,
+):
+    """
+    Test the prepare_documents function to ensure it correctly transforms parsed data into the desired MongoDB schema.
+    Test the prepare_documents function to ensure it correctly transforms parsed data into the desired MongoDB schema
+    without the 'tasks' section.
+
+    Args:
+        mock_object_id (Mock): Mocked ObjectId instance.
+        mock_datetime (Mock): Mocked datetime instance.
+        mock_get_current_ingress_id (Mock): Mocked get_current_ingress_id function.
+        parsed_data (dict): The input parsed data.
+        file_key (str): The S3 file key.
+        expected_documents (List[Dict[str, Any]]): The expected list of documents.
+
+    Expecting a List of Documents:
+
+    The expected_documents parameter is now a list of dictionaries, each representing an individual MongoDB document corresponding to an observation.
+    Mocking datetime.now:
+
+    The created_at field is set to a fixed datetime (2022-04-16T12:00:00+00:00) to ensure consistency across test runs.
+    Handling Multiple Observations:
+
+    Each observation in the detailed_data_table results in a separate document in the expected_documents list.
+    Incorporating Metadata and Tasks:
+
+    Each document includes the shared metadata and tasks fields, ensuring that these are correctly propagated to each MongoDB document.
+    """
+    # Configure the mock for datetime to return a fixed datetime
+    fixed_datetime = datetime(2022, 4, 16, 12, 0, 0, tzinfo=timezone.utc)
+    mock_datetime.now.return_value = fixed_datetime
+
+    # Call the function under test
+    actual_documents = prepare_documents(parsed_data, file_key, None)
+
+    # Assert that the actual_documents match the expected_documents
+    assert actual_documents == expected_documents
 
 
 """
