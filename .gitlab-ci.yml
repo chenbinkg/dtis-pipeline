@@ -78,7 +78,7 @@ lambda-unit-tests:
     - apk add -U bash
     - chmod +x ./tasks
   script:
-    - bash -c "./tasks pytest_unit_test_alpine"
+    - bash -c "./tasks lambda_unit_tests_alpine"
 
 lambda-integration-tests:
   stage: integration-test
