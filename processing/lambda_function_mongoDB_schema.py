@@ -1474,7 +1474,7 @@ def prepare_documents(
                 "type": "Point",
                 "coordinates": [
                     float(observation.get("SHIP_Lon", 0.0)),
-                    ship_lat,
+                    float(observation.get("SHIP_Lat", 0.0)),
                 ],
             },
             "speed": float(parsed_data["detailed_data_table"][0].get("SHIP_SOG", 0.0)),
