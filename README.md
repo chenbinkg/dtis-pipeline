@@ -8,6 +8,26 @@ To manage data operations (data upload, data processing) for the ocean floor DTI
 - [upload](upload/) - contains files needed to upload data to AWS
 - [processing](processing/) - contains Lambda function (deployed as Python script in AWS) for the conversion of uploaded (text) files into MongoDB documents
 
+## Demo
+1. Make sure the infrastructure is already set up. Please follow the instructions from:
+	* [infrastructure/1-terraform-init](infrastructure/1-terraform-init)
+	* [infrastructure/2-seafloor-data](infrastructure/2-seafloor-data)
+2. Run the data upload script, using the demo data:
+	* plan:
+	```
+	NIWA_DRY_RUN=true NIWA_ENVIRONMENT=testing NIWA_CRUISE_ID=TAN0616 NIWA_IMAGES_DIR=./demo-data/TAN0616/images NIWA_VIDEOS_DIR=./demo-data/TAN0616/videos NIWA_OFOP_DIR=./demo-data/TAN0616/txt ./upload/data_upload.sh
+	```
+	* notice the files that did not match local verification, and would not be uploaded to S3. Notice the station IDs - they were parsed from the file paths.
+	* apply:
+	```
+	NIWA_DRY_RUN=false NIWA_ENVIRONMENT=testing NIWA_CRUISE_ID=TAN0616 NIWA_IMAGES_DIR=./demo-data/TAN0616/images NIWA_VIDEOS_DIR=./demo-data/TAN0616/videos NIWA_OFOP_DIR=./demo-data/TAN0616/txt ./upload/data_upload.sh
+	```
+3. The files uploaded to S3 should automatically generate messages in an SQS queue. And the SQS queue should automatically invoke the lambda function. Feel free to go to Amazon CloudWatch, to read the lambda function log messages.
+
+
+Cleanup:
+* delete the files from the S3 bucket
+* you may want to delete the infrastructure, with Terraform
 
 ## Running the data upload script
 
@@ -53,7 +73,6 @@ apt-get install file
 		* `error.txt` - contains only warnings and errors
 		* `success.txt` - contains successful messages
 		* `sync_logs.txt` - contains AWS S3 upload logs
-		* `lambda_function_response.json` - contains AWS Lambda function trigger results
 
 If you are looking for an error message, it might be faster to go look for it in the `error.txt` file, rather than trying to find it in the terminal output.
 
@@ -170,3 +189,23 @@ bats ./upload/test/bats/*
 ```
 
 - running the Docker command directly - copy the command from the `tasks` script
+
+
+### Unit testing with Pytest
+
+Run it locally with:
+```
+./tasks _lambda_unit_tests
+```
+
+Or run it in Docker with:
+```
+./tasks lambda_unit_tests
+```
+
+#### Troubleshooting
+If you get a `Permission denied` error, please remove these generated files:
+```
+rm -r processing/venv/
+rm -r processing/results.xml
+```

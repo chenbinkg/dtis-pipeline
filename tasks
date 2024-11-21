@@ -121,7 +121,43 @@ case "${command}" in
   bats_alpine)
       alpine_bats_install_and_run
       ;;
-  pytest_unit_test_alpine)
+  _lambda_package)
+      # packages the lambda file and its dependencies into a zip file, so
+      # it can be uploaded into AWS
+
+      cd processing/
+      python3 -m venv venv
+      source venv/bin/activate
+      pip install -r requirements.txt
+      ;;
+  lambda_package)
+      # invokes _lambda_package in Docker
+
+      docker run -t --rm -v $PWD:/tmp/niwa python:3.9.20-bullseye bash -c "cd /tmp/niwa && apt update && apt install -y python3-venv && ./tasks _lambda_package"
+
+      processing_dir=$(realpath ./processing/)
+      rm -f "${processing_dir}/lambda_function.zip"
+      cd "${processing_dir}/venv/lib/python3.9/site-packages"
+      zip -r9 ${processing_dir}/lambda_function.zip .
+      cd ${processing_dir}
+      zip -g lambda_function.zip lambda_function_mongoDB_schema.py
+      ;;
+  _lambda_unit_tests)
+      # runs pytest unit tests of the Lambda function locally
+
+      # TODO: invoke _lambda_package here instead
+      cd processing/
+      python3 -m venv venv
+      source venv/bin/activate
+      pip install -r requirements.txt
+      pytest
+      ;;
+  lambda_unit_tests)
+      # runs pytest unit tests of the Lambda function in Docker
+
+      docker run -t --rm -v $PWD:/tmp/niwa python:3.9.20-bullseye bash -c "cd /tmp/niwa && apt update && apt install -y python3-venv && ./tasks _lambda_unit_tests"
+      ;;
+  lambda_unit_tests_alpine)
       alpine_pyenv_python_installation
       alpine_pyenv_python_pytest_install_and_run_unit_tests
       ;;
