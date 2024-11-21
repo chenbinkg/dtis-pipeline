@@ -3,6 +3,92 @@
 set -Eeuo pipefail
 
 checkov_image_name="bridgecrew/checkov:3.2.74"
+docker_cli_image_name="docker:27.3.1-cli"
+docker_dind_image_name="docker:27.3.1-dind"
+python_image_name="python:3.9.20"
+terraform_upstream_image_name="hashicorp/terraform:1.9.8"
+terraform_image_name="hashicorp/terraform:1.9.8"
+
+function alpine_python_install (
+  apk --update-cache --no-cache add python3 py3-pip
+  python3 -m venv venv
+  source venv/bin/activate
+  pip3 install --upgrade pip && pip3 install --upgrade setuptools
+)
+
+function alpine_python_checkov_install_and_run (
+  . venv/bin/activate
+  pip3 install checkov
+  checkov --directory infrastructure --output cli --output junitxml --output-file-path console,results.xml
+)
+
+function alpine_shellcheck_install_and_run (
+  apk --update-cache --no-cache add shellcheck xmlstarlet
+  # Unfortunately shellcheck can only display checkstyle or tty outputs - not both.
+  # See here for more details: https://github.com/koalaman/shellcheck/wiki/checkstyle2text
+  # First lets run shellcheck in default tty mode (and ignore any errors).
+  shellcheck -e SC2181 upload/data_upload.sh || true
+  # And again run Shellcheck in checkstyle mode to generate a JUnitXML report.
+  # See https://github.com/koalaman/shellcheck/wiki/JUnit for JUnit encoding.
+  shellcheck -f checkstyle -e SC2181 upload/data_upload.sh | xmlstarlet tr misc/checkstyle/checkstyle2junit.xslt > shellcheck_report.xml
+)
+
+function bats_remove_log_files (
+  # remove the log files first
+  rm -f ./upload/test/bats/error.txt
+  rm -f ./upload/test/bats/success.txt
+  rm -f ./upload/test/bats/sync_logs.txt
+  rm -f ./upload/test/bats/plan.txt
+)
+
+function alpine_bats_install_and_run (
+  # We need to download the individual bats packages because the supplied runner version of Alpine does not have them in the repository.
+  # https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-1.11.0-r1.apk
+  # https://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/bats-core-1.11.0-r0.apk
+  # https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-assert-2.1.0-r0.apk
+  # https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-file-0.4.0-r0.apk
+  # https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-support-0.3.0-r0.apk
+  apk --update-cache --no-cache add file ca-certificates wget
+  update-ca-certificates
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-1.11.0-r1.apk
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/bats-core-1.11.0-r0.apk
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-assert-2.1.0-r0.apk
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-file-0.4.0-r0.apk
+  wget https://dl-cdn.alpinelinux.org/alpine/edge/community/x86_64/bats-support-0.3.0-r0.apk
+  apk --update-cache --no-cache add --allow-untrusted bats-1.11.0-r1.apk bats-core-1.11.0-r0.apk bats-assert-2.1.0-r0.apk bats-file-0.4.0-r0.apk bats-support-0.3.0-r0.apk
+
+  # remove the log files first
+  bats_remove_log_files
+  cd upload/test/bats/
+  bats --report-formatter junit test-data-upload.sh
+)
+
+function alpine_pyenv_python_installation (
+  # Install pyenv and distribution-agnostic python environment installation dependencies
+  apk --update-cache --no-cache add git bash build-base ca-certificates libffi-dev openssl-dev bzip2-dev zlib-dev readline-dev sqlite-dev xz-dev tk-dev wget
+  # Download and Install pyenv for distribution-agnostic python environment installation
+  update-ca-certificates
+  wget https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer
+  chmod +x ./pyenv-installer
+  ./pyenv-installer
+  # Setup pyenv path shims and initialisation.
+  export PYENV_ROOT="$HOME/.pyenv"
+  export PATH="$PYENV_ROOT/bin:$PATH"
+  eval "$(pyenv init -)"
+  # Install and set python environment.
+  pyenv install 3.9.20
+  pyenv shell 3.9.20
+  # Finally create an easily accessable virtual environment for the installed python version.
+  python -m venv venv
+)
+
+function alpine_pyenv_python_pytest_install_and_run_unit_tests (
+  source venv/bin/activate
+  cd processing
+  pip install --upgrade pip
+  pip install -r requirements.txt
+  pytest
+)
 
 command="$1"
 set +u
@@ -14,19 +100,26 @@ case "${command}" in
       # interactive
       docker run --rm --entrypoint=/bin/bash -v $PWD:/tmp/niwa -ti $checkov_image_name -c /bin/bash
       ;;
+  checkov_alpine)
+      alpine_python_install
+      alpine_python_checkov_install_and_run
+      ;;
   shellcheck)
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck -e SC2181 /tmp/niwa/upload/data_upload.sh"
       ;;
+  shellcheck_alpine)
+      alpine_shellcheck_install_and_run
+      ;;
   bats)
       # remove the log files first
-      rm -f ./upload/test/bats/error.txt
-      rm -f ./upload/test/bats/success.txt
-      rm -f ./upload/test/bats/sync_logs.txt
-      rm -f ./upload/test/bats/plan.txt
+      bats_remove_log_files
 
       # We need the 'file' command for the data upload script. That command
       # is not installed in the docker image. Therefore, we install it below.
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa bats/bats:1.11.0 -c "cd /tmp/niwa/upload/test/bats/ && apk add -U file && bats ./*"
+      ;;
+  bats_alpine)
+      alpine_bats_install_and_run
       ;;
   _lambda_package)
       # packages the lambda file and its dependencies into a zip file, so
@@ -63,6 +156,10 @@ case "${command}" in
       # runs pytest unit tests of the Lambda function in Docker
 
       docker run -t --rm -v $PWD:/tmp/niwa python:3.9.20-bullseye bash -c "cd /tmp/niwa && apt update && apt install -y python3-venv && ./tasks _lambda_unit_tests"
+      ;;
+  lambda_unit_tests_alpine)
+      alpine_pyenv_python_installation
+      alpine_pyenv_python_pytest_install_and_run_unit_tests
       ;;
   *)
       echo "Invalid command: '${command}'"
