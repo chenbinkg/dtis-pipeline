@@ -1530,6 +1530,19 @@ def test_parse_tasks_latest_format():
                 "feature": {},  # Empty because 'tasks' is empty
             },
         ),
+        (
+            {
+                "metadata": {
+                    "Cruise": "TAN2208",
+                    "Station": "11",
+                    "Remarks": "Empty data site",
+                },
+                # "tasks" field is removed
+                "detailed_data_table": [],
+            },
+            "TEST_FILE_KEY_3",
+            [],  # Expected documents list is empty since there are no observations
+        ),
         # can add more test cases as needed
     ],
 )
@@ -1793,6 +1806,20 @@ def DEPRECATED_test_prepare_documents(
                     "created_at": "2022-04-16T12:00:00+00:00",
                 },
             ],
+        ),
+        # Test Case 3: Empty tasks and no observations
+        (
+            {
+                "metadata": {
+                    "Cruise": "TAN2208",
+                    "Station": "11",
+                    "Remarks": "Empty data site",
+                },
+                # "tasks" field is removed
+                "detailed_data_table": [],
+            },
+            "TEST_FILE_KEY_3",
+            [],  # Expected documents list is empty since there are no observations
         ),
         # Add more test cases as needed
     ],
