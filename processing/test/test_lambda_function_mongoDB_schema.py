@@ -2126,7 +2126,7 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                 "Gear deployed    :\t  :  :  ",
                 "--------------------------------",
                 "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path",
-                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0\t0\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
+                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t178.1\t-24.0\t111.0\t9.9\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
             ],
             {
                 "metadata": {
@@ -2163,10 +2163,10 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                         "SHIP_COG": "239.99",
                         "SHIP_Hdg": "25.03",
                         "Water_Depth": "2607.8",
-                        "SUB1_Lon": "0.0",
-                        "SUB1_Lat": "0.0",
-                        "SUB1_Depth": "0.0",
-                        "SUB1_Altitude": "0.0",
+                        "SUB1_Lon": "178.1",
+                        "SUB1_Lat": "-24.0",
+                        "SUB1_Depth": "111.0",
+                        "SUB1_Altitude": "9.9",
                         "Elapsed video Time": "00:00:00",
                         "Observations/Comments": "",
                         "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",
@@ -2199,7 +2199,7 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                 "Remarks :\t Far field site 1",
                 "--------------------------------",
                 "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path",
-                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0\t0\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
+                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0.1\t0.88\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
             ],
             {
                 "metadata": {
@@ -2222,8 +2222,8 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                         "Water_Depth": "2607.8",
                         "SUB1_Lon": "0.0",
                         "SUB1_Lat": "0.0",
-                        "SUB1_Depth": "0.0",
-                        "SUB1_Altitude": "0.0",
+                        "SUB1_Depth": "0.1",
+                        "SUB1_Altitude": "0.88",
                         "Elapsed video Time": "00:00:00",
                         "Observations/Comments": "",
                         "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954",

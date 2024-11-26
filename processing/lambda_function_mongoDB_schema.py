@@ -1477,13 +1477,19 @@ def prepare_documents(
     metadata = parsed_data.get("metadata", {})
     logger.info(f"Extracted metadata: {metadata}")
 
-    # # # Example logic to determine 'feature' based on 'tasks'
-    # tasks = parsed_data.get("tasks", [])
-    # # feature = tasks[0] if tasks else {}
-
+    # Extract bounding box (coordinates)
+    bounding_box = parsed_data.get("bounding_box")
+    logger.debug(f"Extracted bounding box: {bounding_box}")
+    
     # Extract detailed data
     observations = parsed_data.get("detailed_data_table", [])
     logger.info(f"Extracted {len(observations)} observations.")
+    
+    # # Example logic to determine 'feature' based on 'tasks'
+    # tasks = parsed_data.get("tasks", [])
+    # # feature = tasks[0] if tasks else {}
+
+    
     documents = []
 
     # Get the current ingressId
@@ -1540,6 +1546,7 @@ def prepare_documents(
             #     "created_at": datetime.now(timezone.utc).isoformat(),
             # },
             "file_key": file_key,
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "metadata": metadata,
             # "tasks": tasks,
             # "timestamp": parsed_data.get("detailed_data_table", [{}])[0].get("PC_Time"),
@@ -1550,23 +1557,23 @@ def prepare_documents(
                     float(observation.get("SHIP_Lat", 0.0)),
                 ],
             },
-            "speed": float(parsed_data["detailed_data_table"][0].get("SHIP_SOG", 0.0)),
-            "course": float(parsed_data["detailed_data_table"][0].get("SHIP_COG", 0.0)),
+            "speed": float(observation.get("SHIP_SOG", 0.0)),
+            "course": float(observation.get("SHIP_COG", 0.0)),
             "heading": float(
-                parsed_data["detailed_data_table"][0].get("SHIP_Hdg", 0.0)
+                observation.get("SHIP_Hdg", 0.0)
             ),
             "depth": float(
-                parsed_data["detailed_data_table"][0].get("Water_Depth", 0.0)
+                observation.get("Water_Depth", 0.0)
             ),
             "subLocation": {
                 "type": "Point",
                 "coordinates": [
-                    float(parsed_data["detailed_data_table"][0].get("SUB1_Lon", 0.0)),
-                    float(parsed_data["detailed_data_table"][0].get("SUB1_Lat", 0.0)),
+                    float(observation.get("SUB1_Lon", 0.0)),
+                    float(observation.get("SUB1_Lat", 0.0)),
                 ],
             },
             "subDepth": float(
-                parsed_data["detailed_data_table"][0].get("SUB1_Depth", 0.0)
+                observation.get("SUB1_Depth", 0.0)
             ),
             "feature": 
             # observation,  # Assign observation e based on 'detailed_data_table' content
@@ -1575,8 +1582,8 @@ def prepare_documents(
                 "mediaType": "video",
                 "mediaOffset": 0,
                 "observation": "Observations/Comments",
-                "observation2": "",
-                "observation_source": "original",
+                "observation2": observation.get("ID_Number", "ID_Number"),
+                "observation_source": file_key,
                 "observationRef": "<a href='https://www.marinespecies.org/rest/'>Link</a>",
             }
         }
