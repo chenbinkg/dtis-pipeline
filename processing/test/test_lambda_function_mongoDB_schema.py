@@ -193,7 +193,7 @@ def test_get_file_from_s3_no_file(s3_client):
         get_file_from_s3(s3_client, "test_bucket", "test_key")
 
 
-@pytest.mark.skip("Skipping test for now: not used and expected to fail")
+@pytest.mark.skip("Skipping test for now: not used")
 def test_parse_file_content():
     """
     Test parsing of file content.
@@ -1657,6 +1657,148 @@ def DEPRECATED_test_prepare_documents(
     "parsed_data, file_key, expected_documents",
     [
         # Test Case: No tasks and multiple observations with bounding_box
+        (
+            {
+                "metadata": {
+                    "Cruise": "TAN2206",
+                    "Station": "9",
+                    "Remarks": "Far field site 1",
+                },
+                "bounding_box": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [-178.1025627, -24.0038202],
+                            [-178.1025627, -24.0037027],
+                            [-178.102472, -24.0037027],
+                            [-178.102472, -24.0038202],
+                            [-178.1025627, -24.0038202],
+                        ]
+                    ],
+                },
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                    },
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:41:55",
+                        "PC_Time": "2022-04-16T08:41:55",
+                        "SHIP_Lon": -178.1025627,
+                        "SHIP_Lat": -24.0037027,
+                        "SHIP_SOG": 0.76,
+                        "SHIP_COG": 194.0,
+                        "SHIP_Hdg": 46.09,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "[-81] IN THE WATER",
+                    },
+                ],
+            },
+            "TEST_FILE_KEY",
+            [
+                {
+                    "file_key": "TEST_FILE_KEY",
+                    "metadata": {
+                        "Cruise": "TAN2206",
+                        "Station": "9",
+                        "Remarks": "Far field site 1",
+                    },
+                    "bounding_box": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-178.1025627, -24.0038202],
+                                [-178.1025627, -24.0037027],
+                                [-178.102472, -24.0037027],
+                                [-178.102472, -24.0038202],
+                                [-178.1025627, -24.0038202],
+                            ]
+                        ],
+                    },
+                    "ingressId": 1,
+                    "observation": {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                    },
+                    "created_at": "2022-04-16T12:00:00+00:00",
+                },
+                {
+                    "file_key": "TEST_FILE_KEY",
+                    "metadata": {
+                        "Cruise": "TAN2206",
+                        "Station": "9",
+                        "Remarks": "Far field site 1",
+                    },
+                    "bounding_box": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-178.1025627, -24.0038202],
+                                [-178.1025627, -24.0037027],
+                                [-178.102472, -24.0037027],
+                                [-178.102472, -24.0038202],
+                                [-178.1025627, -24.0038202],
+                            ]
+                        ],
+                    },
+                    "ingressId": 1,
+                    "observation": {
+                        "Date": "2022-04-16",
+                        "Time": "20:41:55",
+                        "PC_Time": "2022-04-16T08:41:55",
+                        "SHIP_Lon": -178.1025627,
+                        "SHIP_Lat": -24.0037027,
+                        "SHIP_SOG": 0.76,
+                        "SHIP_COG": 194.0,
+                        "SHIP_Hdg": 46.09,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "[-81] IN THE WATER",
+                    },
+                    "created_at": "2022-04-16T12:00:00+00:00",
+                },
+            ],
+        ),  # Test Case 1: Empty tasks and multiple observations
         (
             {
                 "metadata": {

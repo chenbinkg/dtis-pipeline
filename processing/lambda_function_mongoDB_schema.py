@@ -14,9 +14,11 @@ Requirements:
 * Define environment variable for the name of the MongoDB collection used for overview, e.g. INGRESS_COLLECTION_DTIS
 * Define environment variable for the name of the S3 bucket containing the text files, e.g. S3_BUCKET_NAME
 * For 2016 files: Prot and posi files need to be both available in an upload, image and video files are implicitly expected, too.
+* For 2016 files: Prot and posi files need to be both available in an upload, image and video files are implicitly expected, too.
 
 
 
+27 November 2024 Tilmann Steinmetz
 27 November 2024 Tilmann Steinmetz
 
 """
@@ -912,6 +914,12 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
         "SUB1_Lat",
         "SUB1_Lon",
     ]  # Update based on actual keys
+    coordinate_keys = [
+        "SHIP_Lat",
+        "SHIP_Lon",
+        "SUB1_Lat",
+        "SUB1_Lon",
+    ]  # Update based on actual keys
     coordinates = []
     for obs in observations:
         try:
@@ -1107,6 +1115,7 @@ def parse_data_rows(
             logger.debug("Skipping empty line at index %s.", idx)
             continue  # Skip empty lines
 
+
         fields = line.split("\t")
         # Check if the number of fields matches the number of headers
         if len(fields) != len(headers):
@@ -1140,17 +1149,29 @@ def parse_data_rows(
 
         # Ensure numeric fields are returned as strings
         for key in [
+            
             "SHIP_Lon",
+           
             "SHIP_Lat",
+           
             "SHIP_SOG",
+           
             "SHIP_COG",
+           
             "SHIP_Hdg",
+           
             "Water_Depth",
+           
             "SUB1_Lon",
+           
             "SUB1_Lat",
+           
             "SUB1_Depth",
+           
             "SUB1_Altitude",
+           
             "ID_Number",
+        ,
         ]:
             if key in observation:
                 try:
@@ -1186,7 +1207,9 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
         List[Dict[str, Any]]: A list of structured data suitable for MongoDB insertion.
         metadata: Metadata dictionary.
         bounding_box: Bounding box coordinates (of all events parsed for this station).
+        bounding_box: Bounding box coordinates (of all events parsed for this station).
         detailed_data_table: List of observation dictionaries.
+
 
     """
     logger.debug("Searching for METADATA. Parsing 'latest' format file.")
@@ -1215,9 +1238,9 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
             coordinates.append((lat, lon))
 
             # If there are SUB1 coordinates
-            # sub_lat = float(obs.get("SUB1_Lat", 0))
-            # sub_lon = float(obs.get("SUB1_Lon", 0))
-            # coordinates.append((sub_lat, sub_lon))
+            sub_lat = float(obs.get("SUB1_Lat", 0))
+            sub_lon = float(obs.get("SUB1_Lon", 0))
+            coordinates.append((sub_lat, sub_lon))
         except (TypeError, ValueError) as e:
             logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
             continue
@@ -1294,6 +1317,9 @@ def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
         columns = ["DateTime"] + columns[2:]
         logger.debug("Columns after combining Date and Time: %s", columns)
     else:
+        logger.warning(
+            "Expected first two columns to be 'Date' and 'Time'. Columns: %s", columns
+        )
         logger.warning(
             "Expected first two columns to be 'Date' and 'Time'. Columns: %s", columns
         )
@@ -1426,6 +1452,21 @@ def prepare_documents(
     # Extract detailed data table (observations)
     logger.info("Extracted %s observations.", len(observations))
 
+    # Initialize the list of documents
+    documents = []
+
+    logger.debug("Preparing document for MongoDB insertion.")
+    logger.info("Assembling document")
+
+    # Extracted metadata
+    logger.info("Extracted metadata: %s", metadata)
+
+    # Extracted bounding box (coordinates)
+    logger.info("Extracted bounding box: %s", str(bounding_box))
+
+    # Extract detailed data table (observations)
+    logger.info("Extracted %s observations.", len(observations))
+
     # Get the current ingressId
     current_ingress_id = 1
 
@@ -1440,7 +1481,7 @@ def prepare_documents(
                 datetime.now(timezone.utc),
             )
             logger.debug(
-                "Retrieved ingress document with ingress_id: %s",
+                "Updated ingress document with ingress_id: %s",
                 current_ingress_id,
             )
         except Exception as e:
