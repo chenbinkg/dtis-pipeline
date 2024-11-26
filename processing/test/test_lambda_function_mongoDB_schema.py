@@ -54,6 +54,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from botocore.exceptions import ClientError
 from lambda_function_mongoDB_schema import (
+    calculate_bounding_box,
     detect_file_format,
     detect_header_line,
     get_file_from_s3,
@@ -73,7 +74,6 @@ from lambda_function_mongoDB_schema import (
     parse_tasks,
     parse_time_only,
     prepare_documents,
-    calculate_bounding_box,
 )
 
 """
@@ -192,6 +192,7 @@ def test_get_file_from_s3_no_file(s3_client):
     with pytest.raises(FileNotFoundError):
         get_file_from_s3(s3_client, "test_bucket", "test_key")
 
+
 @pytest.mark.skip("Skipping test for now: not used")
 def test_parse_file_content():
     """
@@ -268,6 +269,7 @@ def test_insert_documents_to_mongodb(db):
     collection.insert_many.return_value = Mock(inserted_ids=[1, 2])
     result = insert_documents_to_mongodb(collection, documents)
     assert result == [1, 2]
+
 
 @pytest.mark.skip("Skipping test for now: insert one is not currently used")
 def test_insert_one_document_to_mongodb(db, mongo_client, test_document={"_id": 1}):
@@ -469,6 +471,7 @@ def test_get_posi_file_content_various_paths(input_key, expected_posi_key):
     mock_s3.get_object.assert_called_once_with(
         Bucket="test-bucket", Key=expected_posi_key
     )
+
 
 @pytest.mark.skip("Skipping test for now: not used")
 @pytest.mark.parametrize(
@@ -879,10 +882,7 @@ def test_parse_data_line_time_parsing(test_case, basic_line):
         ("00:00:00", "00:00:00"),
         ("23:59:59", "23:59:59"),
         # Invalid time formats
-        ("8:41:57", None),  # Leading zero missing
-        
-        
-        
+        ("8:41:57", "08:41:57"),  # Leading zero missing
         # Edge cases
         ("12:34:56", "12:34:56"),
         ("01:01:01", "01:01:01"),
@@ -890,6 +890,7 @@ def test_parse_data_line_time_parsing(test_case, basic_line):
 )
 def test_parse_time_only(input_str, expected_output):
     assert parse_time_only(input_str) == expected_output
+
 
 @pytest.mark.parametrize(
     "input_str",
@@ -906,9 +907,10 @@ def test_parse_time_only(input_str, expected_output):
 def test_parse_time_incomplete_only(input_str):
     with pytest.raises(Exception) as excinfo:
         parse_time_only(input_str)
-        
+
         # assert result is None
         assert "Exception" in str(excinfo.value)
+
 
 @pytest.mark.parametrize(
     "input_str, expected_output",
@@ -1097,9 +1099,7 @@ def test_parse_original_format(file_key, file_content, expected_output):
     assert fileformat == "original"
 
 
-@pytest.mark.skip(
-    reason="DEPRECATED - currently not expecting this test to pass"
-)
+@pytest.mark.skip(reason="DEPRECATED - currently not expecting this test to pass")
 @pytest.mark.parametrize(
     "file_key, file_content, expected_output",
     [
@@ -1198,7 +1198,6 @@ def DEPRECATED_test_parse_latest_format(file_key, file_content, expected_output)
                 "04/16/2022\t20:42:55\t-178.102664\t-24.003771\t[-99]\t[-99] SUB",
                 "04/16/2022\t20:42:55\t-178.102647\t-24.003771\t[-99]\t[-99] SUB",
                 "04/16/2022\t20:42:56\t-178.102644\t-24.003769\t[-99]\t[-99] SUB",
-                
             ],
             {
                 "metadata": {},
@@ -1244,7 +1243,7 @@ def DEPRECATED_test_parse_latest_format(file_key, file_content, expected_output)
                         "ID_Name": "[-99] SUB",
                     },
                 ],
-            }
+            },
         ),
         # Add additional parameter sets here...
     ],
@@ -1265,6 +1264,7 @@ def test_parse_simple_format(lines, expected_output):
     assert output["detailed_output_table"] == expected_output["detailed_output_table"]
     # assert fileformat == "simple"
 
+
 @pytest.mark.skip(reason="Skipping this test for now.")
 def test_parse_unknown_format(self):
     file_key = "unknown/prot.txt"
@@ -1281,6 +1281,7 @@ def test_parse_unknown_format(self):
     result = parse_file_content(file_content, file_key)
     self.assertEqual(result, expected_output)
     self.assertEqual(result, expected_output)
+
 
 @pytest.mark.skip(reason="Skipping this test for now.")
 def test_print_document_format_for_latest_format():
@@ -1376,6 +1377,7 @@ def test_detect_file_format(lines, expected_format):
     result = detect_file_format(lines)
     assert result == expected_format
 
+
 @pytest.mark.skip(reason="Skipping this test for now.")
 def test_parse_tasks_latest_format():
     lines = [
@@ -1448,6 +1450,7 @@ def test_parse_tasks_latest_format():
 
     parsed_tasks = parse_tasks(lines, start_idx)
     assert parsed_tasks == expected_tasks
+
 
 @pytest.mark.skip(reason="DEPRECATED - Skipping this test.")
 @pytest.mark.parametrize(
@@ -1650,7 +1653,149 @@ def DEPRECATED_test_prepare_documents(
 @pytest.mark.parametrize(
     "parsed_data, file_key, expected_documents",
     [
-        # Test Case 1: Empty tasks and multiple observations
+        # Test Case: No tasks and multiple observations with bounding_box
+        (
+            {
+                "metadata": {
+                    "Cruise": "TAN2206",
+                    "Station": "9",
+                    "Remarks": "Far field site 1",
+                },
+                "bounding_box": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [-178.1025627, -24.0038202],
+                            [-178.1025627, -24.0037027],
+                            [-178.102472, -24.0037027],
+                            [-178.102472, -24.0038202],
+                            [-178.1025627, -24.0038202],
+                        ]
+                    ],
+                },
+                "detailed_data_table": [
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                    },
+                    {
+                        "Date": "2022-04-16",
+                        "Time": "20:41:55",
+                        "PC_Time": "2022-04-16T08:41:55",
+                        "SHIP_Lon": -178.1025627,
+                        "SHIP_Lat": -24.0037027,
+                        "SHIP_SOG": 0.76,
+                        "SHIP_COG": 194.0,
+                        "SHIP_Hdg": 46.09,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "[-81] IN THE WATER",
+                    },
+                ],
+            },
+            "TEST_FILE_KEY",
+            [
+                {
+                    "file_key": "TEST_FILE_KEY",
+                    "metadata": {
+                        "Cruise": "TAN2206",
+                        "Station": "9",
+                        "Remarks": "Far field site 1",
+                    },
+                    "bounding_box": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-178.1025627, -24.0038202],
+                                [-178.1025627, -24.0037027],
+                                [-178.102472, -24.0037027],
+                                [-178.102472, -24.0038202],
+                                [-178.1025627, -24.0038202],
+                            ]
+                        ],
+                    },
+                    "ingressId": 1,
+                    "observation": {
+                        "Date": "2022-04-16",
+                        "Time": "20:33:30",
+                        "PC_Time": "2022-04-16T08:33:30",
+                        "SHIP_Lon": -178.102472,
+                        "SHIP_Lat": -24.0038202,
+                        "SHIP_SOG": 0.45,
+                        "SHIP_COG": 239.99,
+                        "SHIP_Hdg": 25.03,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "DTIS photo: 1; volt: 25.7; magn. fs: 7954 ",
+                    },
+                    "created_at": "2022-04-16T12:00:00+00:00",
+                },
+                {
+                    "file_key": "TEST_FILE_KEY",
+                    "metadata": {
+                        "Cruise": "TAN2206",
+                        "Station": "9",
+                        "Remarks": "Far field site 1",
+                    },
+                    "bounding_box": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-178.1025627, -24.0038202],
+                                [-178.1025627, -24.0037027],
+                                [-178.102472, -24.0037027],
+                                [-178.102472, -24.0038202],
+                                [-178.1025627, -24.0038202],
+                            ]
+                        ],
+                    },
+                    "ingressId": 1,
+                    "observation": {
+                        "Date": "2022-04-16",
+                        "Time": "20:41:55",
+                        "PC_Time": "2022-04-16T08:41:55",
+                        "SHIP_Lon": -178.1025627,
+                        "SHIP_Lat": -24.0037027,
+                        "SHIP_SOG": 0.76,
+                        "SHIP_COG": 194.0,
+                        "SHIP_Hdg": 46.09,
+                        "Water_Depth": 2607.8,
+                        "SUB1_Lon": 0.0,
+                        "SUB1_Lat": 0.0,
+                        "SUB1_Depth": 0.0,
+                        "SUB1_Altitude": 0.0,
+                        "Elapsed video Time": "00:00:00",
+                        "Observations/Comments": "",
+                        "Image-Video Path": "[-81] IN THE WATER",
+                    },
+                    "created_at": "2022-04-16T12:00:00+00:00",
+                },
+            ],
+        ),  # Test Case 1: Empty tasks and multiple observations
         (
             {
                 "metadata": {
@@ -1951,6 +2096,7 @@ def test_prepare_documents(
         # assert actual_document["subLocation"] == expected_document["subLocation"]
         # assert actual_document["subDepth"] == expected_document["subDepth"]
         # assert actual_document["feature"] == expected_document["feature"]
+        assert actual_document["bounding_box"] == expected_document["bounding_box"]
 
 
 """
@@ -2018,6 +2164,7 @@ def test_detect_header_line(lines, start_idx, expected_headers, expected_next_id
     headers, next_idx = detect_header_line(lines, start_idx)
     assert headers == expected_headers
     assert next_idx == expected_next_idx
+
 
 @pytest.mark.skip(reason="Not used at the moment.")
 @pytest.mark.parametrize(
@@ -2185,11 +2332,11 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                 #     }
                 # ],
                 "bounding_box": {
-                            "min_lat": -24.0038202,
-                            "max_lat": -24.003300,
-                            "min_lon": -178.1025627,
-                            "max_lon": -178.102400,
-                        },
+                    "min_lat": -24.0038202,
+                    "max_lat": -24.003300,
+                    "min_lon": -178.1025627,
+                    "max_lon": -178.102400,
+                },
             },
         ),
         (
@@ -2199,7 +2346,7 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                 "Remarks :\t Far field site 1",
                 "--------------------------------",
                 "#Date\tTime\tPC_Time\tSHIP_Lon\tSHIP_Lat\tSHIP_SOG\tSHIP_COG\tSHIP_Hdg\tWater_Depth\tSUB1_Lon\tSUB1_Lat\tSUB1_Depth\tSUB1_Altitude\tElapsed video Time\tObservations/Comments\tImage-Video Path",
-                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0\t0\t0.1\t0.88\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
+                "04/16/2022\t20:33:30\t16/04/2022 08:33:30\t-178.102472\t-24.0038202\t0.45\t239.99\t25.03\t2607.8\t0.5\t88.4\t0.1\t0.88\t00:00:00\t\tDTIS photo: 1; volt: 25.7; magn. fs: 7954",
             ],
             {
                 "metadata": {
@@ -2220,8 +2367,8 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                         "SHIP_COG": "239.99",
                         "SHIP_Hdg": "25.03",
                         "Water_Depth": "2607.8",
-                        "SUB1_Lon": "0.0",
-                        "SUB1_Lat": "0.0",
+                        "SUB1_Lon": "0.5",
+                        "SUB1_Lat": "88.4",
                         "SUB1_Depth": "0.1",
                         "SUB1_Altitude": "0.88",
                         "Elapsed video Time": "00:00:00",
@@ -2236,8 +2383,7 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                     [0],
                     [0],
                 ],
-
-                              },
+            },
         ),
     ],
     ids=[
@@ -2268,54 +2414,70 @@ def test_parse_latest_format(lines, expected_output):
     #     parsed_output["bounding_box"][0] == expected_output["bounding_box"][0]
     # )
     assert (
-        parsed_output["detailed_data_table"][0]['Date'] == expected_output["detailed_data_table"][0]['Date'] 
+        parsed_output["detailed_data_table"][0]["Date"]
+        == expected_output["detailed_data_table"][0]["Date"]
     ), "Detailed data table date does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['Time'] == expected_output["detailed_data_table"][0]['Time'] 
+        parsed_output["detailed_data_table"][0]["Time"]
+        == expected_output["detailed_data_table"][0]["Time"]
     ), "Detailed data table Time field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['PC_Time'] == expected_output["detailed_data_table"][0]['PC_Time'] 
+        parsed_output["detailed_data_table"][0]["PC_Time"]
+        == expected_output["detailed_data_table"][0]["PC_Time"]
     ), "Detailed data table PC_Time field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SHIP_Lon'] == expected_output["detailed_data_table"][0]['SHIP_Lon']
+        parsed_output["detailed_data_table"][0]["SHIP_Lon"]
+        == expected_output["detailed_data_table"][0]["SHIP_Lon"]
     ), "Detailed data table SHIP_Lon field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SHIP_Lat'] == expected_output["detailed_data_table"][0]['SHIP_Lat']
+        parsed_output["detailed_data_table"][0]["SHIP_Lat"]
+        == expected_output["detailed_data_table"][0]["SHIP_Lat"]
     ), "Detailed data table SHIP_Lat field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SHIP_SOG'] == expected_output["detailed_data_table"][0]['SHIP_SOG']
+        parsed_output["detailed_data_table"][0]["SHIP_SOG"]
+        == expected_output["detailed_data_table"][0]["SHIP_SOG"]
     ), "Detailed data table SHIP_SOG field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SHIP_COG'] == expected_output["detailed_data_table"][0]['SHIP_COG']
+        parsed_output["detailed_data_table"][0]["SHIP_COG"]
+        == expected_output["detailed_data_table"][0]["SHIP_COG"]
     ), "Detailed data table SHIP_COG field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SHIP_Hdg'] == expected_output["detailed_data_table"][0]['SHIP_Hdg']
+        parsed_output["detailed_data_table"][0]["SHIP_Hdg"]
+        == expected_output["detailed_data_table"][0]["SHIP_Hdg"]
     ), "Detailed data table SHIP_Hdg field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['Water_Depth'] == expected_output["detailed_data_table"][0]['Water_Depth']
+        parsed_output["detailed_data_table"][0]["Water_Depth"]
+        == expected_output["detailed_data_table"][0]["Water_Depth"]
     ), "Detailed data table Water_Depth field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SUB1_Lon'] == expected_output["detailed_data_table"][0]['SUB1_Lon']
+        parsed_output["detailed_data_table"][0]["SUB1_Lon"]
+        == expected_output["detailed_data_table"][0]["SUB1_Lon"]
     ), "Detailed data table SUB1_Lon field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SUB1_Lat'] == expected_output["detailed_data_table"][0]['SUB1_Lat']
+        parsed_output["detailed_data_table"][0]["SUB1_Lat"]
+        == expected_output["detailed_data_table"][0]["SUB1_Lat"]
     ), "Detailed data table SUB1_Lat field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SUB1_Depth'] == expected_output["detailed_data_table"][0]['SUB1_Depth']
+        parsed_output["detailed_data_table"][0]["SUB1_Depth"]
+        == expected_output["detailed_data_table"][0]["SUB1_Depth"]
     ), "Detailed data table SUB1_Depth field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['SUB1_Altitude'] == expected_output["detailed_data_table"][0]['SUB1_Altitude']
+        parsed_output["detailed_data_table"][0]["SUB1_Altitude"]
+        == expected_output["detailed_data_table"][0]["SUB1_Altitude"]
     ), "Detailed data table SUB1_Altitude field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['Elapsed video Time'] == expected_output["detailed_data_table"][0]['Elapsed video Time']
+        parsed_output["detailed_data_table"][0]["Elapsed video Time"]
+        == expected_output["detailed_data_table"][0]["Elapsed video Time"]
     ), "Detailed data table Elapsed video Time field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['Observations/Comments'] == expected_output["detailed_data_table"][0]['Observations/Comments']
+        parsed_output["detailed_data_table"][0]["Observations/Comments"]
+        == expected_output["detailed_data_table"][0]["Observations/Comments"]
     ), "Detailed data table Observations/Comments field does not match"
     assert (
-        parsed_output["detailed_data_table"][0]['Image-Video Path'] == expected_output["detailed_data_table"][0]['Image-Video Path']
+        parsed_output["detailed_data_table"][0]["Image-Video Path"]
+        == expected_output["detailed_data_table"][0]["Image-Video Path"]
     ), "Detailed data table Image-Video Path field does not match"
-    
+
     assert (
         parsed_output["metadata"]["Cruise"] == expected_output["metadata"]["Cruise"]
     ), "Metadata 'Cruise' field does not match"
@@ -2328,5 +2490,5 @@ def test_parse_latest_format(lines, expected_output):
     # assert (
     #     parsed_output["metadata"]["In the Water"] == expected_output["metadata"]["In the Water"]
     # ), "Metadata 'In the Water' field does not match"
-    
+
     # Add more assertions as needed for other fields
