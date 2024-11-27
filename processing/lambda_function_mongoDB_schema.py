@@ -14,11 +14,8 @@ Requirements:
 * Define environment variable for the name of the MongoDB collection used for overview, e.g. INGRESS_COLLECTION_DTIS
 * Define environment variable for the name of the S3 bucket containing the text files, e.g. S3_BUCKET_NAME
 * For 2016 files: Prot and posi files need to be both available in an upload, image and video files are implicitly expected, too.
-* For 2016 files: Prot and posi files need to be both available in an upload, image and video files are implicitly expected, too.
 
 
-
-27 November 2024 Tilmann Steinmetz
 27 November 2024 Tilmann Steinmetz
 
 """
@@ -38,7 +35,7 @@ from pymongo.collection import Collection, ReturnDocument
 from pymongo.database import Database
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 START_TIME = datetime.now(timezone.utc)
 MAX_EXECUTION_TIME = 850  # 14.5 minutes (for 15-minute Lambda timeout)
@@ -84,20 +81,14 @@ def parse_datetime(datetime_str: str) -> Optional[str]:
         try:
             if datetime_str is None:
                 return None
-            logger.debug("datetime_str datetime: %s", datetime_str)
             parsed_date = datetime.strptime(datetime_str, fmt)
             # Assume UTC timezone if not specified
-            try:
-                if parsed_date.tzinfo is None:
-                    parsed_date = parsed_date.replace(tzinfo=timezone.utc)
-            except ValueError:
-                pass
-            logger.debug("Parsed datetime: %s", parsed_date)
+            parsed_date = parsed_date.replace(tzinfo=timezone.utc)
+            # logger.debug("Parsed datetime: %s", parsed_date)
             return parsed_date.isoformat()
         except ValueError:
-            pass
-            logger.debug(f"Invalid datetime format: {datetime_str}. Continuing...")
-            # continue
+            logger.warning(f"Invalid datetime format: {datetime_str}")
+            continue
 
     logger.debug(f"Failed to parse datetime: {datetime_str}")
     return None
@@ -130,8 +121,7 @@ def parse_time_only(time_str: str) -> Optional[str]:
             logger.warning(f"Invalid time format: {time_str}")
             continue
     logger.error(f"Failed to parse time: {time_str}")
-    raise ValueError(f"Invalid time format: {time_str}")
-    # return None
+    return None
 
 
 def prepare_for_mongodb(document):
@@ -264,14 +254,6 @@ def calculate_bounding_box(coordinates):
     """
     if not coordinates:
         return None
-
-    # latitudes, longitudes = zip(*coordinates)
-    # return {
-    #     "min_lat": min(latitudes),
-    #     "max_lat": max(latitudes),
-    #     "min_lon": min(longitudes),
-    #     "max_lon": max(longitudes),
-    # }
 
     lons, lats = zip(*coordinates)
     return {
@@ -908,12 +890,7 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
     observations = parse_data_rows(lines, header_idx, headers)
 
     # Extract coordinate pairs
-    coordinate_keys = [
-        "SHIP_Lat",
-        "SHIP_Lon",
-        "SUB1_Lat",
-        "SUB1_Lon",
-    ]  # Update based on actual keys
+
     coordinate_keys = [
         "SHIP_Lat",
         "SHIP_Lon",
@@ -927,10 +904,10 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
             lon = float(obs.get("SHIP_Lon", 0))
             coordinates.append((lat, lon))
 
-            # If there are SUB1 coordinates
-            sub_lat = float(obs.get("SUB1_Lat", 0))
-            sub_lon = float(obs.get("SUB1_Lon", 0))
-            coordinates.append((sub_lat, sub_lon))
+            # # If there are SUB1 coordinates
+            # sub_lat = float(obs.get("SUB1_Lat", 0))
+            # sub_lon = float(obs.get("SUB1_Lon", 0))
+            # coordinates.append((sub_lat, sub_lon))
         except (TypeError, ValueError) as e:
             logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
             continue
@@ -1105,23 +1082,23 @@ def parse_data_rows(
     """
     logger.debug("Parsing data rows.")
 
-    # detailed_data_table = []
-    # delimiter_pattern = re.compile(r"^-+$")
+    detailed_data_table = []
+    delimiter_pattern = re.compile(r"^-+$")
     observations = []
 
     for idx in range(start_idx, len(lines)):
         line = lines[idx].strip()
-        if not line:
-            logger.debug("Skipping empty line at index %s.", idx)
-            continue  # Skip empty lines
+        if not line or line.startswith("#"):
+            continue  # Skip empty lines or comments
 
         fields = line.split("\t")
         # Check if the number of fields matches the number of headers
         if len(fields) != len(headers):
             logger.warning("Skipping malformed data line %s, %s", idx, line)
-            # continue   # we can skip this line and continue with the next
-            # but as some of our file formats do not have headers for all columns
-            # we may want to  continue parsing
+            logger.warning(
+                "Is this an 'original format file? They have fewer headers than columns."
+            )
+            # continue
 
         observation = dict(zip(headers, fields))
 
@@ -1175,7 +1152,7 @@ def parse_data_rows(
             #     observation[key] = observation[key]
 
         observations.append(observation)
-        logger.debug("Parsed record at line %s: %s", idx, observation)
+        logger.debug(f"Parsed observation at line {idx}: {observation}")
 
     logger.debug(f"Parsed {len(observations)} data rows.")
 
@@ -1196,8 +1173,6 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
         bounding_box: Bounding box coordinates (of all events parsed for this station).
         bounding_box: Bounding box coordinates (of all events parsed for this station).
         detailed_data_table: List of observation dictionaries.
-
-
     """
     logger.debug("Searching for METADATA. Parsing 'latest' format file.")
     parsed_data = parse_metadata(lines)
@@ -1249,19 +1224,6 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
     ]
 
 
-# def parse_simple_format(lines: List[str]) -> List[Dict[str, Any]]:
-#     """
-#     Parses files adhering to the "simple" format.
-
-#     Args:
-#         lines (List[str]): Lines from the file content.
-
-
-#     Returns:
-#         List[Dict[str, Any]]: List of Structured data docs suitable for MongoDB insertion.
-#         (metadata, detailed_data_table)
-#     """
-#     logger.debug("Parsing 'simple' format file.")
 def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
     """
     Parses files adhering to the "simple" format.
@@ -1274,55 +1236,64 @@ def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
     """
     logger.debug("Parsing 'simple' format file.")
     metadata = {}
-    observations = []
+    detailed_data_table = []
+    start_idx = 0
+    # Parse metadata
+    for idx, line in enumerate(lines):
+        stripped_line = line.strip()
 
-    if not lines:
-        logger.error("Input lines are empty.")
-        return {
-            "metadata": metadata,
-            "detailed_data_table": observations,
+        if not stripped_line:
+            continue
+
+        logger.debug("Processing line %s: %s", idx, line)
+
+        if ":" in stripped_line:
+            parts = stripped_line.split("\t", 1)
+            if len(parts) == 2:
+                key, value = parts
+                metadata[key.strip().rstrip(":")] = value.strip()
+            else:
+                logger.warning(
+                    "Unexpected metadata line in 'simple' format file at line %s: %s",
+                    idx,
+                    line,
+                )
+        else:
+            logger.debug(
+                "Skipping non-key-value line ( in 'simple' format file) at line %s: %s",
+                idx,
+                line,
+            )
+
+    # Parse header
+    header = lines[start_idx]
+    columns = header.split("\t")
+
+    # Parse data lines
+    for line in lines[start_idx + 1 :]:
+        if line.startswith("End ###"):
+            break
+        parts = line.split("\t")
+        if len(parts) < len(columns):
+            logger.debug(
+                "Some columns are missing in the line: %s. Skipping this line.",
+                line,
+            )
+            continue
+        record = {
+            "Date": parse_datetime(parts[0]),
+            "Time": parse_time_only(parts[1]),
+            "SUB1_Lon": float(parts[2]),
+            "SUB1_Lat": float(parts[3]),
+            "ID_Number": parts[4],
+            "ID_Name": parts[5],
         }
-
-    # Parse header from the first line
-    header = lines[0].strip()
-    logger.debug("Simple format Header: %s", header)
-
-    if not header.startswith("#"):
-        logger.error("Header line does not start with '#': %s", header)
-        return {
-            "metadata": metadata,
-            "detailed_data_table": observations,
-        }
-
-    # Remove '#' and split by tab to get columns
-    columns = header.lstrip("#").split("\t")
-    logger.debug("Columns before combining Date and Time: %s", columns)
-
-    # Check if the first two columns are 'Date' and 'Time'
-    if len(columns) >= 2 and columns[0] == "Date" and columns[1] == "Time":
-        # Combine 'Date' and 'Time' into 'DateTime'
-        columns = ["DateTime"] + columns[2:]
-        logger.debug("Columns after combining Date and Time: %s", columns)
-    else:
-        logger.warning(
-            "Expected first two columns to be 'Date' and 'Time'. Columns: %s", columns
-        )
-        logger.warning(
-            "Expected first two columns to be 'Date' and 'Time'. Columns: %s", columns
-        )
-
-    # Parse data lines starting from the second line
-    data_lines = lines[1:]
-    logger.debug("Number of data lines to parse: %d", len(data_lines))
-
-    # Use existing parse_data_rows function with updated columns
-    observations = parse_data_rows(data_lines, 0, columns)
-
-    logger.debug("Parsed %d data records.", len(observations))
+        detailed_data_table.append(prepare_for_mongodb(record))
 
     return {
         "metadata": metadata,
-        "detailed_output_table": observations,
+        # "bounding_box": bounding_box,
+        "detailed_output_table": detailed_data_table,
     }
 
 
@@ -1330,8 +1301,7 @@ def parse_file_content(
     file_content: str, key: str, ingress_collection: Collection
 ) -> Tuple[
     List[Dict[str, Any]],  # List of documents
-    str,  # file_format,
-    Optional[Tuple[float, float, float, float]],  # bounding_box
+    str,  # file_format
 ]:
     """
     Parses the file content and returns a list of documents
@@ -1345,7 +1315,6 @@ def parse_file_content(
     Returns:
         List[Dict[str, Any]]: A list of parsed documents.
         file_format (from detection algorithm).
-
     """
     logger.debug(f"file_content: {file_content[:100]}...")
 
@@ -1394,7 +1363,7 @@ def parse_file_content(
         logging.debug("Preparing document for MongoDB insertion. %s", parsed_data)
         document = prepare_documents(parsed_data, key, ingress_collection)
         if document:
-            documents.append(document)
+            documents.extend(document)
 
     # # We will return the bounding box from the last parsed document
     # bounding_box = parsed_data.get("bounding_box")
@@ -1439,20 +1408,7 @@ def prepare_documents(
     # Extract detailed data table (observations)
     logger.info("Extracted %s observations.", len(observations))
 
-    # Initialize the list of documents
     documents = []
-
-    logger.debug("Preparing document for MongoDB insertion.")
-    logger.info("Assembling document")
-
-    # Extracted metadata
-    logger.info("Extracted metadata: %s", metadata)
-
-    # Extracted bounding box (coordinates)
-    logger.info("Extracted bounding box: %s", str(bounding_box))
-
-    # Extract detailed data table (observations)
-    logger.info("Extracted %s observations.", len(observations))
 
     # Get the current ingressId
     current_ingress_id = 1
@@ -1465,7 +1421,7 @@ def prepare_documents(
                 metadata.get("Cruise"),
                 metadata.get("Station"),
                 metadata.get("Remarks"),
-                datetime.now(timezone.utc),
+                observations[0].get("PC_Time"),
             )
             logger.debug(
                 "Updated ingress document with ingress_id: %s",
@@ -1476,19 +1432,6 @@ def prepare_documents(
             return []  # Return empty list if ingressId retrieval fails
         finally:
             logger.debug("Current ingressId: %s", current_ingress_id)
-
-    # increment ingress id
-    count_documents = len(parsed_data.get("detailed_data_table", []))
-
-    increment_ingress_id(
-        ingress_collection,
-        metadata.get("Cruise"),
-        metadata.get("Station"),
-        metadata.get("Remarks"),
-        bounding_box,
-        count_documents,
-        datetime.now(timezone.utc),
-    )
 
     # Initialize default values
     try:
@@ -1523,7 +1466,7 @@ def prepare_documents(
             "file_key": file_key,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "metadata": metadata,
-            "bounding_box": bounding_box,
+            # "tasks": tasks,
             "timestamp": observation.get("PC_Time"),
             "shipLocation": {
                 "type": "Point",
@@ -1666,6 +1609,15 @@ def lambda_handler(event, context):
                         bucket_name,
                         file_key,
                     )
+
+                    # # Parse the file content
+                    # documents, file_format = parse_file_content(
+                    #     file_content,
+                    #     file_key,
+                    #     ingress_collection,
+                    # )
+
+                    # all_documents.extend(documents)
 
                     # Parse the file content
                     documents, file_format = parse_file_content(
