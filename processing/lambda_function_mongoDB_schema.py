@@ -1115,7 +1115,6 @@ def parse_data_rows(
             logger.debug("Skipping empty line at index %s.", idx)
             continue  # Skip empty lines
 
-
         fields = line.split("\t")
         # Check if the number of fields matches the number of headers
         if len(fields) != len(headers):
@@ -1149,29 +1148,17 @@ def parse_data_rows(
 
         # Ensure numeric fields are returned as strings
         for key in [
-            
             "SHIP_Lon",
-           
             "SHIP_Lat",
-           
             "SHIP_SOG",
-           
             "SHIP_COG",
-           
             "SHIP_Hdg",
-           
             "Water_Depth",
-           
             "SUB1_Lon",
-           
             "SUB1_Lat",
-           
             "SUB1_Depth",
-           
             "SUB1_Altitude",
-           
             "ID_Number",
-        ,
         ]:
             if key in observation:
                 try:
