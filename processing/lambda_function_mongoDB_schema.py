@@ -185,7 +185,7 @@ def get_current_ingress_id(
             "cruise": cruise,
             "station": station,
             "remarks": remarks,
-            "date_created": date_created,
+            # "date_created": date_created, # we don't use the date_created
         },
         {
             "$setOnInsert": {
@@ -233,8 +233,8 @@ def increment_ingress_id(
             "$setOnInsert": {
                 "date_created": (
                     date_created.isoformat()
-                    if isinstance(date_created, datetime)
-                    else date_created
+                    # if isinstance(date_created, datetime)
+                    # else date_created
                 )
             },
         }
@@ -1080,56 +1080,6 @@ def parse_tasks(lines: List[str], start_idx: int) -> List[Dict[str, str]]:
 
     return tasks
 
-    # task_start_idx = -1
-    # for idx in range(start_idx, len(lines)):
-    #     line = lines[idx].strip()
-    #     logger.debug(f"Processing line {idx}: {line} in 'parse_tasks'")
-    #     match = task_pattern.match(line)
-    #     if match:
-    #         task_start_idx = idx
-    #         logger.debug(
-    #             f"Found Task line at index {idx} - this is our task_start_idx: {line}"
-    #         )
-    #         break  # Start parsing from the first "Task" line
-
-    # if task_start_idx != -1:
-    #     for idx in range(task_start_idx + 1, len(lines)):
-    #         line = lines[idx].strip()
-    #         logger.debug(f"Processing line {idx}: {line} in 'parse_tasks'")
-    #         if match:
-    #             continue  # Skip the header line
-    #         if line.startswith("----------------------------------------------------------------"):
-    #             break  # End of tasks section
-
-    #         # Split based on two or more spaces or tabs
-    #         fields = re.split(r"[ \t]{2,}", line)
-    #         # Pattern: [ \t]{2,}
-    #         # Splits the line based on two or more spaces or tabs. This ensures
-    #         # that fields are correctly separated even if there's inconsistent spacing.
-    #         if len(fields) != len(task_headers):
-    #             logger.warning(f"Skipping malformed task line {idx}: {line}")
-    #             continue
-
-    #         task = dict(zip(task_headers, fields))
-
-    #         # Parse and format datetime fields using helper functions
-    #         if "PC Date and Time" in task:
-    #             task["PC Date and Time"] = parse_datetime(task["PC Date and Time"])
-
-    #         if "UTC Time" in task:
-    #             task["UTC Time"] = parse_time_only(task["UTC Time"])
-
-    #         if "UTC Date" in task:
-    #             task["UTC Date"] = parse_datetime(task["UTC Date"])
-
-    #         #
-    #         tasks.append(task)
-    #         logger.info(f"Parsed task at line {idx}: {task}")
-    # else:
-    #     logger.error("Task section not found in the file.")
-
-    # return tasks
-
 
 def parse_data_rows(
     lines: List[str], start_idx: int, headers: List[str]
@@ -1367,7 +1317,8 @@ def parse_file_content(
     file_content: str, key: str, ingress_collection: Collection
 ) -> Tuple[
     List[Dict[str, Any]],  # List of documents
-    str,  # file_format
+    str,  # file_format,
+    Optional[Tuple[float, float, float, float]],  # bounding_box
 ]:
     """
     Parses the file content and returns a list of documents
@@ -1381,6 +1332,7 @@ def parse_file_content(
     Returns:
         List[Dict[str, Any]]: A list of parsed documents.
         file_format (from detection algorithm).
+
     """
     logger.debug(f"file_content: {file_content[:100]}...")
 
@@ -1430,6 +1382,9 @@ def parse_file_content(
         document = prepare_documents(parsed_data, key, ingress_collection)
         if document:
             documents.append(document)
+
+    # # We will return the bounding box from the last parsed document
+    # bounding_box = parsed_data.get("bounding_box")
 
     if not documents:
         logger.error("No parsed data found to create documents.")
@@ -1485,7 +1440,7 @@ def prepare_documents(
                 datetime.now(timezone.utc),
             )
             logger.debug(
-                "Updated ingress document with ingress_id: %s",
+                "Retrieved ingress document with ingress_id: %s",
                 current_ingress_id,
             )
         except Exception as e:
@@ -1493,6 +1448,19 @@ def prepare_documents(
             return []  # Return empty list if ingressId retrieval fails
         finally:
             logger.debug("Current ingressId: %s", current_ingress_id)
+
+    # increment ingress id
+    count_documents = len(parsed_data.get("detailed_data_table", []))
+
+    increment_ingress_id(
+        ingress_collection,
+        metadata.get("Cruise"),
+        metadata.get("Station"),
+        metadata.get("Remarks"),
+        bounding_box,
+        count_documents,
+        datetime.now(timezone.utc),
+    )
 
     # Initialize default values
     try:
@@ -1672,30 +1640,36 @@ def lambda_handler(event, context):
                     )
 
                     # Parse the file content
-                    parsed_data_list = parse_latest_format(file_content.splitlines())
+                    documents, file_format = parse_file_content(
+                        file_content,
+                        file_key,
+                        ingress_collection,  # Pass the ingress collection
+                    )
+                    # parsed_data_list = parse_latest_format(file_content.splitlines())
 
                     # Get the ingress collection
                     ingress_collection = db[os.environ["INGRESS_COLLECTION_DTIS"]]
+                    all_documents.extend(documents)
 
-                    # Prepare and insert documents
-                    all_documents = []
-                    for parsed_data in parsed_data_list:
-                        documents = prepare_documents(
-                            parsed_data, file_key, ingress_collection
-                        )
-                        logger.debug(f"Prepared documents: {documents}")
-                        all_documents.extend(documents)
+                    # # Prepare and insert documents
+                    # all_documents = []
+                    # for parsed_data in parsed_data_list:
+                    #     documents = prepare_documents(
+                    #         parsed_data, file_key, ingress_collection
+                    #     )
+                    #     logger.debug(f"Prepared documents: {documents}")
+                    #     all_documents.extend(documents)
 
-                    inserted_ids = insert_documents_to_mongodb(
-                        db[os.environ["MONGODB_COLLECTION"]], all_documents
-                    )
+                    # inserted_ids = insert_documents_to_mongodb(
+                    #     db[os.environ["MONGODB_COLLECTION"]], all_documents
+                    # )
 
-                    return {
-                        "statusCode": 200,
-                        "body": json.dumps(
-                            f"Inserted {len(inserted_ids)} documents successfully!"
-                        ),
-                    }
+                    # return {
+                    #     "statusCode": 200,
+                    #     "body": json.dumps(
+                    #         f"Inserted {len(inserted_ids)} documents successfully!"
+                    #     ),
+                    # }
 
             except Exception as e:
                 logger.error(f"Error processing record: {str(e)}")
