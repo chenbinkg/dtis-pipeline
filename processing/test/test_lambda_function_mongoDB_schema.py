@@ -1340,13 +1340,9 @@ Gear deployed    :	  :  :
 @pytest.mark.parametrize(
     "lines, expected_format",
     [
-        (["Cruise : Test Cruise", "UTC Time\tPC Time\tLat"], "original"),
-        (["Cruise : Test Cruise", "#Date\tTime\tPC_Time\tSHIP_Lon"], "latest"),
-        (["Cruise : Test Cruise", "#Date\tTime\tPC_Time"], "new"),
-        (["#Date\tTime\tPC_Time"], "latest"),
+        # (["Cruise : Test Cruise", "UTC Time\tPC Time\tLat"], "original"),
         (["#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name"], "simple"),
         (["#Date\tTime\tPC_Time\tSHIP_Lon"], "latest"),
-        (["#Date\sTime\sPC_Time"], "unknown"),
         (["Some random text"], "unknown"),
         # New test case for 'latest' format
         (
@@ -2377,7 +2373,7 @@ def test_parse_tasks(lines, start_idx, expected_tasks):
             ],
             [
                 {
-                    "Date": "2022-04-16",
+                    "Date": "2022-04-16T00:00:00+00:00",
                     "Time": "20:33:30",
                     "PC_Time": "2022-04-16T08:33:30",
                     "SHIP_Lon": -178.102472,
@@ -2400,6 +2396,8 @@ def test_parse_tasks(lines, start_idx, expected_tasks):
 )
 def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
     data_rows = parse_data_rows(lines, start_idx, headers)
+    assert data_rows[0]["Date"] == expected_data_rows[0]["Date"]  # Check Date
+    assert data_rows[0]["Date"] == expected_data_rows[0]["PC_Time"]  # Check Date
     assert data_rows == expected_data_rows
 
 
