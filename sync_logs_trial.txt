@@ -1,0 +1,3129 @@
+File Sync Report - Mon 11 Nov 2024 16:42:35 NZDT
+----------------------------
+Environment Name: testing
+S3 Bucket Name: dtis-ofop-851725470721-raw-testing
+Region: ap-southeast-2
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+S3 object exists already, not uploading
+Completed 256.0 KiB/7.8 MiB (263.4 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.8 MiB (377.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.8 MiB (475.0 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/7.8 MiB (555.3 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/7.8 MiB (629.2 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/7.8 MiB (701.8 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/7.8 MiB (778.6 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/7.8 MiB (835.8 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/7.8 MiB (897.3 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/7.8 MiB (954.3 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/7.8 MiB (1008.7 KiB/s) with 1 file(s) remaining 
+Completed 3.0 MiB/7.8 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/7.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/7.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/7.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/7.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/7.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/7.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/7.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/7.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/7.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/7.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/7.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/7.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/7.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/7.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/7.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/7.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/7.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/7.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/7.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/7.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_067.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_067.JPG
+Completed 256.0 KiB/8.9 MiB (273.3 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.9 MiB (377.0 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.9 MiB (476.3 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.9 MiB (549.4 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.9 MiB (618.3 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.9 MiB (686.3 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.9 MiB (744.6 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.9 MiB (794.9 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.9 MiB (853.8 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.9 MiB (906.6 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.9 MiB (954.4 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.9 MiB (1000.5 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/8.9 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.9 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.9 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.9 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.9 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.9 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.9 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.9 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.9 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.9 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.9 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.9 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.9 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.9 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.9 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.9 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.9 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.9 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.9 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/8.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.9 MiB/8.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_068.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_068.JPG
+Completed 256.0 KiB/7.9 MiB (300.0 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.9 MiB (403.7 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.9 MiB (512.6 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/7.9 MiB (593.6 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/7.9 MiB (666.8 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/7.9 MiB (739.5 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/7.9 MiB (804.7 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/7.9 MiB (859.8 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/7.9 MiB (923.2 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/7.9 MiB (980.4 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/7.9 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/7.9 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/7.9 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/7.9 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/7.9 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/7.9 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/7.9 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/7.9 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/7.9 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/7.9 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/7.9 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/7.9 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/7.9 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/7.9 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/7.9 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/7.9 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/7.9 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/7.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/7.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/7.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/7.9 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 7.9 MiB/7.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_069.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_069.JPG
+Completed 256.0 KiB/9.4 MiB (389.1 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.4 MiB (727.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.4 MiB (1.0 MiB/s) with 1 file(s) remaining  
+Completed 1.0 MiB/9.4 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/9.4 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/9.4 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/9.4 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/9.4 MiB (2.4 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/9.4 MiB (2.7 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/9.4 MiB (2.9 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/9.4 MiB (3.2 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/9.4 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/9.4 MiB (3.7 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.4 MiB (4.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.4 MiB (4.2 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.4 MiB (4.5 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.4 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.4 MiB (5.1 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.4 MiB (5.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.4 MiB (5.6 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.4 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.4 MiB (6.0 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.4 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.4 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.4 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.4 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.4 MiB (7.2 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.4 MiB (7.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.4 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.4 MiB (7.9 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.4 MiB (8.1 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.4 MiB (8.3 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.4 MiB (8.5 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.4 MiB (8.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.4 MiB (8.9 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.4 MiB (9.2 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.4 MiB (9.4 MiB/s) with 1 file(s) remaining    
+Completed 9.4 MiB/9.4 MiB (8.5 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_070.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_070.JPG
+Completed 256.0 KiB/4.3 MiB (299.3 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/4.3 MiB (401.8 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/4.3 MiB (478.6 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/4.3 MiB (565.0 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/4.3 MiB (632.8 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/4.3 MiB (702.7 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/4.3 MiB (761.8 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/4.3 MiB (826.2 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/4.3 MiB (872.4 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/4.3 MiB (925.9 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/4.3 MiB (975.4 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/4.3 MiB (1020.5 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/4.3 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/4.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/4.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/4.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/4.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.3 MiB/4.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_071.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_071.JPG
+Completed 256.0 KiB/6.2 MiB (265.6 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/6.2 MiB (371.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/6.2 MiB (472.0 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/6.2 MiB (545.6 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/6.2 MiB (614.5 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/6.2 MiB (683.6 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/6.2 MiB (743.4 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/6.2 MiB (808.5 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/6.2 MiB (854.2 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/6.2 MiB (906.6 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/6.2 MiB (955.7 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/6.2 MiB (1000.8 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/6.2 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/6.2 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/6.2 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/6.2 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/6.2 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/6.2 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/6.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/6.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/6.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/6.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/6.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/6.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/6.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_072.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_072.JPG
+Completed 256.0 KiB/8.6 MiB (399.7 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.6 MiB (743.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.6 MiB (1.0 MiB/s) with 1 file(s) remaining  
+Completed 1.0 MiB/8.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/8.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/8.6 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/8.6 MiB (2.3 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/8.6 MiB (2.6 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/8.6 MiB (2.7 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/8.6 MiB (3.0 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/8.6 MiB (3.3 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/8.6 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/8.6 MiB (3.8 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.6 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.6 MiB (4.4 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.6 MiB (4.7 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.6 MiB (4.9 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.6 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.6 MiB (5.5 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.6 MiB (5.8 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.6 MiB (6.1 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.6 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.6 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.6 MiB (6.9 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.6 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.6 MiB (7.2 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.6 MiB (7.4 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.6 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.6 MiB (7.9 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.6 MiB (8.1 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.6 MiB (8.4 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.6 MiB (8.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.6 MiB (8.8 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.6 MiB (9.0 MiB/s) with 1 file(s) remaining    
+Completed 8.6 MiB/8.6 MiB (8.4 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_073.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_073.JPG
+Completed 256.0 KiB/8.0 MiB (365.1 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.0 MiB (689.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.0 MiB (981.7 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/8.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/8.0 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/8.0 MiB (2.1 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/8.0 MiB (2.3 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/8.0 MiB (2.6 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/8.0 MiB (2.9 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/8.0 MiB (3.2 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/8.0 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/8.0 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.0 MiB (3.8 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.0 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.0 MiB (4.4 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.0 MiB (4.6 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.0 MiB (4.9 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.0 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.0 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.0 MiB (5.6 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.0 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.0 MiB (6.1 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.0 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.0 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.0 MiB (6.9 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.0 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.0 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.0 MiB (7.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.0 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.0 MiB (7.9 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.0 MiB (7.3 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_074.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_074.JPG
+Completed 256.0 KiB/8.8 MiB (282.1 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.8 MiB (388.6 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.8 MiB (478.0 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.8 MiB (552.1 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.8 MiB (620.2 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.8 MiB (688.7 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.8 MiB (748.7 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.8 MiB (813.2 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.8 MiB (858.8 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.8 MiB (912.3 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.8 MiB (960.4 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.8 MiB (1005.2 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/8.8 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_075.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_075.JPG
+Completed 256.0 KiB/9.3 MiB (252.8 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.3 MiB (357.8 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.3 MiB (456.1 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.3 MiB (528.8 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/9.3 MiB (596.9 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/9.3 MiB (664.0 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/9.3 MiB (722.5 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/9.3 MiB (785.7 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/9.3 MiB (830.8 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/9.3 MiB (882.4 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/9.3 MiB (931.6 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/9.3 MiB (975.8 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/9.3 MiB (1017.5 KiB/s) with 1 file(s) remaining 
+Completed 3.5 MiB/9.3 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.3 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 9.3 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_076.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_076.JPG
+Completed 256.0 KiB/9.3 MiB (281.4 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.3 MiB (398.4 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.3 MiB (509.1 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.3 MiB (590.8 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/9.3 MiB (666.1 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/9.3 MiB (740.0 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/9.3 MiB (804.4 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/9.3 MiB (861.5 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/9.3 MiB (925.3 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/9.3 MiB (983.6 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/9.3 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/9.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/9.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.3 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.3 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.3 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.3 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.3 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.3 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.3 MiB (2.0 MiB/s) with 1 file(s) remaining    
+Completed 9.3 MiB/9.3 MiB (1.9 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_077.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_077.JPG
+Completed 256.0 KiB/9.4 MiB (378.8 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.4 MiB (674.1 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.4 MiB (965.1 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.4 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/9.4 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/9.4 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/9.4 MiB (2.1 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/9.4 MiB (2.3 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/9.4 MiB (2.5 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/9.4 MiB (2.8 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/9.4 MiB (3.1 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/9.4 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/9.4 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.4 MiB (3.9 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.4 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.4 MiB (4.4 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.4 MiB (4.6 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.4 MiB (4.9 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.4 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.4 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.4 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.4 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.4 MiB (6.2 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.4 MiB (6.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.4 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.4 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.4 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.4 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.4 MiB (7.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.4 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.4 MiB (7.9 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.4 MiB (8.2 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.4 MiB (8.4 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.4 MiB (8.6 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.4 MiB (8.8 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.4 MiB (9.1 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.4 MiB (9.3 MiB/s) with 1 file(s) remaining    
+Completed 9.4 MiB/9.4 MiB (8.5 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_078.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_078.JPG
+Completed 256.0 KiB/9.6 MiB (312.4 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.6 MiB (588.2 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.6 MiB (838.3 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/9.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/9.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/9.6 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/9.6 MiB (2.0 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/9.6 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/9.6 MiB (2.4 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/9.6 MiB (2.7 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/9.6 MiB (2.8 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/9.6 MiB (3.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.6 MiB (3.3 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.6 MiB (3.5 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.6 MiB (3.7 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.6 MiB (3.9 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.6 MiB (4.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.6 MiB (4.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.6 MiB (4.6 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.6 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.6 MiB (5.0 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.6 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.6 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.6 MiB (5.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.6 MiB (5.8 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.6 MiB (6.1 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.6 MiB (6.2 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.6 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.6 MiB (6.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.6 MiB (6.7 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.6 MiB (6.9 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.6 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.6 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.6 MiB (7.5 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.6 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.6 MiB (7.8 MiB/s) with 1 file(s) remaining    
+Completed 9.5 MiB/9.6 MiB (8.0 MiB/s) with 1 file(s) remaining    
+Completed 9.6 MiB/9.6 MiB (7.3 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_079.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_079.JPG
+Completed 256.0 KiB/4.8 MiB (291.5 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/4.8 MiB (409.3 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/4.8 MiB (498.5 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/4.8 MiB (572.0 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/4.8 MiB (642.1 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/4.8 MiB (712.0 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/4.8 MiB (770.8 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/4.8 MiB (835.9 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/4.8 MiB (881.0 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/4.8 MiB (933.9 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/4.8 MiB (982.0 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/4.8 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/4.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/4.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/4.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/4.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/4.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/4.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/4.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/4.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_080.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_080.JPG
+Completed 256.0 KiB/4.3 MiB (409.7 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/4.3 MiB (680.4 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/4.3 MiB (964.3 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/4.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/4.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/4.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/4.3 MiB (2.0 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/4.3 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/4.3 MiB (2.4 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/4.3 MiB (2.7 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/4.3 MiB (3.0 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/4.3 MiB (3.1 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/4.3 MiB (3.3 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/4.3 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/4.3 MiB (3.8 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/4.3 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/4.3 MiB (4.3 MiB/s) with 1 file(s) remaining    
+Completed 4.3 MiB/4.3 MiB (3.9 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_081.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_081.JPG
+Completed 256.0 KiB/5.6 MiB (285.5 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/5.6 MiB (402.7 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/5.6 MiB (500.7 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/5.6 MiB (580.4 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/5.6 MiB (655.2 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/5.6 MiB (729.8 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/5.6 MiB (794.2 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/5.6 MiB (852.7 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/5.6 MiB (916.4 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/5.6 MiB (973.4 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/5.6 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/5.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/5.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/5.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/5.6 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/5.6 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/5.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/5.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/5.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/5.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/5.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/5.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 5.6 MiB/5.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_082.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_082.JPG
+Completed 256.0 KiB/8.2 MiB (282.7 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.2 MiB (386.4 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.2 MiB (474.5 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.2 MiB (548.3 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.2 MiB (627.4 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.2 MiB (696.0 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.2 MiB (755.1 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.2 MiB (805.6 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.2 MiB (862.7 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.2 MiB (915.8 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.2 MiB (964.7 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.2 MiB (1008.9 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/8.2 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.2 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.2 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.2 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.2 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.2 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.2 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.2 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.2 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.2 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.2 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_083.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_083.JPG
+Completed 256.0 KiB/9.5 MiB (350.3 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.5 MiB (659.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.5 MiB (932.8 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/9.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/9.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/9.5 MiB (2.0 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/9.5 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/9.5 MiB (2.5 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/9.5 MiB (2.7 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/9.5 MiB (3.0 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/9.5 MiB (3.3 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/9.5 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.5 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.5 MiB (3.8 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.5 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.5 MiB (4.3 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.5 MiB (4.6 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.5 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.5 MiB (5.1 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.5 MiB (5.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.5 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.5 MiB (5.6 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.5 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.5 MiB (6.1 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.5 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.5 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.5 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.5 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.5 MiB (7.2 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.5 MiB (7.4 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.5 MiB (7.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.5 MiB (7.8 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.5 MiB (8.0 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.5 MiB (8.1 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.5 MiB (8.3 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.5 MiB (8.6 MiB/s) with 1 file(s) remaining    
+Completed 9.5 MiB/9.5 MiB (7.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_084.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_084.JPG
+Completed 256.0 KiB/7.1 MiB (384.1 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.1 MiB (715.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.1 MiB (1003.2 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/7.1 MiB (1.2 MiB/s) with 1 file(s) remaining     
+Completed 1.2 MiB/7.1 MiB (1.5 MiB/s) with 1 file(s) remaining     
+Completed 1.5 MiB/7.1 MiB (1.7 MiB/s) with 1 file(s) remaining     
+Completed 1.8 MiB/7.1 MiB (2.0 MiB/s) with 1 file(s) remaining     
+Completed 2.0 MiB/7.1 MiB (2.3 MiB/s) with 1 file(s) remaining     
+Completed 2.2 MiB/7.1 MiB (2.5 MiB/s) with 1 file(s) remaining     
+Completed 2.5 MiB/7.1 MiB (2.7 MiB/s) with 1 file(s) remaining     
+Completed 2.8 MiB/7.1 MiB (3.0 MiB/s) with 1 file(s) remaining     
+Completed 3.0 MiB/7.1 MiB (3.3 MiB/s) with 1 file(s) remaining     
+Completed 3.2 MiB/7.1 MiB (3.5 MiB/s) with 1 file(s) remaining     
+Completed 3.5 MiB/7.1 MiB (3.8 MiB/s) with 1 file(s) remaining     
+Completed 3.8 MiB/7.1 MiB (4.1 MiB/s) with 1 file(s) remaining     
+Completed 4.0 MiB/7.1 MiB (4.2 MiB/s) with 1 file(s) remaining     
+Completed 4.2 MiB/7.1 MiB (4.5 MiB/s) with 1 file(s) remaining     
+Completed 4.5 MiB/7.1 MiB (4.7 MiB/s) with 1 file(s) remaining     
+Completed 4.8 MiB/7.1 MiB (5.0 MiB/s) with 1 file(s) remaining     
+Completed 5.0 MiB/7.1 MiB (5.2 MiB/s) with 1 file(s) remaining     
+Completed 5.2 MiB/7.1 MiB (5.5 MiB/s) with 1 file(s) remaining     
+Completed 5.5 MiB/7.1 MiB (5.7 MiB/s) with 1 file(s) remaining     
+Completed 5.8 MiB/7.1 MiB (6.0 MiB/s) with 1 file(s) remaining     
+Completed 6.0 MiB/7.1 MiB (6.2 MiB/s) with 1 file(s) remaining     
+Completed 6.2 MiB/7.1 MiB (6.5 MiB/s) with 1 file(s) remaining     
+Completed 6.5 MiB/7.1 MiB (6.6 MiB/s) with 1 file(s) remaining     
+Completed 6.8 MiB/7.1 MiB (6.8 MiB/s) with 1 file(s) remaining     
+Completed 7.0 MiB/7.1 MiB (7.0 MiB/s) with 1 file(s) remaining     
+Completed 7.1 MiB/7.1 MiB (6.4 MiB/s) with 1 file(s) remaining     
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_085.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_085.JPG
+Completed 256.0 KiB/7.0 MiB (265.5 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.0 MiB (371.3 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.0 MiB (459.4 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/7.0 MiB (544.1 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/7.0 MiB (611.9 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/7.0 MiB (680.6 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/7.0 MiB (738.9 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/7.0 MiB (790.0 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/7.0 MiB (847.1 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/7.0 MiB (899.5 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/7.0 MiB (948.2 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/7.0 MiB (992.5 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/7.0 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/7.0 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/7.0 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/7.0 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/7.0 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/7.0 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/7.0 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/7.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/7.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/7.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/7.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/7.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/7.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/7.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/7.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/7.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_086.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_086.JPG
+Completed 256.0 KiB/8.5 MiB (267.1 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.5 MiB (372.4 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.5 MiB (460.7 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.5 MiB (546.3 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.5 MiB (615.0 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.5 MiB (683.7 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.5 MiB (743.0 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.5 MiB (794.1 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.5 MiB (852.7 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.5 MiB (905.9 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.5 MiB (954.8 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.5 MiB (999.1 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/8.5 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_087.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_087.JPG
+Completed 256.0 KiB/7.4 MiB (390.9 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.4 MiB (684.1 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.4 MiB (908.5 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/7.4 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/7.4 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/7.4 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/7.4 MiB (2.0 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/7.4 MiB (2.1 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/7.4 MiB (2.4 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/7.4 MiB (2.6 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/7.4 MiB (2.9 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/7.4 MiB (3.2 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/7.4 MiB (3.3 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/7.4 MiB (3.5 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/7.4 MiB (3.8 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/7.4 MiB (4.0 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/7.4 MiB (4.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/7.4 MiB (4.5 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/7.4 MiB (4.7 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/7.4 MiB (5.0 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/7.4 MiB (5.1 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/7.4 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/7.4 MiB (5.6 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/7.4 MiB (5.8 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/7.4 MiB (6.1 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/7.4 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/7.4 MiB (6.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/7.4 MiB (6.7 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/7.4 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 7.4 MiB/7.4 MiB (6.2 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_088.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_088.JPG
+Completed 256.0 KiB/8.8 MiB (266.8 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.8 MiB (372.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.8 MiB (473.0 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.8 MiB (547.4 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.8 MiB (615.9 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.8 MiB (684.7 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.8 MiB (743.2 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.8 MiB (807.9 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.8 MiB (853.7 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.8 MiB (906.3 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.8 MiB (954.8 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.8 MiB (998.3 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/8.8 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/8.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_089.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_089.JPG
+Completed 256.0 KiB/8.2 MiB (266.6 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.2 MiB (373.2 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.2 MiB (472.9 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.2 MiB (547.2 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.2 MiB (616.6 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.2 MiB (686.3 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.2 MiB (745.6 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.2 MiB (796.9 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.2 MiB (855.2 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.2 MiB (907.1 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.2 MiB (955.5 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.2 MiB (1002.2 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/8.2 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.2 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.2 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.2 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.2 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.2 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.2 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.2 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.2 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.2 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.2 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.2 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_090.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_090.JPG
+Completed 256.0 KiB/8.6 MiB (266.0 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.6 MiB (372.6 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.6 MiB (473.1 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.6 MiB (547.7 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.6 MiB (617.2 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.6 MiB (686.4 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.6 MiB (745.2 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.6 MiB (797.0 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.6 MiB (855.9 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.6 MiB (908.8 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.6 MiB (958.0 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.6 MiB (1004.0 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/8.6 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.6 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.6 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.6 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.6 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.6 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.6 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.6 MiB/8.6 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_091.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_091.JPG
+Completed 256.0 KiB/9.2 MiB (414.1 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.2 MiB (733.6 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.2 MiB (1.1 MiB/s) with 1 file(s) remaining  
+Completed 1.0 MiB/9.2 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/9.2 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/9.2 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/9.2 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/9.2 MiB (2.5 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/9.2 MiB (2.7 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/9.2 MiB (3.0 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/9.2 MiB (3.3 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/9.2 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/9.2 MiB (3.9 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.2 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.2 MiB (4.4 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.2 MiB (4.7 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.2 MiB (5.0 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.2 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.2 MiB (5.5 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.2 MiB (5.8 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.2 MiB (6.1 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.2 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.2 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.2 MiB (6.7 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.2 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.2 MiB (7.2 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.2 MiB (7.4 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.2 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.2 MiB (8.0 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.2 MiB (8.2 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.2 MiB (8.4 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.2 MiB (8.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.2 MiB (8.8 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.2 MiB (9.0 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.2 MiB (9.2 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.2 MiB (9.5 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.2 MiB (8.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_092.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_092.JPG
+Completed 256.0 KiB/8.1 MiB (416.9 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.1 MiB (781.5 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.1 MiB (1.1 MiB/s) with 1 file(s) remaining  
+Completed 1.0 MiB/8.1 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/8.1 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/8.1 MiB (2.0 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/8.1 MiB (2.3 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/8.1 MiB (2.6 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/8.1 MiB (2.9 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/8.1 MiB (3.2 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/8.1 MiB (3.5 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/8.1 MiB (3.9 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/8.1 MiB (4.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.1 MiB (4.3 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.1 MiB (4.6 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.1 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.1 MiB (5.1 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.1 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.1 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.1 MiB (6.0 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.1 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.1 MiB (6.5 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.1 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.1 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.1 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.1 MiB (7.6 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.1 MiB (7.8 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.1 MiB (8.1 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.1 MiB (8.4 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.1 MiB (8.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.1 MiB (8.7 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.1 MiB (9.0 MiB/s) with 1 file(s) remaining    
+Completed 8.1 MiB/8.1 MiB (8.3 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_093.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_093.JPG
+Completed 256.0 KiB/8.4 MiB (288.5 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.4 MiB (383.8 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.4 MiB (464.9 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.4 MiB (544.9 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.4 MiB (609.3 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.4 MiB (673.0 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.4 MiB (727.6 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.4 MiB (787.9 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.4 MiB (828.8 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.4 MiB (878.5 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.4 MiB (923.4 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.4 MiB (963.8 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/8.4 MiB (1014.7 KiB/s) with 1 file(s) remaining 
+Completed 3.5 MiB/8.4 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.4 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.4 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.4 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.4 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.4 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.4 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.4 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.4 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.4 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.4 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.4 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.4 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.4 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.4 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.4 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.4 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.4 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.4 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.4 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.4 MiB/8.4 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_094.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_094.JPG
+Completed 256.0 KiB/7.3 MiB (394.7 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.3 MiB (734.8 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.3 MiB (1.0 MiB/s) with 1 file(s) remaining  
+Completed 1.0 MiB/7.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/7.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/7.3 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/7.3 MiB (2.1 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/7.3 MiB (2.4 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/7.3 MiB (2.7 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/7.3 MiB (3.0 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/7.3 MiB (3.1 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/7.3 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/7.3 MiB (3.7 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/7.3 MiB (4.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/7.3 MiB (4.2 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/7.3 MiB (4.5 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/7.3 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/7.3 MiB (4.9 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/7.3 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/7.3 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/7.3 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/7.3 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/7.3 MiB (6.2 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/7.3 MiB (6.5 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/7.3 MiB (6.7 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/7.3 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/7.3 MiB (7.2 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/7.3 MiB (7.4 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/7.3 MiB (7.6 MiB/s) with 1 file(s) remaining    
+Completed 7.3 MiB/7.3 MiB (6.9 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_095.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_095.JPG
+Completed 256.0 KiB/7.9 MiB (408.9 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.9 MiB (754.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.9 MiB (1.1 MiB/s) with 1 file(s) remaining  
+Completed 1.0 MiB/7.9 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/7.9 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/7.9 MiB (2.0 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/7.9 MiB (2.3 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/7.9 MiB (2.5 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/7.9 MiB (2.8 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/7.9 MiB (3.2 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/7.9 MiB (3.5 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/7.9 MiB (3.8 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/7.9 MiB (4.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/7.9 MiB (4.2 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/7.9 MiB (4.5 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/7.9 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/7.9 MiB (5.1 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/7.9 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/7.9 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/7.9 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/7.9 MiB (6.2 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/7.9 MiB (6.5 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/7.9 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/7.9 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/7.9 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/7.9 MiB (7.6 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/7.9 MiB (7.8 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/7.9 MiB (8.0 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/7.9 MiB (8.3 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/7.9 MiB (8.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/7.9 MiB (8.7 MiB/s) with 1 file(s) remaining    
+Completed 7.9 MiB/7.9 MiB (7.9 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_096.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_096.JPG
+Completed 256.0 KiB/8.4 MiB (359.4 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.4 MiB (677.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.4 MiB (968.7 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.4 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/8.4 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/8.4 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/8.4 MiB (2.1 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/8.4 MiB (2.4 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/8.4 MiB (2.6 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/8.4 MiB (2.8 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/8.4 MiB (3.1 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/8.4 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/8.4 MiB (3.7 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.4 MiB (3.9 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.4 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.4 MiB (4.4 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.4 MiB (4.6 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.4 MiB (4.9 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.4 MiB (5.1 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.4 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.4 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.4 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.4 MiB (6.2 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.4 MiB (6.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.4 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.4 MiB (6.9 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.4 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.4 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.4 MiB (7.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.4 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.4 MiB (7.9 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.4 MiB (8.2 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.4 MiB (8.4 MiB/s) with 1 file(s) remaining    
+Completed 8.4 MiB/8.4 MiB (7.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_097.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_097.JPG
+Completed 256.0 KiB/10.0 MiB (372.7 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/10.0 MiB (691.5 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/10.0 MiB (973.8 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/10.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/10.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/10.0 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/10.0 MiB (2.1 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/10.0 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/10.0 MiB (2.5 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/10.0 MiB (2.8 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/10.0 MiB (3.1 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/10.0 MiB (3.3 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/10.0 MiB (3.5 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/10.0 MiB (3.7 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/10.0 MiB (4.0 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/10.0 MiB (4.3 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/10.0 MiB (4.5 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/10.0 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/10.0 MiB (5.0 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/10.0 MiB (5.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/10.0 MiB (5.5 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/10.0 MiB (5.8 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/10.0 MiB (6.0 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/10.0 MiB (6.2 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/10.0 MiB (6.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/10.0 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/10.0 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/10.0 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/10.0 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/10.0 MiB (7.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/10.0 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/10.0 MiB (7.9 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/10.0 MiB (8.1 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/10.0 MiB (8.3 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/10.0 MiB (8.5 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/10.0 MiB (8.7 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/10.0 MiB (8.9 MiB/s) with 1 file(s) remaining    
+Completed 9.5 MiB/10.0 MiB (9.1 MiB/s) with 1 file(s) remaining    
+Completed 9.8 MiB/10.0 MiB (9.3 MiB/s) with 1 file(s) remaining    
+Completed 10.0 MiB/10.0 MiB (8.5 MiB/s) with 1 file(s) remaining   
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_098.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_098.JPG
+Completed 256.0 KiB/9.4 MiB (391.7 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.4 MiB (699.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.4 MiB (989.0 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.4 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/9.4 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/9.4 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/9.4 MiB (2.1 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/9.4 MiB (2.3 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/9.4 MiB (2.6 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/9.4 MiB (2.9 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/9.4 MiB (3.2 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/9.4 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/9.4 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.4 MiB (3.9 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.4 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.4 MiB (4.4 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.4 MiB (4.6 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.4 MiB (4.9 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.4 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.4 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.4 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.4 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.4 MiB (6.2 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.4 MiB (6.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.4 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.4 MiB (6.9 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.4 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.4 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.4 MiB (7.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.4 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.4 MiB (8.0 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.4 MiB (8.2 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.4 MiB (8.4 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.4 MiB (8.6 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.4 MiB (8.8 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.4 MiB (9.0 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.4 MiB (9.3 MiB/s) with 1 file(s) remaining    
+Completed 9.4 MiB/9.4 MiB (8.5 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_099.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_099.JPG
+Completed 256.0 KiB/9.4 MiB (387.3 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.4 MiB (725.1 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.4 MiB (1010.6 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.4 MiB (1.3 MiB/s) with 1 file(s) remaining     
+Completed 1.2 MiB/9.4 MiB (1.5 MiB/s) with 1 file(s) remaining     
+Completed 1.5 MiB/9.4 MiB (1.9 MiB/s) with 1 file(s) remaining     
+Completed 1.8 MiB/9.4 MiB (2.0 MiB/s) with 1 file(s) remaining     
+Completed 2.0 MiB/9.4 MiB (2.3 MiB/s) with 1 file(s) remaining     
+Completed 2.2 MiB/9.4 MiB (2.6 MiB/s) with 1 file(s) remaining     
+Completed 2.5 MiB/9.4 MiB (2.9 MiB/s) with 1 file(s) remaining     
+Completed 2.8 MiB/9.4 MiB (3.1 MiB/s) with 1 file(s) remaining     
+Completed 3.0 MiB/9.4 MiB (3.4 MiB/s) with 1 file(s) remaining     
+Completed 3.2 MiB/9.4 MiB (3.6 MiB/s) with 1 file(s) remaining     
+Completed 3.5 MiB/9.4 MiB (3.9 MiB/s) with 1 file(s) remaining     
+Completed 3.8 MiB/9.4 MiB (4.1 MiB/s) with 1 file(s) remaining     
+Completed 4.0 MiB/9.4 MiB (4.4 MiB/s) with 1 file(s) remaining     
+Completed 4.2 MiB/9.4 MiB (4.7 MiB/s) with 1 file(s) remaining     
+Completed 4.5 MiB/9.4 MiB (4.9 MiB/s) with 1 file(s) remaining     
+Completed 4.8 MiB/9.4 MiB (5.2 MiB/s) with 1 file(s) remaining     
+Completed 5.0 MiB/9.4 MiB (5.4 MiB/s) with 1 file(s) remaining     
+Completed 5.2 MiB/9.4 MiB (5.6 MiB/s) with 1 file(s) remaining     
+Completed 5.5 MiB/9.4 MiB (5.9 MiB/s) with 1 file(s) remaining     
+Completed 5.8 MiB/9.4 MiB (6.1 MiB/s) with 1 file(s) remaining     
+Completed 6.0 MiB/9.4 MiB (6.4 MiB/s) with 1 file(s) remaining     
+Completed 6.2 MiB/9.4 MiB (6.6 MiB/s) with 1 file(s) remaining     
+Completed 6.5 MiB/9.4 MiB (6.8 MiB/s) with 1 file(s) remaining     
+Completed 6.8 MiB/9.4 MiB (7.1 MiB/s) with 1 file(s) remaining     
+Completed 7.0 MiB/9.4 MiB (7.3 MiB/s) with 1 file(s) remaining     
+Completed 7.2 MiB/9.4 MiB (7.4 MiB/s) with 1 file(s) remaining     
+Completed 7.5 MiB/9.4 MiB (7.6 MiB/s) with 1 file(s) remaining     
+Completed 7.8 MiB/9.4 MiB (7.8 MiB/s) with 1 file(s) remaining     
+Completed 8.0 MiB/9.4 MiB (8.0 MiB/s) with 1 file(s) remaining     
+Completed 8.2 MiB/9.4 MiB (8.2 MiB/s) with 1 file(s) remaining     
+Completed 8.5 MiB/9.4 MiB (8.5 MiB/s) with 1 file(s) remaining     
+Completed 8.8 MiB/9.4 MiB (8.7 MiB/s) with 1 file(s) remaining     
+Completed 9.0 MiB/9.4 MiB (8.9 MiB/s) with 1 file(s) remaining     
+Completed 9.2 MiB/9.4 MiB (9.1 MiB/s) with 1 file(s) remaining     
+Completed 9.4 MiB/9.4 MiB (8.2 MiB/s) with 1 file(s) remaining     
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_100.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_100.JPG
+Completed 256.0 KiB/10.1 MiB (335.9 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/10.1 MiB (634.2 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/10.1 MiB (897.2 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/10.1 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/10.1 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/10.1 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/10.1 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/10.1 MiB (2.1 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/10.1 MiB (2.4 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/10.1 MiB (2.6 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/10.1 MiB (2.9 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/10.1 MiB (3.1 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/10.1 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/10.1 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/10.1 MiB (3.8 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/10.1 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/10.1 MiB (4.3 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/10.1 MiB (4.6 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/10.1 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/10.1 MiB (5.1 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/10.1 MiB (5.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/10.1 MiB (5.6 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/10.1 MiB (5.8 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/10.1 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/10.1 MiB (6.1 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/10.1 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/10.1 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/10.1 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/10.1 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/10.1 MiB (7.2 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/10.1 MiB (7.4 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/10.1 MiB (7.5 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/10.1 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/10.1 MiB (7.9 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/10.1 MiB (8.1 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/10.1 MiB (8.3 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/10.1 MiB (8.5 MiB/s) with 1 file(s) remaining    
+Completed 9.5 MiB/10.1 MiB (8.7 MiB/s) with 1 file(s) remaining    
+Completed 9.8 MiB/10.1 MiB (9.0 MiB/s) with 1 file(s) remaining    
+Completed 10.0 MiB/10.1 MiB (9.2 MiB/s) with 1 file(s) remaining   
+Completed 10.1 MiB/10.1 MiB (8.3 MiB/s) with 1 file(s) remaining   
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_101.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_101.JPG
+Completed 256.0 KiB/9.3 MiB (359.2 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.3 MiB (669.5 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.3 MiB (950.6 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/9.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/9.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/9.3 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/9.3 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/9.3 MiB (2.5 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/9.3 MiB (2.8 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/9.3 MiB (3.0 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/9.3 MiB (3.1 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/9.3 MiB (3.4 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.3 MiB (3.6 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.3 MiB (3.9 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.3 MiB (4.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.3 MiB (4.4 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.3 MiB (4.7 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.3 MiB (4.8 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.3 MiB (5.0 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.3 MiB (5.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.3 MiB (5.5 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.3 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.3 MiB (6.0 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.3 MiB (6.2 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.3 MiB (6.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.3 MiB (6.7 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.3 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.3 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.3 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.3 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.3 MiB (7.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.3 MiB (7.8 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.3 MiB (8.0 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.3 MiB (8.2 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.3 MiB (8.4 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.3 MiB (8.6 MiB/s) with 1 file(s) remaining    
+Completed 9.3 MiB/9.3 MiB (7.8 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_102.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_102.JPG
+Completed 256.0 KiB/8.0 MiB (275.1 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.0 MiB (380.2 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.0 MiB (467.2 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.0 MiB (540.9 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.0 MiB (621.3 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.0 MiB (676.7 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.0 MiB (748.7 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.0 MiB (799.6 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.0 MiB (856.9 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.0 MiB (908.5 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.0 MiB (943.8 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.0 MiB (1001.4 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/8.0 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.0 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.0 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.0 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.0 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.0 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.0 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.0 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.0 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.0 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.0 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_103.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_103.JPG
+Completed 256.0 KiB/7.8 MiB (359.4 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.8 MiB (672.7 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.8 MiB (954.0 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/7.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/7.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/7.8 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/7.8 MiB (2.0 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/7.8 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/7.8 MiB (2.5 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/7.8 MiB (2.8 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/7.8 MiB (3.0 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/7.8 MiB (3.2 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/7.8 MiB (3.5 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/7.8 MiB (3.7 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/7.8 MiB (4.0 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/7.8 MiB (4.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/7.8 MiB (4.5 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/7.8 MiB (4.7 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/7.8 MiB (5.0 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/7.8 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/7.8 MiB (5.4 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/7.8 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/7.8 MiB (5.9 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/7.8 MiB (6.1 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/7.8 MiB (6.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/7.8 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/7.8 MiB (6.8 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/7.8 MiB (7.0 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/7.8 MiB (7.2 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/7.8 MiB (7.4 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/7.8 MiB (7.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/7.8 MiB (6.8 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_104.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_104.JPG
+Completed 256.0 KiB/9.0 MiB (265.9 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.0 MiB (370.9 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.0 MiB (470.9 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.0 MiB (544.6 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/9.0 MiB (612.9 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/9.0 MiB (680.5 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/9.0 MiB (740.3 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/9.0 MiB (803.7 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/9.0 MiB (850.2 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/9.0 MiB (903.3 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/9.0 MiB (951.2 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/9.0 MiB (996.3 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/9.0 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/9.0 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.0 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.0 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.0 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.0 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.0 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.0 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.0 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.0 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.0 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.0 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.0 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.0 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.0 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.0 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.0 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_105.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_105.JPG
+Completed 256.0 KiB/8.1 MiB (255.2 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.1 MiB (360.4 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.1 MiB (448.6 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.1 MiB (533.0 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.1 MiB (601.1 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.1 MiB (656.0 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.1 MiB (727.2 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.1 MiB (778.8 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.1 MiB (836.3 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.1 MiB (876.8 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.1 MiB (924.8 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.1 MiB (980.8 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/8.1 MiB (1021.0 KiB/s) with 1 file(s) remaining 
+Completed 3.5 MiB/8.1 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.1 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.1 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.1 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.1 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.1 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.1 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.1 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.1 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.1 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.1 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.1 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.1 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.1 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.1 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.1 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.1 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.1 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.1 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.1 MiB/8.1 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_106.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_106.JPG
+Completed 256.0 KiB/8.3 MiB (286.9 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.3 MiB (379.5 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.3 MiB (468.5 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.3 MiB (555.1 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.3 MiB (623.0 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.3 MiB (691.6 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.3 MiB (751.3 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.3 MiB (802.8 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.3 MiB (860.7 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.3 MiB (913.2 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.3 MiB (961.9 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.3 MiB (1006.2 KiB/s) with 1 file(s) remaining 
+Completed 3.2 MiB/8.3 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.3 MiB/8.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_107.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_107.JPG
+Completed 256.0 KiB/8.3 MiB (247.3 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.3 MiB (353.2 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.3 MiB (451.7 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.3 MiB (524.6 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.3 MiB (593.2 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.3 MiB (660.5 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.3 MiB (719.8 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.3 MiB (783.4 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.3 MiB (828.4 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.3 MiB (881.4 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.3 MiB (929.7 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.3 MiB (974.7 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/8.3 MiB (1017.2 KiB/s) with 1 file(s) remaining 
+Completed 3.5 MiB/8.3 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.3 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.3 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.3 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.3 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.3 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.3 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.3 MiB/8.3 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_108.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_108.JPG
+Completed 256.0 KiB/8.5 MiB (286.9 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.5 MiB (403.4 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.5 MiB (500.1 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.5 MiB (593.7 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.5 MiB (668.8 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.5 MiB (743.7 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.5 MiB (808.3 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.5 MiB (865.7 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.5 MiB (929.1 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.5 MiB (987.5 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.5 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/8.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.5 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.5 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.5 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.5 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.5 MiB (1.8 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_109.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_109.JPG
+Completed 256.0 KiB/9.5 MiB (261.3 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.5 MiB (357.5 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.5 MiB (438.6 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.5 MiB (518.3 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/9.5 MiB (582.0 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/9.5 MiB (644.8 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/9.5 MiB (699.8 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/9.5 MiB (759.6 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/9.5 MiB (801.4 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/9.5 MiB (849.4 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/9.5 MiB (894.0 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/9.5 MiB (934.1 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/9.5 MiB (985.2 KiB/s) with 1 file(s) remaining  
+Completed 3.5 MiB/9.5 MiB (1020.0 KiB/s) with 1 file(s) remaining 
+Completed 3.8 MiB/9.5 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.5 MiB/9.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_110.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_110.JPG
+Completed 256.0 KiB/9.6 MiB (245.4 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.6 MiB (342.3 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.6 MiB (423.3 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.6 MiB (492.4 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/9.6 MiB (555.3 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/9.6 MiB (617.8 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/9.6 MiB (672.2 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/9.6 MiB (729.9 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/9.6 MiB (771.3 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/9.6 MiB (819.6 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/9.6 MiB (864.1 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/9.6 MiB (905.1 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/9.6 MiB (954.7 KiB/s) with 1 file(s) remaining  
+Completed 3.5 MiB/9.6 MiB (989.7 KiB/s) with 1 file(s) remaining  
+Completed 3.8 MiB/9.6 MiB (1023.4 KiB/s) with 1 file(s) remaining 
+Completed 4.0 MiB/9.6 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.6 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.6 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.6 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.6 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.6 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.6 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.6 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 9.5 MiB/9.6 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.6 MiB/9.6 MiB (1.6 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_111.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_111.JPG
+Completed 256.0 KiB/7.5 MiB (392.3 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/7.5 MiB (733.2 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/7.5 MiB (1.0 MiB/s) with 1 file(s) remaining  
+Completed 1.0 MiB/7.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 1.2 MiB/7.5 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 1.5 MiB/7.5 MiB (1.9 MiB/s) with 1 file(s) remaining    
+Completed 1.8 MiB/7.5 MiB (2.2 MiB/s) with 1 file(s) remaining    
+Completed 2.0 MiB/7.5 MiB (2.5 MiB/s) with 1 file(s) remaining    
+Completed 2.2 MiB/7.5 MiB (2.6 MiB/s) with 1 file(s) remaining    
+Completed 2.5 MiB/7.5 MiB (2.9 MiB/s) with 1 file(s) remaining    
+Completed 2.8 MiB/7.5 MiB (3.2 MiB/s) with 1 file(s) remaining    
+Completed 3.0 MiB/7.5 MiB (3.5 MiB/s) with 1 file(s) remaining    
+Completed 3.2 MiB/7.5 MiB (3.8 MiB/s) with 1 file(s) remaining    
+Completed 3.5 MiB/7.5 MiB (4.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/7.5 MiB (4.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/7.5 MiB (4.4 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/7.5 MiB (4.7 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/7.5 MiB (4.9 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/7.5 MiB (5.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/7.5 MiB (5.5 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/7.5 MiB (5.7 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/7.5 MiB (6.0 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/7.5 MiB (6.3 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/7.5 MiB (6.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/7.5 MiB (6.6 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/7.5 MiB (6.9 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/7.5 MiB (7.1 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/7.5 MiB (7.3 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/7.5 MiB (7.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/7.5 MiB (7.7 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/7.5 MiB (6.9 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_112.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_112.JPG
+Completed 256.0 KiB/9.8 MiB (261.1 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/9.8 MiB (363.8 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/9.8 MiB (452.5 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/9.8 MiB (524.2 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/9.8 MiB (591.4 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/9.8 MiB (659.1 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/9.8 MiB (717.6 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/9.8 MiB (780.3 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/9.8 MiB (836.1 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/9.8 MiB (877.3 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/9.8 MiB (923.7 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/9.8 MiB (967.0 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/9.8 MiB (1020.0 KiB/s) with 1 file(s) remaining 
+Completed 3.5 MiB/9.8 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 3.8 MiB/9.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/9.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/9.8 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/9.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/9.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/9.8 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/9.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/9.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/9.8 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/9.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/9.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/9.8 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/9.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/9.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/9.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/9.8 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/9.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/9.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/9.8 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/9.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 8.8 MiB/9.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.0 MiB/9.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.2 MiB/9.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.5 MiB/9.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+Completed 9.8 MiB/9.8 MiB (1.8 MiB/s) with 1 file(s) remaining    
+Completed 9.8 MiB/9.8 MiB (1.7 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_113.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_113.JPG
+Completed 256.0 KiB/8.5 MiB (256.9 KiB/s) with 1 file(s) remaining
+Completed 512.0 KiB/8.5 MiB (355.1 KiB/s) with 1 file(s) remaining
+Completed 768.0 KiB/8.5 MiB (437.5 KiB/s) with 1 file(s) remaining
+Completed 1.0 MiB/8.5 MiB (506.2 KiB/s) with 1 file(s) remaining  
+Completed 1.2 MiB/8.5 MiB (570.4 KiB/s) with 1 file(s) remaining  
+Completed 1.5 MiB/8.5 MiB (634.0 KiB/s) with 1 file(s) remaining  
+Completed 1.8 MiB/8.5 MiB (688.9 KiB/s) with 1 file(s) remaining  
+Completed 2.0 MiB/8.5 MiB (748.6 KiB/s) with 1 file(s) remaining  
+Completed 2.2 MiB/8.5 MiB (790.0 KiB/s) with 1 file(s) remaining  
+Completed 2.5 MiB/8.5 MiB (839.3 KiB/s) with 1 file(s) remaining  
+Completed 2.8 MiB/8.5 MiB (885.0 KiB/s) with 1 file(s) remaining  
+Completed 3.0 MiB/8.5 MiB (925.2 KiB/s) with 1 file(s) remaining  
+Completed 3.2 MiB/8.5 MiB (974.2 KiB/s) with 1 file(s) remaining  
+Completed 3.5 MiB/8.5 MiB (1011.8 KiB/s) with 1 file(s) remaining 
+Completed 3.8 MiB/8.5 MiB (1.0 MiB/s) with 1 file(s) remaining    
+Completed 4.0 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.2 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.5 MiB/8.5 MiB (1.1 MiB/s) with 1 file(s) remaining    
+Completed 4.8 MiB/8.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.0 MiB/8.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.2 MiB/8.5 MiB (1.2 MiB/s) with 1 file(s) remaining    
+Completed 5.5 MiB/8.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 5.8 MiB/8.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.0 MiB/8.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.2 MiB/8.5 MiB (1.3 MiB/s) with 1 file(s) remaining    
+Completed 6.5 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 6.8 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 7.0 MiB/8.5 MiB (1.4 MiB/s) with 1 file(s) remaining    
+Completed 7.2 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.5 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 7.8 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 8.0 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+Completed 8.2 MiB/8.5 MiB (1.6 MiB/s) with 1 file(s) remaining    
+Completed 8.5 MiB/8.5 MiB (1.5 MiB/s) with 1 file(s) remaining    
+upload: ../../../../Volumes/archive/National/Datasets/Voyage 2022-2024/Data/TAN2206/DTIS/DTIS Stills/TAN2206_034/TAN2206_034_114.JPG to s3://dtis-ofop-851725470721-raw-testing/TAN2206/034/images/TAN2206_034_114.JPG
+File Sync Report - [1]+  Stopped Mon 11 Nov 2024 17:45:00 NZDT

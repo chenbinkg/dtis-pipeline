@@ -1,15 +1,135 @@
-# Based on: https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Docker.gitlab-ci.yml
+stages:
+  - check
+  - lint
+  - unit-test
+  - integration-test
+  - package
+  - deploy
+  - system-test
 
+#debug-pipeline-dev:
+#  stage: check
+#  needs: []
+#  before_script:
+#    - apk add -U bash
+#    - chmod +x ./tasks
+#  script:
+#    - cat /etc/os-release
+#    - docker image ls
 
-shellcheck:
-  tags:
-    - docker
-  # Use the official docker image.
-  image: docker:cli
-  stage: test
-  services:
-    - docker:dind
-  script:
+# Using NIWA IT Provided Shell executor Runner (uses alpine:latest image)
+infra-checkov:
+  stage: check
+  needs: []
+  artifacts:
+    reports:
+      junit:
+        - results.xml
+  # We have more work to do here - deferred to later date.
+  allow_failure: true
+  before_script:
     - apk add -U bash
     - chmod +x ./tasks
-    - bash -c "./tasks shellcheck"
+  script:
+    - bash -c "./tasks checkov_alpine"
+
+scripts-shellcheck:
+  stage: lint
+  needs: []
+  artifacts:
+    reports:
+      junit:
+        - shellcheck_report.xml
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - bash -c "./tasks shellcheck_alpine" || true
+
+scripts-unit-tests:
+  stage: unit-test
+  needs: [scripts-shellcheck]
+  artifacts:
+    reports:
+      junit:
+        - upload/test/bats/report.xml
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - bash -c "./tasks bats_alpine"
+
+scripts-package:
+  stage: package
+  needs: [scripts-unit-tests]
+  # We have more work to do here - Not yet implemented.
+  allow_failure: true
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - echo "TODO - Package Upload Script"
+    - exit 1
+
+lambda-unit-tests:
+  stage: unit-test
+  needs: []
+  artifacts:
+    reports:
+      junit:
+        - processing/report.xml
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - bash -c "./tasks lambda_unit_tests_alpine"
+
+lambda-integration-tests:
+  stage: integration-test
+  needs: [lambda-unit-tests]
+  # We have more work to do here - not yet implemented.
+  allow_failure: true
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - echo "TODO - lambda-integration-tests"
+    - exit 1
+
+lambda-package:
+  stage: package
+  needs: [lambda-integration-tests]
+  # We have more work to do here - Not yet integrated into CICD.
+  allow_failure: true
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - echo "TODO - lambda-package"
+    - exit 1
+
+lambda-deployment:
+  stage: deploy
+  needs: [lambda-package, infra-checkov]
+  # We have more work to do here - Not yet integrated into CICD.
+  allow_failure: true
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - echo "TODO - lambda-deployment"
+    - exit 1
+
+system-tests:
+  stage: system-test
+  # We really should use the `scripts-package` artefact to test upload is funtioning.
+  # Just use successful `scripts-unit-tests` stage dependency for now.
+  needs: [scripts-unit-tests, lambda-deployment]
+  # We have more work to do here - Not implemented yet.
+  allow_failure: true
+  before_script:
+    - apk add -U bash
+    - chmod +x ./tasks
+  script:
+    - echo "TODO - system-tests"
+    - exit 1
