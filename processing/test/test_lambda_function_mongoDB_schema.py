@@ -47,9 +47,8 @@ import sys
 
 # Adjust the path to ensure the module can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
@@ -75,6 +74,7 @@ from lambda_function_mongoDB_schema import (  # parse_tasks,
     parse_time_only,
     prepare_documents,
 )
+from pymongo import ReturnDocument
 
 """
 Summary of new Tests for re-factored code:
@@ -234,7 +234,28 @@ def test_increment_ingress_id_existing_document():
 
     # Assert
     assert ingress_count == 5
-    mock_collection.find_one_and_update.assert_called_once()
+    # mock_collection.find_one_and_update.assert_called_once()
+    mock_collection.find_one_and_update.assert_called_once_with(
+        {"cruise": "TAN2206", "station": "009", "remarks": "RemarkX"},
+        {
+            "$inc": {"ingress_count": 1},
+            "$set": {
+                "bounding_box": {
+                    "min_lat": -42.0123,
+                    "max_lat": 10.55,
+                    "min_lon": -20,
+                    "max_lon": 20,
+                },
+                "date_updated": ANY,  # Allows for dynamic datetime
+            },
+            "$setOnInsert": {
+                "observationCount": 333,
+                "date_created": "2023-01-01T00:00:00+00:00",
+            },
+        },
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
 
 
 @pytest.mark.skip("Skipping test for now: not used")

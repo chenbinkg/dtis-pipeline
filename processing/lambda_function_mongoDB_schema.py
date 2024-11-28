@@ -226,15 +226,19 @@ def increment_ingress_id(
             The number of documents ingested.
         date_created (datetime):
             The date the document was created.
+    Returns:
+        int:
+        The updated ingress_count.
     """
-    logger.info(
+    logger.debug(
         f"Attempting to update document with filter: {{'cruise': '{cruise}', 'station': '{station}', 'remarks': '{remarks}'}}"
     )
+    logger.debug(f"Bounding Box: {bounding_box}")
     try:
         update_doc = {
             "$inc": {"ingress_count": 1},
             "$set": {
-                "boundingBox": bounding_box,
+                "bounding_box": bounding_box,
                 "date_updated": datetime.now(
                     timezone.utc
                 ).isoformat(),  # Convert to ISO string
@@ -259,16 +263,19 @@ def increment_ingress_id(
             return_document=ReturnDocument.AFTER,
         )
 
+        if counter is None:
+            logger.error("find_one_and_update did not return any document.")
+            return 0
+
+        ingress_count = counter.get("ingress_count", 0)
         logger.info(
-            f"Updated document ingress_count: {counter.get('ingress_count', 0)}"
+            f"Updated document ingress_count: {ingress_count}, bounding_box: {counter.get('bounding_box')}"
         )
 
-        return counter.get("ingress_count", 0)
+        return ingress_count
 
     except Exception as e:
         logger.error(f"Error in increment_ingress_id: {str(e)}")
-        # logger.error(f"Document that caused error: {update_doc}")
-        # pass
         raise
 
 
@@ -284,11 +291,11 @@ def calculate_bounding_box(coordinates):
         "type": "Polygon",
         "coordinates": [
             [
-                [min(lons), min(lats)],
-                [max(lons), min(lats)],
-                [max(lons), max(lats)],
-                [min(lons), max(lats)],
-                [min(lons), min(lats)],
+                [min(lats), min(lons)],
+                [max(lats), min(lons)],
+                [max(lats), max(lons)],
+                [min(lats), max(lons)],
+                [min(lats), min(lons)],
             ]
         ],
     }
