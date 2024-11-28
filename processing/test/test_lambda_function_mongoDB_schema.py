@@ -59,6 +59,7 @@ from lambda_function_mongoDB_schema import (  # parse_tasks,
     detect_header_line,
     get_file_from_s3,
     get_posi_file_content,
+    increment_ingress_id,
     initialize_resources,
     insert_documents_to_mongodb,
     lambda_handler,
@@ -190,6 +191,50 @@ def test_get_file_from_s3_no_file(s3_client):
     )
     with pytest.raises(FileNotFoundError):
         get_file_from_s3(s3_client, "test_bucket", "test_key")
+
+
+def test_increment_ingress_id_existing_document():
+    """
+    Test incrementing the ingress count for an existing document.
+    """
+    # Mock the MongoDB collection
+    mock_collection = MagicMock()
+    mock_document = {
+        "cruise": "TAN2206",
+        "station": "009",
+        "remarks": "RemarkX",
+        "ingress_count": 5,
+        "bounding_box": {
+            "min_lat": -42.0123,
+            "max_lat": 10.55,
+            "min_lon": -20,
+            "max_lon": 20,
+        },
+        "observationCount": 333,
+        "date_created": "2023-01-01T00:00:00Z",
+    }
+    # Configure find_one_and_update to return the updated document
+    mock_collection.find_one_and_update.return_value = mock_document
+
+    # Call the function
+    ingress_count = increment_ingress_id(
+        ingress_collection=mock_collection,
+        cruise="TAN2206",
+        station="009",
+        remarks="RemarkX",
+        bounding_box={
+            "min_lat": -42.0123,
+            "max_lat": 10.55,
+            "min_lon": -20,
+            "max_lon": 20,
+        },
+        count_documents=333,
+        date_created=datetime(2023, 1, 1, tzinfo=timezone.utc),
+    )
+
+    # Assert
+    assert ingress_count == 5
+    mock_collection.find_one_and_update.assert_called_once()
 
 
 @pytest.mark.skip("Skipping test for now: not used")

@@ -220,7 +220,7 @@ def increment_ingress_id(
             The station identifier.
         remarks (str):
             The remarks identifier.
-        bounding_box (Dict):
+        bounding_box (dict):
             The bounding box coordinates.
         count_documents (int):
             The number of documents ingested.
@@ -228,19 +228,19 @@ def increment_ingress_id(
             The date the document was created.
     """
     logger.info(
-        f"Attempting to update document with filter: {{'cruise': '{cruise}', 'station': '{station}', 'remarks': '{remarks}'}} "
+        f"Attempting to update document with filter: {{'cruise': '{cruise}', 'station': '{station}', 'remarks': '{remarks}'}}"
     )
     try:
         update_doc = {
             "$inc": {"ingress_count": 1},
             "$set": {
+                "boundingBox": bounding_box,
                 "date_updated": datetime.now(
                     timezone.utc
                 ).isoformat(),  # Convert to ISO string
             },
             "$setOnInsert": {
                 "observationCount": count_documents,
-                "boundingBox": bounding_box,
                 "date_created": (
                     date_created.isoformat()
                     if isinstance(date_created, datetime)
@@ -248,22 +248,28 @@ def increment_ingress_id(
                 ),
             },
         }
+        # Log the update document for debugging
+        logger.debug(f"Update Document: {json.dumps(update_doc, default=str)}")
 
-        # Log the document before insertion
-        logger.debug(
-            f"Attempting to update document with filter: {{'cruise': '{cruise}', 'station': '{station}', 'remarks': '{remarks}'}} and update: {json.dumps(update_doc, default=str)}"
-        )
-        result = ingress_collection.update_one(
+        # Use find_one_and_update to return the updated document
+        counter = ingress_collection.find_one_and_update(
             {"cruise": cruise, "station": station, "remarks": remarks},
             update_doc,
             upsert=True,
+            return_document=ReturnDocument.AFTER,
         )
-        return result
+
+        logger.info(
+            f"Updated document ingress_count: {counter.get('ingress_count', 0)}"
+        )
+
+        return counter.get("ingress_count", 0)
+
     except Exception as e:
         logger.error(f"Error in increment_ingress_id: {str(e)}")
-        logger.error(f"Document that caused error: {update_doc}")
-        pass
-        # raise
+        # logger.error(f"Document that caused error: {update_doc}")
+        # pass
+        raise
 
 
 def calculate_bounding_box(coordinates):
@@ -1218,25 +1224,25 @@ def prepare_documents(
     # Get the current ingressId
     current_ingress_id = 1
 
-    # Extract ingressID from  MongoDB (using ingress_collection)
-    if ingress_collection is not None:
-        try:
-            current_ingress_id = get_current_ingress_id(
-                ingress_collection,
-                metadata.get("Cruise"),
-                metadata.get("Station"),
-                metadata.get("Remarks"),
-                observations[0].get("PC_Time"),
-            )
-            logger.debug(
-                "Updated ingress document with ingress_id: %s",
-                current_ingress_id,
-            )
-        except Exception as e:
-            logger.error("Failed to get current ingressId: %s", e)
-            return []  # Return empty list if ingressId retrieval fails
-        finally:
-            logger.debug("Current ingressId: %s", current_ingress_id)
+    # # Extract ingressID from  MongoDB (using ingress_collection)
+    # if ingress_collection is not None:
+    #     try:
+    #         current_ingress_id = get_current_ingress_id(
+    #             ingress_collection,
+    #             metadata.get("Cruise"),
+    #             metadata.get("Station"),
+    #             metadata.get("Remarks"),
+    #             observations[0].get("PC_Time"),
+    #         )
+    #         logger.debug(
+    #             "Updated ingress document with ingress_id: %s",
+    #             current_ingress_id,
+    #         )
+    #     except Exception as e:
+    #         logger.error("Failed to get current ingressId: %s", e)
+    #         return []  # Return empty list if ingressId retrieval fails
+    #     finally:
+    #         logger.debug("Current ingressId: %s", current_ingress_id)
 
     # Initialize default values
     try:
@@ -1478,7 +1484,7 @@ def lambda_handler(event, context):
                 station,
                 remarks,
                 bounding_box,
-                inserted_actual,
+                len(inserted_actual),
                 date_created=datetime.now(timezone.utc),
             )
         except Exception as e:
