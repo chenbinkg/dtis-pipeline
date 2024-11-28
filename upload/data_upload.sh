@@ -51,19 +51,7 @@ if [ -z "${NIWA_ENVIRONMENT}" ]; then
   exit 1
 fi
 
-if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
-  # S3 bucket details
-  bucket_name="dtis-ofop-851725470721-raw-testing"
-
-  # Lambda function URL
-  lambda_function_url=https://abcdefg.lambda-url.us-east-1.on.aws/
-elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
-  # S3 bucket details
-  bucket_name="dtis-ofop-851725470721-raw-production"
-
-  # Lambda function URL
-  lambda_function_url=https://TODO.lambda-url.us-east-1.on.aws/
-else
+if [ "${NIWA_ENVIRONMENT}" != "testing" ] && [ "${NIWA_ENVIRONMENT}" != "production" ]; then
   echo "Variable NIWA_ENVIRONMENT was not set to a supported value. Please set it to either testing or production"
   exit 1
 fi
@@ -209,7 +197,17 @@ function get_station_id() {
               # remove whitespace
               station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
             else
-              echo "Error: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+              # this gives, e.g. /STN_002/
+              temp_parse=$(echo "${file_path_upper_case}" | grep -oE "/STN_[0-9]{3,}/")
+              if [ $? -eq 0 ]; then
+                # this gives, e.g. STN_002
+                temp_parse=$(echo "${temp_parse}" | awk -F '/' '{print $2}' | grep -oE "[0-9]{3,}")
+                station_id="${temp_parse}"
+                # remove whitespace
+                station_id="$(echo -e "${station_id}" | sed -e 's/[[:space:]]*$//')"
+              else
+                echo "Error: Could not get station id for the file: ${file_path} (file path matches no pattern, potential cruise ID mismatch)" | tee -a "${error_file}"
+              fi
             fi
           fi
         fi
@@ -262,7 +260,7 @@ upload_to_s3() {
         sync_output="S3 object exists already, not uploading"
         sync_output_exit_status=0
       else
-        sync_output=$(set -x; aws s3 cp "${file_path}" "${s3_destination}")
+        sync_output=$(set -x; aws s3 cp "${file_path}" "${s3_destination}" --storage-class "STANDARD_IA")
         sync_output_exit_status=$?
       fi
 
@@ -410,17 +408,25 @@ check_ofop_files() {
     done
 }
 
-# Trigger Lambda function via Lambda Function URL
-trigger_lambda_function() {
-    echo "Triggering Lambda function via URL..."
+# Function to enable event source mapping for the Lambda function using AWS CLI
+enable_lambda() {
+    echo "$(date +"%F %T") Enabling Lambda event source mapping for the function: ${lambda_function_name}..."
 
-    # Make a POST request to the Lambda function URL
-    response=$(curl -s -w "%{http_code}" -o /dev/null -X POST "$lambda_function_url")
-
-    if [ "$response" == "200" ]; then
-        echo "Lambda function triggered successfully." >> "$success_file"
+    event_source_mapping_info=$(aws lambda list-event-source-mappings --function-name "${lambda_function_name}")
+    if echo "${event_source_mapping_info}" | grep -q '"State": "Enabled"'; then
+        echo "$(date +"%F %T") Lambda event source mapping was already enabled. Nothing to do" | tee -a "${success_file}"
     else
-        echo "Failed to trigger Lambda function. HTTP response code: $response" >> "$error_file"
+      uuid=$(echo "${event_source_mapping_info}" | grep "UUID" | awk -F ':' '{print $2}' | grep -o "[a-zA-Z0-9-]*")
+      aws lambda update-event-source-mapping \
+    --uuid  "${uuid}" \
+    --enabled
+
+      # Check if the invocation was successful
+      if [ $? -eq 0 ]; then
+          echo "$(date +"%F %T") Lambda event source mapping enabled successfully" | tee -a "$success_file"
+      else
+          echo "$(date +"%F %T") Failed to enable Lambda event source mapping" | tee -a "$error_file"
+      fi
     fi
 }
 
@@ -491,6 +497,7 @@ if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   check_image_files "$images_dir"
   # Check station ID, write which files passed all the checks into a file
   write_validated_file_paths "image" "${image_files_to_copy[@]}"
+  echo ""
 
   ##############################################
   # SubSubSection: video files
@@ -503,6 +510,7 @@ if [[ "${NIWA_DRY_RUN}" == "true" ]]; then
   check_video_files "$videos_dir"
   # Check station ID, write which files passed all the checks into a file
   write_validated_file_paths "video" "${video_files_to_copy[@]}"
+  echo ""
 
   ##############################################
   # SubSubSection: text files
@@ -536,9 +544,6 @@ fi
 ##############################################
 
 if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
-  # Verify the S3 bucket
-  verify_s3_bucket
-
   # Set AWS configurations in the script (for S3 specifically)
   echo "Setting AWS configurations"
   aws configure set region "${aws_region}"
@@ -551,6 +556,21 @@ if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
   aws configure set s3.use_accelerate_endpoint false
   aws configure set s3.addressing_style virtual
   echo "Finished setting AWS configurations"
+
+  AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+  if [ "${NIWA_ENVIRONMENT}" == "testing" ]; then
+    bucket_name="dtis-ofop-${AWS_ACCOUNT_ID}-raw-testing"
+    lambda_function_name="dtis-ofop-testing"
+  elif [ "${NIWA_ENVIRONMENT}" == "production" ]; then
+    bucket_name="dtis-ofop-${AWS_ACCOUNT_ID}-raw-production"
+    lambda_function_name="dtis-ofop-production"
+  else
+    echo "Variable NIWA_ENVIRONMENT was not set to a supported value. Please set it to either testing or production"
+    exit 1
+  fi
+
+  # Verify the S3 bucket
+  verify_s3_bucket
 fi
 
 ##############################################
@@ -573,6 +593,10 @@ fi
 ##############################################
 # Section: Trigger the Lambda function
 ##############################################
-
 # Trigger the Lambda function after upload completes
-# trigger_lambda_function
+if [[ "${NIWA_DRY_RUN}" != "true" ]]; then
+  echo "----------------------------" | tee -a  "$success_file"
+  echo "----------------------------" | tee -a  "$error_file"
+  enable_lambda
+  exit 0
+fi
