@@ -53,7 +53,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
-from lambda_function_mongoDB_schema import (
+from lambda_function_mongoDB_schema import (  # parse_tasks,
     calculate_bounding_box,
     detect_file_format,
     detect_header_line,
@@ -71,7 +71,6 @@ from lambda_function_mongoDB_schema import (
     parse_original_format,
     parse_posi_file,
     parse_simple_format,
-    parse_tasks,
     parse_time_only,
     prepare_documents,
 )
