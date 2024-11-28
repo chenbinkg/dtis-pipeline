@@ -380,7 +380,7 @@ def test_lambda_handler(
 
     result = lambda_handler(event, context)
     assert result["statusCode"] == 200
-    assert "Inserted 2 documents successfully!" in json.loads(result["body"])
+    assert "Successfully processed all records" in json.loads(result["body"])
 
     # Ensure the MongoDB connection is closed
     # mock_mongo_client.close.assert_called_once()

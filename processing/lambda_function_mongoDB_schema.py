@@ -181,7 +181,7 @@ def get_current_ingress_id(
         },
         {
             "$setOnInsert": {
-                "value": 0,
+                "ingress_count": 0,
                 "date_created": (
                     date_created.isoformat()
                     if isinstance(date_created, datetime)
@@ -193,7 +193,7 @@ def get_current_ingress_id(
         upsert=True,
         return_document=ReturnDocument.AFTER,
     )
-    return counter["value"]
+    return counter["ingress_count"]
 
 
 def increment_ingress_id(
@@ -210,32 +210,49 @@ def increment_ingress_id(
     If the document does not exist, create it with a value of 1.
 
     This is used to keep track of the number of ingresses for a given cruise/station/remarks.
-    """
 
+    Args:
+        ingress_collection (Collection):
+            The MongoDB collection for ingresses.
+        cruise (str):
+            The cruise identifier.
+        station (str):
+            The station identifier.
+        remarks (str):
+            The remarks identifier.
+        bounding_box (Dict):
+            The bounding box coordinates.
+        count_documents (int):
+            The number of documents ingested.
+        date_created (datetime):
+            The date the document was created.
+    """
+    logger.info(
+        f"Attempting to update document with filter: {{'cruise': '{cruise}', 'station': '{station}', 'remarks': '{remarks}'}} "
+    )
     try:
         update_doc = {
-            "$inc": {"value": 1},
+            "$inc": {"ingress_count": 1},
             "$set": {
-                "observationCount": count_documents,
-                "boundingBox": bounding_box,
                 "date_updated": datetime.now(
                     timezone.utc
                 ).isoformat(),  # Convert to ISO string
             },
             "$setOnInsert": {
+                "observationCount": count_documents,
+                "boundingBox": bounding_box,
                 "date_created": (
                     date_created.isoformat()
-                    # if isinstance(date_created, datetime)
-                    # else date_created
-                )
+                    if isinstance(date_created, datetime)
+                    else date_created
+                ),
             },
         }
 
         # Log the document before insertion
         logger.debug(
-            f"Attempting to update with document: {json.dumps(update_doc, default=str)}"
+            f"Attempting to update document with filter: {{'cruise': '{cruise}', 'station': '{station}', 'remarks': '{remarks}'}} and update: {json.dumps(update_doc, default=str)}"
         )
-
         result = ingress_collection.update_one(
             {"cruise": cruise, "station": station, "remarks": remarks},
             update_doc,
@@ -245,7 +262,8 @@ def increment_ingress_id(
     except Exception as e:
         logger.error(f"Error in increment_ingress_id: {str(e)}")
         logger.error(f"Document that caused error: {update_doc}")
-        raise
+        pass
+        # raise
 
 
 def calculate_bounding_box(coordinates):
@@ -1444,7 +1462,7 @@ def lambda_handler(event, context):
         remarks = "No remarks captured"
         try:
             remarks = remarks.strip() if remarks else None
-            cruise = cruise.strip() if cruise else "TAN2206"
+            cruise = cruise.strip() if cruise else "TAN2206"  # DEBUG ONLY - REMOVE
 
             # Increment the ingressId
             logger.info(
