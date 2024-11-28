@@ -1231,25 +1231,25 @@ def prepare_documents(
     # Get the current ingressId
     current_ingress_id = 1
 
-    # # Extract ingressID from  MongoDB (using ingress_collection)
-    # if ingress_collection is not None:
-    #     try:
-    #         current_ingress_id = get_current_ingress_id(
-    #             ingress_collection,
-    #             metadata.get("Cruise"),
-    #             metadata.get("Station"),
-    #             metadata.get("Remarks"),
-    #             observations[0].get("PC_Time"),
-    #         )
-    #         logger.debug(
-    #             "Updated ingress document with ingress_id: %s",
-    #             current_ingress_id,
-    #         )
-    #     except Exception as e:
-    #         logger.error("Failed to get current ingressId: %s", e)
-    #         return []  # Return empty list if ingressId retrieval fails
-    #     finally:
-    #         logger.debug("Current ingressId: %s", current_ingress_id)
+    # Extract ingressID from  MongoDB (using ingress_collection)
+    if ingress_collection is not None:
+        try:
+            current_ingress_id = get_current_ingress_id(
+                ingress_collection,
+                metadata.get("Cruise"),
+                metadata.get("Station"),
+                metadata.get("Remarks"),
+                observations[0].get("PC_Time"),
+            )
+            logger.debug(
+                "Updated ingress document with ingress_id: %s",
+                current_ingress_id,
+            )
+        except Exception as e:
+            logger.error("Failed to get current ingressId: %s", e)
+            return []  # Return empty list if ingressId retrieval fails
+        finally:
+            logger.debug("Current ingressId: %s", current_ingress_id)
 
     # Initialize default values
     try:
@@ -1444,8 +1444,6 @@ def lambda_handler(event, context):
                         )
                     )
 
-                    # Get the ingress collection
-                    ingress_collection = db[os.environ["INGRESS_COLLECTION_DTIS"]]
                     all_documents.extend(documents)
 
                     logger.info("Parsed file format: %s", file_format)
@@ -1475,7 +1473,10 @@ def lambda_handler(event, context):
         remarks = "No remarks captured"
         try:
             remarks = remarks.strip() if remarks else None
-            cruise = cruise.strip() if cruise else "TAN2206"  # DEBUG ONLY - REMOVE
+            cruise = cruise.strip()  # if cruise else "TAN2206"  # DEBUG ONLY - REMOVE
+            station = (
+                station.strip() if station else "DefaultStation"
+            )  # Ensure station is handled
 
             # Increment the ingressId
             logger.info(
@@ -1485,7 +1486,7 @@ def lambda_handler(event, context):
                 remarks,
                 bounding_box,
             )
-            increment_ingress_id(
+            ingress_count = increment_ingress_id(
                 ingress_collection,
                 cruise,
                 station,
@@ -1494,8 +1495,11 @@ def lambda_handler(event, context):
                 len(inserted_actual),
                 date_created=datetime.now(timezone.utc),
             )
-        except Exception as e:
-            logger.error(f"Failed to increment ingressId: {str(e)}")
+            logger.info(f"Final Ingress Count: {ingress_count}")
+
+        except Exception as inner_e:
+            logger.error(f"Error processing record {record}: {str(inner_e)}")
+            # Depending on requirements, you might want to continue or re-raise
 
         # Close the MongoDB client
         mongo_client.close()
