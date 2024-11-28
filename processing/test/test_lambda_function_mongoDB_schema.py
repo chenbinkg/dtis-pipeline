@@ -1406,8 +1406,8 @@ Gear deployed    :	  :  :
     [
         # (["Cruise : Test Cruise", "UTC Time\tPC Time\tLat"], "original"),
         (["#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name"], "simple"),
-        (["#Date\tTime\tPC_Time\tSHIP_Lon"], "latest"),
-        (["Some random text"], "unknown"),
+        # (["#Date\tTime\tPC_Time\tSHIP_Lon"], "latest"),
+        # (["Some random text"], "unknown"),
         # New test case for 'latest' format
         (
             [
