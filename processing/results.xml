@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="36" time="1.804" timestamp="2024-11-05T16:52:30.191039" hostname="NIWA-1019802"><properties><property name="Environment.collection_name" value="pytest_runtime_default" /></properties><testcase classname="test.generic_test" name="test_generic_1" time="0.001" /><testcase classname="test.generic_test" name="test_generic_2" time="0.001" /><testcase classname="test.generic_test" name="test_generic_3" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_initialize_resources" time="0.721" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_get_file_from_s3_success" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_get_file_from_s3_no_file" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_file_content" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_prepare_documents" time="0.002"><failure message="assert 0 &gt; 0&#10; +  where 0 = len([])">def test_prepare_documents():
+        data_lines = [
+            "12:34:56\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation"
+        ]
+        file_key = "test_key"
+        posi_data = {
+            "2020-12-12T12:34:56Z": {
+                "datetime": datetime(2020, 12, 12, 12, 34, 56, tzinfo=timezone.utc),
+                "data": {},
+            }
+        }
+        cruise = "cruise"
+        station = "station"
+        remarks = "remarks"
+        ingress_collection = MagicMock()
+        documents, sub_coordinates = prepare_documents(
+            ingress_collection, data_lines, file_key, posi_data, cruise, station, remarks
+        )
+&gt;       assert len(documents) &gt; 0
+E       assert 0 &gt; 0
+E        +  where 0 = len([])
+
+test\test_lambda_function_mongoDB_schema.py:160: AssertionError</failure></testcase><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_insert_documents_to_mongodb" time="0.002" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_lambda_handler" time="0.011"><failure message="ValueError: Source file test_key is neither a _prot.txt nor _obs.txt file">mock_insert_documents_to_mongodb = &lt;MagicMock name='insert_documents_to_mongodb' id='2456130459664'&gt;
+mock_prepare_documents = &lt;MagicMock name='prepare_documents' id='2456167997328'&gt;
+mock_parse_file_content = &lt;MagicMock name='parse_file_content' id='2456168004368'&gt;
+mock_get_file_from_s3 = &lt;MagicMock name='get_file_from_s3' id='2456168004176'&gt;
+mock_initialize_resources = &lt;MagicMock name='initialize_resources' id='2456159069584'&gt;
+
+    @patch("lambda_function_mongoDB_schema.initialize_resources")
+    @patch("lambda_function_mongoDB_schema.get_file_from_s3")
+    @patch("lambda_function_mongoDB_schema.parse_file_content")
+    @patch("lambda_function_mongoDB_schema.prepare_documents")
+    @patch("lambda_function_mongoDB_schema.insert_documents_to_mongodb")
+    def test_lambda_handler(
+        mock_insert_documents_to_mongodb,
+        mock_prepare_documents,
+        mock_parse_file_content,
+        mock_get_file_from_s3,
+        mock_initialize_resources,
+    ):
+        mock_initialize_resources.return_value = (Mock(), Mock(), MagicMock())
+        mock_get_file_from_s3.return_value = "file content"
+        mock_parse_file_content.return_value = {
+            "header": "header",
+            "data_lines": ["data line"],
+            "cruise": "cruise",
+            "station": "station",
+            "remarks": "remarks",
+            "file_format": "original",
+        }
+        mock_prepare_documents.return_value = (["document"], ["sub_coordinates"])
+        mock_insert_documents_to_mongodb.return_value = [1, 2]
+    
+        event = {
+            "Records": [
+                {
+                    "s3": {
+                        "bucket": {"name": "test_bucket"},
+                        "object": {"key": "test_key"},
+                    }
+                }
+            ]
+        }
+        context = Mock()
+    
+&gt;       result = lambda_handler(event, context)
+
+test\test_lambda_function_mongoDB_schema.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+lambda_function_mongoDB_schema.py:692: in lambda_handler
+    posi_content = get_posi_file_content(s3, bucket_name, file_key)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s3 = &lt;Mock id='2456086078288'&gt;, bucket = 'test_bucket', key = 'test_key'
+
+    def get_posi_file_content(s3, bucket, key):
+        """
+        We are using a companion _'posi.txt' file to look up date/time information:
+        Lambda function uses a lookup of information from a a pair of 'companion' text files.
+        get_posi_file_content() is used to find a file which has a similar file name,
+        but instead of ending in _prot.txt, it ends in _posi.txt.
+        """
+    
+        try:
+            # Handle both _prot.txt and _obser.txt cases
+            if key.endswith("_prot.txt"):
+                posi_key = key.replace("_prot.txt", "_posi.txt")
+            elif key.endswith("_obser.txt"):
+                posi_key = key.replace("_obser.txt", "_posi.txt")
+            else:
+&gt;               raise ValueError(
+                    f"Source file {key} is neither a _prot.txt nor _obs.txt file"
+                )
+E               ValueError: Source file test_key is neither a _prot.txt nor _obs.txt file
+
+lambda_function_mongoDB_schema.py:359: ValueError</failure></testcase><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_get_posi_file_content_success" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_get_posi_file_content_no_file" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_get_posi_file_content_file_name_transformation" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_get_posi_file_content_various_paths[sample_prot.txt-sample_posi.txt]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_get_posi_file_content_various_paths[test123_prot.txt-test123_posi.txt]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_get_posi_file_content_various_paths[path/to/file_prot.txt-path/to/file_posi.txt]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line[12:34:56\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation-expected_results0]" time="0.004" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line[12:34:56\tonly_three_fields\tfield3-None]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_new_format" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_video_events[video started-expected_video_state0]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_video_events[start video-expected_video_state1]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_video_events[Video Started at surface-expected_video_state2]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_video_events[video stopped-expected_video_state3]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_video_events[general observation-expected_video_state4]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_time_parsing[test_case0]" time="0.001"><failure message="ValueError: Invalid source input (text) file type">test_case = {'expected': {'hour': 23, 'minute': 59, 'second': 59}, 'time_str': '23:59:59'}
+basic_line = '12:34:56\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation'
+
+    @pytest.mark.parametrize("test_case", time_test_cases())
+    def test_parse_data_line_time_parsing(test_case, basic_line):
+        line = test_case["time_str"] + basic_line[8:]  # Replace time in basic line
+    
+&gt;       result, _, _ = parse_data_line(line, "test_key", None, [])
+
+test\test_lambda_function_mongoDB_schema.py:490: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+line = '23:59:59\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation'
+source_key = 'test_key', video_start_time = None, video_events = []
+file_format = 'original', header = None
+
+    def parse_data_line(
+        line,
+        source_key,
+        video_start_time=None,
+        video_events=[],
+        file_format="original",
+        header=None,
+    ):
+        """
+        Parse a line of data from either original or new rerun_XX_obs format files
+        """
+        check_timeout()
+    
+        # Add safety check for video_events list size
+        if len(video_events) &gt; 1000:  # Set appropriate limit
+            logger.error("Too many video events - possible infinite loop")
+    
+        if not line or line.startswith("#") or line.startswith("End ###"):
+            return None, video_start_time, video_events
+    
+        fields = line.strip().split("\t")
+    
+        if file_format == "original":
+            if len(fields) &lt; 12:  # Original format requires at least 12 fields
+                return None, video_start_time, video_events
+            # logger.info(f"Fields: {fields}, file_format = {file_format}")
+            utc_time = fields[0]
+            lon = float(fields[3])
+            lat = float(fields[2])
+            speed = float(fields[4])
+            course = float(fields[5])
+            depth = float(fields[6])
+            heading = float(fields[7])
+            sub_lon = float(fields[11])
+            sub_lat = float(fields[10])
+            observation = fields[13] if len(fields) &gt; 12 else ""
+            current_time = datetime.strptime(utc_time, "%H:%M:%S")
+    
+        else:  # new rerun_obser text file format
+            if len(fields) != 6:  # New format requires exactly 6 fields
+                return None, video_start_time, video_events
+            logger.info(f"Fields: {fields}, file_format = {file_format}")
+    
+            utc_time = fields[1]
+            # Skip date field[0] in rerun file. We will interpolate the date
+            lon = float(fields[2])
+            lat = float(fields[3])
+            speed = None
+            course = None
+            depth = None
+            heading = None
+            sub_lon = lon  # Use same coordinates for sub location
+            sub_lat = lat
+            observation = fields[5]
+            current_time = datetime.strptime(utc_time, "%H:%M:%S")
+    
+        # Determine source type
+        is_prot = source_key.endswith("_prot.txt")
+        is_obs = source_key.endswith("_obser.txt")
+    
+        if not (is_prot or is_obs):
+&gt;           raise ValueError("Invalid source input (text) file type")
+E           ValueError: Invalid source input (text) file type
+
+lambda_function_mongoDB_schema.py:270: ValueError</failure></testcase><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_time_parsing[test_case1]" time="0.001"><failure message="ValueError: Invalid source input (text) file type">test_case = {'expected': {'hour': 0, 'minute': 0, 'second': 0}, 'time_str': '00:00:00'}
+basic_line = '12:34:56\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation'
+
+    @pytest.mark.parametrize("test_case", time_test_cases())
+    def test_parse_data_line_time_parsing(test_case, basic_line):
+        line = test_case["time_str"] + basic_line[8:]  # Replace time in basic line
+    
+&gt;       result, _, _ = parse_data_line(line, "test_key", None, [])
+
+test\test_lambda_function_mongoDB_schema.py:490: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+line = '00:00:00\tignored\t-41.2345\t174.9876\t2.5\t180.0\t100.5\t45.0\t0\t0\t-41.2345\t174.9876\tignored\tgeneral observation'
+source_key = 'test_key', video_start_time = None, video_events = []
+file_format = 'original', header = None
+
+    def parse_data_line(
+        line,
+        source_key,
+        video_start_time=None,
+        video_events=[],
+        file_format="original",
+        header=None,
+    ):
+        """
+        Parse a line of data from either original or new rerun_XX_obs format files
+        """
+        check_timeout()
+    
+        # Add safety check for video_events list size
+        if len(video_events) &gt; 1000:  # Set appropriate limit
+            logger.error("Too many video events - possible infinite loop")
+    
+        if not line or line.startswith("#") or line.startswith("End ###"):
+            return None, video_start_time, video_events
+    
+        fields = line.strip().split("\t")
+    
+        if file_format == "original":
+            if len(fields) &lt; 12:  # Original format requires at least 12 fields
+                return None, video_start_time, video_events
+            # logger.info(f"Fields: {fields}, file_format = {file_format}")
+            utc_time = fields[0]
+            lon = float(fields[3])
+            lat = float(fields[2])
+            speed = float(fields[4])
+            course = float(fields[5])
+            depth = float(fields[6])
+            heading = float(fields[7])
+            sub_lon = float(fields[11])
+            sub_lat = float(fields[10])
+            observation = fields[13] if len(fields) &gt; 12 else ""
+            current_time = datetime.strptime(utc_time, "%H:%M:%S")
+    
+        else:  # new rerun_obser text file format
+            if len(fields) != 6:  # New format requires exactly 6 fields
+                return None, video_start_time, video_events
+            logger.info(f"Fields: {fields}, file_format = {file_format}")
+    
+            utc_time = fields[1]
+            # Skip date field[0] in rerun file. We will interpolate the date
+            lon = float(fields[2])
+            lat = float(fields[3])
+            speed = None
+            course = None
+            depth = None
+            heading = None
+            sub_lon = lon  # Use same coordinates for sub location
+            sub_lat = lat
+            observation = fields[5]
+            current_time = datetime.strptime(utc_time, "%H:%M:%S")
+    
+        # Determine source type
+        is_prot = source_key.endswith("_prot.txt")
+        is_obs = source_key.endswith("_obser.txt")
+    
+        if not (is_prot or is_obs):
+&gt;           raise ValueError("Invalid source input (text) file type")
+E           ValueError: Invalid source input (text) file type
+
+lambda_function_mongoDB_schema.py:270: ValueError</failure></testcase><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_video_sequences[sequence_times0-expected_duration0]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_video_sequences[sequence_times1-expected_duration1]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_invalid_format" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_media_types[photo 123-photo-/images/TAN2306_123/TAN2306_123_12.jpg]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_media_types[taking photo 456-photo-/images/TAN2306_123/TAN2306_123_12.jpg]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_media_types[general observation--]" time="0.001" /><testcase classname="test.test_lambda_function_mongoDB_schema" name="test_parse_data_line_complete_video_sequence" time="0.001" /><testcase classname="test.trivial_test" name="test_trivial_1" time="0.001" /><testcase classname="test.trivial_test" name="test_trivial_2" time="0.001" /><testcase classname="test.trivial_test" name="test_trivial_3" time="0.001" /></testsuite></testsuites>
