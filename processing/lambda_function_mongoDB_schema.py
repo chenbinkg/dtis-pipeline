@@ -1308,18 +1308,10 @@ def prepare_documents(
             mediafile = f"/images/photo{name_of_media}.jpg"
         else:
             mediatype = "None"
+            mediafile = "None"
 
         # Initialize the document
         document = {
-            # "file_key": file_key,
-            # "meta": {
-            #     "cruiseStationId": str(ObjectId()),  # Generate a unique ID
-            #     "cruise": metadata.get("Cruise"),
-            #     "station": metadata.get("Station"),
-            #     "remarks": metadata.get("Remarks"),
-            #     "ingressId": 1,  # This can be dynamically assigned as needed
-            #     "created_at": datetime.now(timezone.utc).isoformat(),
-            # },
             "file_key": file_key,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "metadata": metadata,
