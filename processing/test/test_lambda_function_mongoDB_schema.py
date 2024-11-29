@@ -73,6 +73,7 @@ from lambda_function_mongoDB_schema import (  # parse_tasks,
     parse_simple_format,
     parse_time_only,
     prepare_documents,
+    remove_brackets,
 )
 from pymongo import ReturnDocument
 
@@ -2502,3 +2503,277 @@ def test_parse_latest_format(lines, expected_output):
     # ), "Metadata 'In the Water' field does not match"
 
     # Add more assertions as needed for other fields
+
+
+@pytest.mark.parametrize(
+    "input_text, default, expected",
+    [
+        # Case 1: Brackets with content
+        ("[29] OBSCURED", "", "OBSCURED"),
+        ("[123] Visible Text", "", "Visible Text"),
+        # Case 2: Brackets with content and default provided
+        ("[29] OBSCURED", "Some video", "OBSCURED"),
+        ("[123] Visible Text", "Some video", "Visible Text"),
+        # Case 3: No brackets
+        ("OBSCURED", "", "OBSCURED"),
+        ("Visible Text", "", "Visible Text"),
+        # Case 4: No brackets with default provided
+        ("OBSCURED", "Some video", "OBSCURED"),
+        ("Visible Text", "Some video", "Visible Text"),
+        # Case 5: Only brackets, no content
+        ("[]", "Some video", "Some video"),
+        ("[ ]", "Default", "Default"),
+        ("[123]", "Default Value", "Default Value"),
+        # Case 6: Empty string
+        ("", "Some video", "Some video"),
+        # Case 7: Brackets with no trailing text
+        ("[29] ", "Some video", "Some video"),
+        ("[123]    ", "Default Value", "Default Value"),
+        # Case 8: Multiple brackets
+        ("[29][30] OBSCURED", "Some video", "OBSCURED"),
+        ("[29][30] ", "Default", "Default"),
+        # Case 9: Brackets in the middle of the text
+        ("Data [29] OBSCURED", "Some video", "Data OBSCURED"),
+        ("Visible [123] Text", "Default", "Visible Text"),
+        # Case 10: Nested brackets (if applicable)
+        # ("[[29]] OBSCURED", "Some video", "OBSCURED"),
+        # ("[29 [30]] OBSCURED", "Default", "OBSCURED"),
+    ],
+)
+def test_remove_brackets(input_text, default, expected):
+    assert remove_brackets(input_text, default) == expected
+
+
+#########################
+# New tests: test_lambda_function_mongodb_schema.py
+#########################
+
+
+@pytest.mark.skip(reason="Not used at the moment.")
+def test_prepare_documents_with_video_observation():
+    """
+    Test that observations containing 'video' information are correctly added to the output document.
+    """
+    # Sample input observation with video
+    observations = [
+        {
+            "Observations/Comments": "[12] Clear water visibility.",
+            "Image-Video Path": "path/to/video1.mp4",
+            "media": "video",
+            "SHOT_Lat": "34.05",
+            "SHOT_Lon": "-118.25",
+            "SHIP_Lat": "34.05",
+            "SHIP_Lon": "-118.25",
+            "SHIP_SOG": "5.5",
+            "PC_Time": "2023-10-01T12:00:00Z",
+        }
+    ]
+    file_key = "TAN2206_StationA_video_data.txt"
+
+    # Expected output document
+    expected_documents = [
+        {
+            "file_key": file_key,
+            "created_at": ANY,  # Timestamp is dynamic
+            "metadata": observations[0],  # Assuming metadata is the entire observation
+            "timestamp": "2023-10-01T12:00:00Z",
+            "shipLocation": {
+                "type": "Point",
+                "coordinates": [-118.25, 34.05],
+            },
+            "speed": 5.5,
+            "feature": {
+                "media": "/images/photopath/to/video1.mp4.jpg",  # Adjust based on media handling logic
+                "mediaType": "video",
+                "mediaOffset": 0,
+                "observation": "Clear water visibility.",
+                "observation2": "Clear water visibility.",
+                "observation_source": file_key,
+                "observationRef": "<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=path/to/video1.mp4&marine_only=true'>Try a WORMS search for path/to/video1.mp4</a>",
+            },
+        }
+    ]
+
+    # Call the function under test
+    documents = prepare_documents(observations, file_key, ingress_collection=None)
+
+    # Assertions
+    assert len(documents) == len(expected_documents), "Number of documents mismatch."
+
+    for doc, expected in zip(documents, expected_documents):
+        # Check static fields
+        assert doc["file_key"] == expected["file_key"]
+        assert doc["metadata"] == expected["metadata"]
+        assert doc["timestamp"] == expected["timestamp"]
+        assert doc["shipLocation"] == expected["shipLocation"]
+        assert doc["speed"] == expected["speed"]
+
+        # Check dynamic fields
+        assert "created_at" in doc
+
+        # Check 'feature' sub-document
+        assert "feature" in doc
+        feature = doc["feature"]
+        expected_feature = expected["feature"]
+
+        assert feature["media"] == expected_feature["media"]
+        assert feature["mediaType"] == expected_feature["mediaType"]
+        assert feature["mediaOffset"] == expected_feature["mediaOffset"]
+        assert feature["observation"] == expected_feature["observation"]
+        assert feature["observation2"] == expected_feature["observation2"]
+        assert feature["observation_source"] == expected_feature["observation_source"]
+        assert feature["observationRef"] == expected_feature["observationRef"]
+
+
+@pytest.mark.skip(reason="Not used at the moment.")
+def test_prepare_documents_with_photo_observation():
+    """
+    Test that observations containing 'photo' information are correctly added to the output document.
+    """
+    # Sample input observation with photo
+    observations = [
+        {
+            "Observations/Comments": "[45] Algae bloom observed.",
+            "Image-Video Path": "path/to/photo1.jpg",
+            "media": "photo",
+            "SHOT_Lat": "36.12",
+            "SHOT_Lon": "-115.17",
+            "SHIP_Lat": "36.12",
+            "SHIP_Lon": "-115.17",
+            "SHIP_SOG": "7.8",
+            "PC_Time": "2023-10-02T15:30:00Z",
+        }
+    ]
+    file_key = "TAN2207_StationB_photo_data.txt"
+
+    # Expected output document
+    expected_documents = [
+        {
+            "file_key": file_key,
+            "created_at": pytest.ANY,  # Timestamp is dynamic
+            "metadata": observations[0],  # Assuming metadata is the entire observation
+            "timestamp": "2023-10-02T15:30:00Z",
+            "shipLocation": {
+                "type": "Point",
+                "coordinates": [-115.17, 36.12],
+            },
+            "speed": 7.8,
+            "feature": {
+                "media": "/images/photopath/to/photo1.jpg.jpg",  # Adjust based on media handling logic
+                "mediaType": "photo",
+                "mediaOffset": 0,
+                "observation": "Algae bloom observed.",
+                "observation2": "Algae bloom observed.",
+                "observation_source": file_key,
+                "observationRef": "<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=path/to/photo1.jpg&marine_only=true'>Try a WORMS search for path/to/photo1.jpg</a>",
+            },
+        }
+    ]
+
+    # Call the function under test
+    documents = prepare_documents(observations, file_key)
+
+    # Assertions
+    assert len(documents) == len(expected_documents), "Number of documents mismatch."
+
+    for doc, expected in zip(documents, expected_documents):
+        # Check static fields
+        assert doc["file_key"] == expected["file_key"]
+        assert doc["metadata"] == expected["metadata"]
+        assert doc["timestamp"] == expected["timestamp"]
+        assert doc["shipLocation"] == expected["shipLocation"]
+        assert doc["speed"] == expected["speed"]
+
+        # Check dynamic fields
+        assert "created_at" in doc
+
+        # Check 'feature' sub-document
+        assert "feature" in doc
+        feature = doc["feature"]
+        expected_feature = expected["feature"]
+
+        assert feature["media"] == expected_feature["media"]
+        assert feature["mediaType"] == expected_feature["mediaType"]
+        assert feature["mediaOffset"] == expected_feature["mediaOffset"]
+        assert feature["observation"] == expected_feature["observation"]
+        assert feature["observation2"] == expected_feature["observation2"]
+        assert feature["observation_source"] == expected_feature["observation_source"]
+        assert feature["observationRef"] == expected_feature["observationRef"]
+
+
+@pytest.mark.skip(reason="Not used at the moment.")
+def test_prepare_documents_with_no_media_observation():
+    """
+    Test that observations with no 'media' information are handled gracefully.
+    """
+    # Sample input observation with no media
+    observations = [
+        {
+            "Observations/Comments": "No media associated with this observation.",
+            "Image-Video Path": "",
+            "media": "None",
+            "SHOT_Lat": "40.71",
+            "SHOT_Lon": "-74.00",
+            "SHIP_Lat": "40.71",
+            "SHIP_Lon": "-74.00",
+            "SHIP_SOG": "0.0",
+            "PC_Time": "2023-10-03T18:45:00Z",
+        }
+    ]
+    file_key = "TAN2208_StationC_no_media_data.txt"
+
+    # Expected output document
+    expected_documents = [
+        {
+            "file_key": file_key,
+            "created_at": pytest.ANY,  # Timestamp is dynamic
+            "metadata": observations[0],  # Assuming metadata is the entire observation
+            "timestamp": "2023-10-03T18:45:00Z",
+            "shipLocation": {
+                "type": "Point",
+                "coordinates": [-74.00, 40.71],
+            },
+            "speed": 0.0,
+            "feature": {
+                "media": "/images/photo.jpg",  # Adjust based on media handling logic for 'None'
+                "mediaType": "None",
+                "mediaOffset": 0,
+                "observation": "No media associated with this observation.",
+                "observation2": "No media associated with this observation.",
+                "observation_source": file_key,
+                "observationRef": "<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D=&marine_only=true'>Try a WORMS search for </a>",
+            },
+        }
+    ]
+
+    # Call the function under test
+    documents = prepare_documents(observations, file_key)
+
+    # Assertions
+    assert len(documents) == len(expected_documents), "Number of documents mismatch."
+
+    for doc, expected in zip(documents, expected_documents):
+        # Check static fields
+        assert doc["file_key"] == expected["file_key"]
+        assert doc["metadata"] == expected["metadata"]
+        assert doc["timestamp"] == expected["timestamp"]
+        assert doc["shipLocation"] == expected["shipLocation"]
+        assert doc["speed"] == expected["speed"]
+
+        # Check dynamic fields
+        assert "created_at" in doc
+
+        # Check 'feature' sub-document
+        assert "feature" in doc
+        feature = doc["feature"]
+        expected_feature = expected["feature"]
+
+        assert feature["media"] == expected_feature["media"]
+        assert feature["mediaType"] == expected_feature["mediaType"]
+        assert feature["mediaOffset"] == expected_feature["mediaOffset"]
+        assert feature["observation"] == expected_feature["observation"]
+        assert feature["observation2"] == expected_feature["observation2"]
+        assert feature["observation_source"] == expected_feature["observation_source"]
+        assert (
+            feature["observationRef"] == expected_feature["observationRef"]
+        )  #         assert feature["observationRef"] == expected_feature["observationRef"]

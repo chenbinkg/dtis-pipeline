@@ -1188,6 +1188,23 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     return documents, file_format, bounding_box, cruise_from_name, station_from_name
 
 
+def remove_brackets(text, default=""):
+    """
+    Removes bracketed content from the input text.
+
+    Args:
+        text (str): The input string containing bracketed content.
+        default (str): The default value to return if the result is empty.
+
+    Returns:
+        str: The cleaned string without brackets or the default value.
+    """
+    # Remove brackets and any content inside them, along with any leading whitespace
+    cleaned = re.sub(r"\[.*?\]\s*", "", text)
+    # Return cleaned text if not empty, else return default
+    return cleaned if cleaned else default
+
+
 def prepare_documents(
     parsed_data: Dict[str, Any], file_key: str, ingress_collection: Optional[Collection]
 ) -> List[Dict[str, Any]]:
@@ -1269,7 +1286,29 @@ def prepare_documents(
         ship_lon, ship_lat, sub1_lon, sub1_lat = 0.0, 0.0, 0.0, 0.0
         ship_sog, ship_cog, ship_hdg, water_depth, sub1_depth = 0.0, 0.0, 0.0, 0.0, 0.0
 
+    mediatype = ""
+    mediafile = ""
     for observation in observations:
+        obstype = observation.get("Image-Video Path", "Some observation")
+
+        # Clean up the observation text
+        cleaned_observation = remove_brackets(obstype, "None")
+
+        if "video" in obstype.lower():
+            mediatype = "video"
+            mediafile = f"/videos/{cleaned_observation}.m2t"
+        elif "photo" in obstype.lower():
+            mediatype = "photo"
+            name_of_media = (
+                cleaned_observation.split(";")[0]
+                .split("photo")[1]
+                .split(":")[1]
+                .strip()
+            )
+            mediafile = f"/images/photo{name_of_media}.jpg"
+        else:
+            mediatype = "None"
+
         # Initialize the document
         document = {
             # "file_key": file_key,
@@ -1308,25 +1347,19 @@ def prepare_documents(
             "feature":
             # observation,  # Assign observation based on 'detailed_data_table' content
             {
-                "media": "video",
-                "mediaType": "video",
+                "media": mediafile,
+                "mediaType": mediatype,
                 "mediaOffset": 0,
-                "observation": "Observations/Comments",
-                "observation2": observation.get("Image-Video Path", "Some video"),
+                "observation": observation.get(
+                    "Observations/Comments", "Observations/Comments"
+                ),
+                "observation2": cleaned_observation,
                 "observation_source": file_key,
-                "observationRef": "<a href='https://www.marinespecies.org/rest/'>Link</a>",
+                "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={observation.get('Image-Video Path', 'Some video')}&marine_only=true'>Try a WORMS search for {observation.get('Image-Video Path', 'Some video')}</a>",
             },
         }
         documents.append(document)
         logger.debug(f"Prepared document for observation: {document}")
-
-    # if not document["tasks"]:
-    #     logger.warning("No tasks found in the parsed data.")
-    #     document["tasks"] = []  # Or set to None, based on your schema
-
-    # # logger.debug("Prepared document: %s", json.dumps(document, indent=2))
-    # logger.debug(f"Prepared document: {document}")
-    # return document
 
     logger.info(f"Total documents prepared for insertion: {len(documents)}")
     return documents
