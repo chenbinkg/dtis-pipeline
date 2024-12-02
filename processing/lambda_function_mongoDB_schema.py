@@ -538,7 +538,6 @@ def parse_posi_file(content):
                     },
                 }
             except ValueError as e:
-                # print(f"Invalid date/time format: {date} {time}. Error: {str(e)}")
                 logger.debug(
                     f"Invalid date/time format - Date: {date}; Time {time}. Error: {str(e)}"
                 )
@@ -593,7 +592,7 @@ def get_file_from_s3(s3_client: boto3.client, bucket: str, key: str) -> str:
         return response["Body"].read().decode("utf-8")
 
     except ClientError as e:
-        print(f"Error retrieving file from S3: {str(e)}")
+        logger.info("Error retrieving file from S3: %s"), str(e)
         raise FileNotFoundError(f"File {key} not found in bucket {bucket}")
 
 
@@ -942,7 +941,7 @@ def parse_data_rows(
                 except ValueError:
                     observation[key] = None
                     logger.warning(
-                        "Failed to convert '%s' to float at line %s: %s",
+                        "Failed to convert '%s' to string at line %s: %s",
                         key,
                         idx,
                         observation[key],
@@ -1105,7 +1104,7 @@ def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
 def parse_file_content(file_content: str, key: str, ingress_collection: Collection) -> [
     str,  # List of documents
     str,  # file_format
-    tuple,  # bounding_boxtuple of coordinates
+    tuple,  # bounding_box / tuple of coordinates
     str,  # cruise_from_name
     str,  # station_from_name
 ]:
@@ -1347,7 +1346,7 @@ def prepare_documents(
                 ),
                 "observation2": cleaned_observation,
                 "observation_source": file_key,
-                "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={observation.get('Image-Video Path', 'Some video')}&marine_only=true'>Try a WORMS search for {observation.get('Image-Video Path', 'Some video')}</a>",
+                "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={cleaned_observation}&marine_only=true'>Try a WORMS search for {cleaned_observation}</a>",
             },
         }
         documents.append(document)
