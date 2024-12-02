@@ -1,12 +1,10 @@
+import os
 import pymongo
 
-LOCAL_SHELL = True
-
-# These should be stored as environment variables
-# db_username = "database_user"
-# db_password = "database_user_password"
-db_username = "BenPhear_Clearpoint"
-db_password = "IxKr8rGq1SssN6xe"
+# These secrest should be stored as environment variables.
+# They can be set locally by hardcoding in `auth_env_vars` and loaded by executing source 'auth_env_vars'.
+db_username = os.environ.get("MONGODB_CLUSTER_USERNAME")
+db_password = os.environ.get("MONGODB_CLUSTER_PASSWORD")
 
 cluster_name = "ServerlessInstance0"
 database_name = "dtistest"
@@ -117,9 +115,6 @@ stage_ship_location_within_bounding_circle = {
     }
 }
 
-
-# TODO - Other types of Ag. Pipeline queries...
-
 # Create Aggregation Pipeline from discrete stages.
 pipeline = [
    stage_match_observations2_pebbles,
@@ -128,6 +123,8 @@ pipeline = [
    stage_ship_location_within_bounding_box,
    stage_ship_location_within_bounding_circle,
 ]
+
+# TODO - Other types of Ag. Pipeline queries...
 
 # Execute the Aggregation Pipeline queries against the collection.
 results = collection.aggregate(pipeline)
