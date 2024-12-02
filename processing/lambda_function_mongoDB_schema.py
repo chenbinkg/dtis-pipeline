@@ -14,9 +14,9 @@ Requirements:
 * Define environment variable for the name of the MongoDB collection used for overview, e.g. INGRESS_COLLECTION_DTIS
 * Define environment variable for the name of the S3 bucket containing the text files, e.g. S3_BUCKET_NAME
 * For 2016 files: Prot and posi files need to be both available in an upload, image and video files are implicitly expected, too.
+* 2016 files: currently not expected to work (this is the 'original' format, not the 'latest' format)
 
-
-29 November 2024 Tilmann Steinmetz
+02 December 2024 Tilmann Steinmetz
 
 """
 
@@ -35,7 +35,7 @@ from pymongo.collection import Collection, ReturnDocument
 from pymongo.database import Database
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 START_TIME = datetime.now(timezone.utc)
 MAX_EXECUTION_TIME = 850  # 14.5 minutes (for 15-minute Lambda timeout)
