@@ -291,11 +291,11 @@ def calculate_bounding_box(coordinates):
         "type": "Polygon",
         "coordinates": [
             [
-                [min(lats), min(lons)],
-                [max(lats), min(lons)],
-                [max(lats), max(lons)],
-                [min(lats), max(lons)],
-                [min(lats), min(lons)],
+                [min(lons), min(lats)],
+                [max(lons), min(lats)],
+                [max(lons), max(lats)],
+                [min(lons), max(lats)],
+                [min(lons), min(lats)],
             ]
         ],
     }
@@ -699,12 +699,12 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
         try:
             lat = float(obs.get("SHIP_Lat", 0))
             lon = float(obs.get("SHIP_Lon", 0))
-            coordinates.append((lat, lon))
+            coordinates.append((lon, lat))
 
-            # # If there are SUB1 coordinates
-            # sub_lat = float(obs.get("SUB1_Lat", 0))
-            # sub_lon = float(obs.get("SUB1_Lon", 0))
-            # coordinates.append((sub_lat, sub_lon))
+            # If there are SUB1 coordinates
+            sub_lat = float(obs.get("SUB1_Lat", 0))
+            sub_lon = float(obs.get("SUB1_Lon", 0))
+            coordinates.append((sub_lon, sub_lat))
         except (TypeError, ValueError) as e:
             logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
             continue
@@ -998,12 +998,12 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
         try:
             lat = float(obs.get("SHIP_Lat", 0))
             lon = float(obs.get("SHIP_Lon", 0))
-            coordinates.append((lat, lon))
+            coordinates.append((lon, lat))
 
             # If there are SUB1 coordinates
             sub_lat = float(obs.get("SUB1_Lat", 0))
             sub_lon = float(obs.get("SUB1_Lon", 0))
-            coordinates.append((sub_lat, sub_lon))
+            coordinates.append((sub_lon, sub_lat))
         except (TypeError, ValueError) as e:
             logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
             continue
@@ -1174,6 +1174,9 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     # Prepare documents for MongoDB insertion
     for parsed_data in parsed_data_list:
         logging.debug("Preparing document for MongoDB insertion. %s", parsed_data)
+        # Add metadata from file name
+        parsed_data["metadata"]["Cruise"] = cruise_from_name
+        parsed_data["metadata"]["Station"] = station_from_name
         document = prepare_documents(parsed_data, key, ingress_collection)
         if document:
             documents.extend(document)
