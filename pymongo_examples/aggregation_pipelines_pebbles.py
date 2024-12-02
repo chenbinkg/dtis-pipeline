@@ -3,8 +3,10 @@ import pymongo
 LOCAL_SHELL = True
 
 # These should be stored as environment variables
-db_username = "database_user"
-db_password = "database_user_password"
+# db_username = "database_user"
+# db_password = "database_user_password"
+db_username = "BenPhear_Clearpoint"
+db_password = "IxKr8rGq1SssN6xe"
 
 cluster_name = "ServerlessInstance0"
 database_name = "dtistest"
@@ -47,9 +49,11 @@ stage_match_speed_greater_than_1 = {
 }
 
 
-# Match documents using $geoWithin and bounding $box longtitude and latitude coordinates
+# Match documents using $geoWithin and bounding $box longtitude and latitude coordinates.
 #
 # If you use longitude and latitude, specify longitude first.
+#  - Valid longitude values are between -180 and 180, both inclusive.
+#  - Valid latitude values are between -90 and 90, both inclusive.
 # https://www.mongodb.com/docs/manual/reference/operator/query/box/#mongodb-query-op.-box
 # '$box': [
 #     [ <bottom left coordinates> ],
@@ -57,14 +61,14 @@ stage_match_speed_greater_than_1 = {
 # ]
 #
 longitude_bottom_left = -180.0
-latitude_bottom_left = -180.0
+latitude_bottom_left = -90.0
 coordinates_bottom_left = [longitude_bottom_left, latitude_bottom_left]
 
-longitude_upper_right = 180
-latitude_upper_right = 180
+longitude_upper_right = 180.0
+latitude_upper_right = 90.0
 coordinates_upper_right = [longitude_upper_right, latitude_upper_right]
 
-stage_ship_location_within_coordinates = {
+stage_ship_location_within_bounding_box = {
     '$match': {
         'shipLocation.coordinates': {
             '$geoWithin': {
@@ -77,6 +81,43 @@ stage_ship_location_within_coordinates = {
     }
 }
 
+# Match documents using $geoWithin and bounding $centerSphere with longtitude and latitude coordinates center.
+#
+# When you specify longitude and latitude coordinates, list the longitude first, and then latitude.
+#  - Valid longitude values are between -180 and 180, both inclusive.
+#  - Valid latitude values are between -90 and 90, both inclusive.
+# In the $centerSphere operator, specify the circle's radius in radians.
+#  - To convert kilometers to radians, divide the kilometer value by 6378.1.
+# https://www.mongodb.com/docs/manual/core/indexes/index-types/geospatial/2dsphere/query/points-within-circle-on-sphere/
+# '$centerSphere': [
+#     [ <longitude>, <latitude> ],
+#     <radius>
+# ]
+#
+longitude_center = 0.0
+latitude_center = 0.0
+coordinates_center = [longitude_center, latitude_center]
+
+def convert_kilometers_to_radians (kilometers: float) -> float:
+    return kilometers / 6378.1
+
+radius_kilometers = 50000
+radius_radians = convert_kilometers_to_radians(radius_kilometers)
+
+stage_ship_location_within_bounding_circle = {
+    '$match': {
+        'shipLocation.coordinates': {
+            '$geoWithin': {
+                '$centerSphere': [
+                    coordinates_center,
+                    radius_radians
+                ]
+            }
+        }
+    }
+}
+
+
 # TODO - Other types of Ag. Pipeline queries...
 
 # Create Aggregation Pipeline from discrete stages.
@@ -84,7 +125,8 @@ pipeline = [
    stage_match_observations2_pebbles,
    stage_match_depth_less_than_5000,
    stage_match_speed_greater_than_1,
-   stage_ship_location_within_coordinates,
+   stage_ship_location_within_bounding_box,
+   stage_ship_location_within_bounding_circle,
 ]
 
 # Execute the Aggregation Pipeline queries against the collection.
