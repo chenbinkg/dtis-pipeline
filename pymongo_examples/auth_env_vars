@@ -1,0 +1,5 @@
+# This file must be used with "source bin/activate" *from bash*
+# You cannot run it directly
+
+export MONGODB_CLUSTER_USERNAME="SET_USERNAME_HERE"
+export MONGODB_CLUSTER_PASSWORD="SET_PASSWORD_HERE"
