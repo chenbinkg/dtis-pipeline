@@ -206,10 +206,10 @@ def test_increment_ingress_id_existing_document():
         "remarks": "RemarkX",
         "ingress_count": 5,
         "bounding_box": {
-            "min_lat": -42.0123,
-            "max_lat": 10.55,
             "min_lon": -20,
             "max_lon": 20,
+            "min_lat": -42.0123,
+            "max_lat": 10.55,
         },
         "observationCount": 333,
         "date_created": "2023-01-01T00:00:00Z",
@@ -2141,6 +2141,23 @@ test_parse_latest_format: Tests the parse_latest_format function, which combines
             },
             5,
         ),
+        (
+            [
+                "Cruise : TAN0616",
+                "Station : 002",
+                "Remarks : little nose west of slump site",
+                "In the water : PC 04.11.2006 03:08:55 / UTC-time 14:08:56",
+                "--------------------------------",
+                "UTC time\tPC time\tLat\tLon\tSpeed\tCourse\tDepth\tHeading\tSub Lat\tSub Lon",
+            ],
+            {
+                "Cruise": "TAN0616",
+                "Station": "002",
+                "Remarks": "little nose west of slump site",
+                "In the water": "PC 04.11.2006 03:08:55 / UTC-time 14:08:56",
+            },
+            5,
+        ),
     ],
 )
 def test_parse_metadata(lines, expected_metadata, expected_data_start_idx):
@@ -2343,10 +2360,10 @@ def test_parse_data_rows(lines, start_idx, headers, expected_data_rows):
                 #     }
                 # ],
                 "bounding_box": {
-                    "min_lat": -24.0038202,
-                    "max_lat": -24.003300,
                     "min_lon": -178.1025627,
                     "max_lon": -178.102400,
+                    "min_lat": -24.0038202,
+                    "max_lat": -24.003300,
                 },
             },
         ),

@@ -14,9 +14,9 @@ Requirements:
 * Define environment variable for the name of the MongoDB collection used for overview, e.g. INGRESS_COLLECTION_DTIS
 * Define environment variable for the name of the S3 bucket containing the text files, e.g. S3_BUCKET_NAME
 * For 2016 files: Prot and posi files need to be both available in an upload, image and video files are implicitly expected, too.
+* 2016 files: currently not expected to work (this is the 'original' format, not the 'latest' format)
 
-
-29 November 2024 Tilmann Steinmetz
+02 December 2024 Tilmann Steinmetz
 
 """
 
@@ -35,7 +35,7 @@ from pymongo.collection import Collection, ReturnDocument
 from pymongo.database import Database
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 START_TIME = datetime.now(timezone.utc)
 MAX_EXECUTION_TIME = 850  # 14.5 minutes (for 15-minute Lambda timeout)
@@ -291,11 +291,11 @@ def calculate_bounding_box(coordinates):
         "type": "Polygon",
         "coordinates": [
             [
-                [min(lats), min(lons)],
-                [max(lats), min(lons)],
-                [max(lats), max(lons)],
-                [min(lats), max(lons)],
-                [min(lats), min(lons)],
+                [min(lons), min(lats)],
+                [max(lons), min(lats)],
+                [max(lons), max(lats)],
+                [min(lons), max(lats)],
+                [min(lons), min(lats)],
             ]
         ],
     }
@@ -538,7 +538,6 @@ def parse_posi_file(content):
                     },
                 }
             except ValueError as e:
-                # print(f"Invalid date/time format: {date} {time}. Error: {str(e)}")
                 logger.debug(
                     f"Invalid date/time format - Date: {date}; Time {time}. Error: {str(e)}"
                 )
@@ -593,7 +592,7 @@ def get_file_from_s3(s3_client: boto3.client, bucket: str, key: str) -> str:
         return response["Body"].read().decode("utf-8")
 
     except ClientError as e:
-        print(f"Error retrieving file from S3: {str(e)}")
+        logger.info("Error retrieving file from S3: %s"), str(e)
         raise FileNotFoundError(f"File {key} not found in bucket {bucket}")
 
 
@@ -700,12 +699,12 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
         try:
             lat = float(obs.get("SHIP_Lat", 0))
             lon = float(obs.get("SHIP_Lon", 0))
-            coordinates.append((lat, lon))
+            coordinates.append((lon, lat))
 
-            # # If there are SUB1 coordinates
-            # sub_lat = float(obs.get("SUB1_Lat", 0))
-            # sub_lon = float(obs.get("SUB1_Lon", 0))
-            # coordinates.append((sub_lat, sub_lon))
+            # If there are SUB1 coordinates
+            sub_lat = float(obs.get("SUB1_Lat", 0))
+            sub_lon = float(obs.get("SUB1_Lon", 0))
+            coordinates.append((sub_lon, sub_lat))
         except (TypeError, ValueError) as e:
             logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
             continue
@@ -942,7 +941,7 @@ def parse_data_rows(
                 except ValueError:
                     observation[key] = None
                     logger.warning(
-                        "Failed to convert '%s' to float at line %s: %s",
+                        "Failed to convert '%s' to string at line %s: %s",
                         key,
                         idx,
                         observation[key],
@@ -999,12 +998,12 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
         try:
             lat = float(obs.get("SHIP_Lat", 0))
             lon = float(obs.get("SHIP_Lon", 0))
-            coordinates.append((lat, lon))
+            coordinates.append((lon, lat))
 
             # If there are SUB1 coordinates
             sub_lat = float(obs.get("SUB1_Lat", 0))
             sub_lon = float(obs.get("SUB1_Lon", 0))
-            coordinates.append((sub_lat, sub_lon))
+            coordinates.append((sub_lon, sub_lat))
         except (TypeError, ValueError) as e:
             logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
             continue
@@ -1105,7 +1104,7 @@ def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
 def parse_file_content(file_content: str, key: str, ingress_collection: Collection) -> [
     str,  # List of documents
     str,  # file_format
-    tuple,  # bounding_boxtuple of coordinates
+    tuple,  # bounding_box / tuple of coordinates
     str,  # cruise_from_name
     str,  # station_from_name
 ]:
@@ -1175,6 +1174,9 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     # Prepare documents for MongoDB insertion
     for parsed_data in parsed_data_list:
         logging.debug("Preparing document for MongoDB insertion. %s", parsed_data)
+        # Add metadata from file name
+        parsed_data["metadata"]["Cruise"] = cruise_from_name
+        parsed_data["metadata"]["Station"] = station_from_name
         document = prepare_documents(parsed_data, key, ingress_collection)
         if document:
             documents.extend(document)
@@ -1347,7 +1349,7 @@ def prepare_documents(
                 ),
                 "observation2": cleaned_observation,
                 "observation_source": file_key,
-                "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={observation.get('Image-Video Path', 'Some video')}&marine_only=true'>Try a WORMS search for {observation.get('Image-Video Path', 'Some video')}</a>",
+                "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={cleaned_observation}&marine_only=true'>Try a WORMS search for {cleaned_observation}</a>",
             },
         }
         documents.append(document)
