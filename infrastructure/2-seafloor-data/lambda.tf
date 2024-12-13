@@ -134,6 +134,8 @@ resource "aws_lambda_function" "dtis" {
   reserved_concurrent_executions = 1
   # defaults to 3 (seconds)
   timeout = 900
+  # defaults to 128 (MB)
+  memory_size = 1024
 
   environment {
     variables = {
