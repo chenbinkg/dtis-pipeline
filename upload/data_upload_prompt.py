@@ -9,6 +9,7 @@ import subprocess
 # import magic
 # from botocore.exceptions import ClientError
 import sys
+import traceback
 
 def get_aws_credentials():
     # prompt for aws authentication
@@ -29,7 +30,7 @@ def get_aws_credentials():
         aws_session_token = os.getenv("AWS_SESSION_TOKEN")
         if not aws_access_key_id or not aws_secret_access_key or not aws_session_token:
             print("AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY or AWS_SESSION_TOKEN was not set. Please set a correct value")
-            sys.exit(1)
+            # sys.exit(1)
         return aws_access_key_id, aws_secret_access_key, aws_session_token
     
     if auth_option == "2":
@@ -37,7 +38,7 @@ def get_aws_credentials():
         aws_profile = input("Enter your AWS profile name: ")
         if not aws_profile:
             print("AWS profile was not set. Please set a correct value")
-            sys.exit(1)
+            # sys.exit(1)
         try:
             session = boto3.Session(profile_name=aws_profile)
             credentials = session.get_credentials()
@@ -52,7 +53,7 @@ def get_aws_credentials():
         except Exception as e:
             print(f"Failed to get AWS credentials from profile {aws_profile}", file=sys.stderr)
             print(e, file=sys.stderr)
-            sys.exit(1)
+            # sys.exit(1)
     
     if auth_option == "3":
         # prompt for aws access key
@@ -60,12 +61,12 @@ def get_aws_credentials():
         # attempt to get environment variables for aws access key and secret
         if not aws_access_key_id:
             print("AWS Access Key ID was not set. Please set a correct value")
-            sys.exit(1)
+            # sys.exit(1)
         # prompt for aws secret access key
         aws_secret_access_key = input("Enter your AWS Secret Access Key: ")
         if not aws_secret_access_key:
             print("AWS Secret Access Key was not set. Please set a correct value")
-            sys.exit(1)
+            # sys.exit(1)
         # prompt for aws session token
         aws_session_token = input("Enter your AWS Session Token: ")
         # if not aws_session_token:
@@ -110,6 +111,15 @@ def get_data_upload_confirmation(cruise_id):
     # prompt for data upload confirmation
     confirmation = None
     print(f"Ready to upload for cruise id {cruise_id}?")
+    while confirmation not in ["yes", "no"]:
+        confirmation = input("Enter yes or no: ")
+        confirmation = confirmation.lower()
+    return confirmation
+
+def get_exit_confirmation():
+    # prompt for exit confirmation
+    confirmation = None
+    print(f"Exit the program now?")
     while confirmation not in ["yes", "no"]:
         confirmation = input("Enter yes or no: ")
         confirmation = confirmation.lower()
@@ -282,7 +292,7 @@ def check_image_files(dir, error_file, image_patterns):
         with open(error_file, 'a') as ef:
             ef.write(f"Error: Images directory: {dir} does not exist.\n")
         print(f"Error: Images directory: {dir} does not exist.")
-        exit(1)
+        # exit(1)
 
     # Find all the files in the images directory with the selected file extensions
     files_with_matching_extension = []
@@ -312,6 +322,7 @@ def check_image_files(dir, error_file, image_patterns):
             with open(error_file, 'a') as ef:
                 ef.write(f"Error: File is not a valid JPEG: {file_no_trailing_whitespace} (Detected type: {file_type})\n")
             print(f"Error: File is not a valid JPEG: {file_no_trailing_whitespace} (Detected type: {file_type})")
+            continue
         else:
             image_files_to_copy.append(file_no_trailing_whitespace)
 
@@ -329,7 +340,7 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
         with open(error_file, 'a') as ef:
             ef.write(f"Error: Videos directory: {dir} does not exist.\n")
         print(f"Error: Videos directory: {dir} does not exist.")
-        exit(1)
+        # exit(1)
 
     # Find all the files in the videos directory with the selected file extensions
     files_with_matching_extension = []
@@ -364,6 +375,7 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
             with open(error_file, 'a') as ef:
                 ef.write(f"Error: File is not a valid .m2t or .m2ts file: {file_no_trailing_whitespace} (Detected type: {file_type})\n")
             print(f"Error: File is not a valid .m2t or .m2ts file: {file_no_trailing_whitespace} (Detected type: {file_type})")
+            continue
         else:
             video_files_to_copy.append(file_no_trailing_whitespace)
 
@@ -407,6 +419,7 @@ def check_ofop_files(dir, error_file, ofop_patterns):
             with open(error_file, 'a') as ef:
                 ef.write(f"Error: File does not match any pattern: {file_name}\n")
             print(f"Error: File does not match any pattern: {file_name}")
+            continue
 
     return text_files_to_copy
 
@@ -441,15 +454,15 @@ def enable_lambda(lambda_client, lambda_function_name, success_file, error_file)
 
 def write_validated_file_paths(file_type, files_list, cruise_id, plan_file, success_file, error_file):
     passed_file_count = 0
-    with open(plan_file, "a") as plan_f:
+    with open(plan_file, "a") as plan_f, open(success_file, 'a') as sf:
         plan_f.write(f"The following {file_type} files passed local verification:\n")
         plan_f.write("FILE_PATH;STATION_ID\n")
         for file in files_list:
             station_id = get_station_id(file, cruise_id, error_file)  # Replace with actual implementation
             if station_id:
                 passed_file_count+=1
-                with open(success_file, 'a') as sf:
-                    sf.write(f"Station ID for the file: {file} is: {station_id}\n")
+                # with open(success_file, 'a') as sf:
+                sf.write(f"Station ID for the file: {file} is: {station_id}\n")
                 plan_f.write(f"{file};{station_id}\n")
         plan_f.write(f"End of {file_type} files that passed local verification\n\n")
     print(f"{passed_file_count} {file_type} files passed location verification")
@@ -457,7 +470,8 @@ def write_validated_file_paths(file_type, files_list, cruise_id, plan_file, succ
 
 def verify_s3_bucket(s3_client, bucket_name):
     try:
-        s3_client.head_bucket(Bucket=bucket_name)
+        response = s3_client.head_bucket(Bucket=bucket_name)
+        print(f"s3 bucket verification: {response}")
         print(f"S3 bucket {bucket_name} exists and is accessible.")
     except Exception as e:
         print(f"Error verifying S3 bucket {bucket_name}: {e}")
@@ -478,7 +492,7 @@ def upload_to_s3(
     # Check if the plan file exists
     if not os.path.isfile(plan_file_to_read_from):
         print(f"Error: Plan file does not exist: {plan_file_to_read_from}")
-        sys.exit(1)
+        # sys.exit(1)
     if dry_run == "false":
         dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         with open(sync_output_file, 'a') as syf:
@@ -573,167 +587,48 @@ def upload_to_s3(
 
 
 if __name__ == "__main__":
-    # initialize bucket name, lambda function name, s3 client and aws region
-    bucket_name = "dtis-ofop-851725470721-raw-testing"
-    lambda_function_name = "dtis-ofop-testing"
-    s3_client = None
-    aws_region = "ap-southeast-2"
 
-    # Initialize log files
-    success_file = "success.txt"
-    error_file = "error.txt"
-    sync_output_file = "sync_logs.txt"
-    plan_file = "plan.txt"
+    try: 
+        # initialize bucket name, lambda function name, s3 client and aws region
+        bucket_name = "dtis-ofop-851725470721-raw-testing"
+        lambda_function_name = "dtis-ofop-testing"
+        s3_client = None
+        aws_region = "ap-southeast-2"
 
-    # Initialize log patterns
-    patterns = {
-        "image": [
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$", # e.g. TAN1802_160_DTIS__004.jpeg
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPG$", # e.g. TAN1802_160_DTIS__004.jpg
-            r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPEG$", # e.g. TAN1802_Stn_160_004.jpeg
-            r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPG$", # e.g. TAN1802_Stn_160_004.jpg
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$", # e.g. TAN1802_160_004.jpg
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$", # e.g. TAN1802_160_004.jpeg
-        ],
-        "video": [
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3}\.M2T[S]?$", # e.g. TAN1802_001.m2t or TAN1802_001.m2ts
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_[0-9]{1}\.M2T[S]?$", # e.g. TAN1802_001_1.m2t or TAN1802_001_2.m2ts
-            r"^[0-9]{4,}\.M2T[S]?$", # e.g. 201012220153001.m2t or 201012220153001.m2ts (only digits)
-        ],
-        "ofop": [
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\.TXT$", # e.g. TAN1802_001_posi.txt
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\.TXT$", # e.g. TAN1802_001_prot.txt
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\.TXT$", # e.g. TAN1802_001_obser.txt
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_OBSER\.TXT$", # e.g. TAN1802_001.sth_rerun.sth_obser.txt
-            r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_PROT\.TXT$", # e.g. TAN1802_001.sth_rerun.sth_prot.txt
-        ]
-    }
+        # Initialize log files
+        success_file = "success.txt"
+        error_file = "error.txt"
+        sync_output_file = "sync_logs.txt"
+        plan_file = "plan.txt"
 
-    # get upload info
-    cruise_id, images_dir, videos_dir, ofop_dir, environment, dry_run = get_data_upload_info()
+        # Initialize log patterns
+        patterns = {
+            "image": [
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$", # e.g. TAN1802_160_DTIS__004.jpeg
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPG$", # e.g. TAN1802_160_DTIS__004.jpg
+                r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPEG$", # e.g. TAN1802_Stn_160_004.jpeg
+                r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPG$", # e.g. TAN1802_Stn_160_004.jpg
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$", # e.g. TAN1802_160_004.jpg
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$", # e.g. TAN1802_160_004.jpeg
+            ],
+            "video": [
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}\.M2T[S]?$", # e.g. TAN1802_001.m2t or TAN1802_001.m2ts
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_[0-9]{1}\.M2T[S]?$", # e.g. TAN1802_001_1.m2t or TAN1802_001_2.m2ts
+                r"^[0-9]{4,}\.M2T[S]?$", # e.g. 201012220153001.m2t or 201012220153001.m2ts (only digits)
+            ],
+            "ofop": [
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\.TXT$", # e.g. TAN1802_001_posi.txt
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\.TXT$", # e.g. TAN1802_001_prot.txt
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\.TXT$", # e.g. TAN1802_001_obser.txt
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_OBSER\.TXT$", # e.g. TAN1802_001.sth_rerun.sth_obser.txt
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_PROT\.TXT$", # e.g. TAN1802_001.sth_rerun.sth_prot.txt
+            ]
+        }
 
-    if dry_run == "false":
-        # get aws access key and secret key
-        aws_access_key_id, aws_secret_access_key, aws_session_token = get_aws_credentials()
+        # get upload info
+        cruise_id, images_dir, videos_dir, ofop_dir, environment, dry_run = get_data_upload_info()
 
-        # Initialize AWS Clients
-        if aws_session_token:
-            session = boto3.Session(
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key,
-                aws_session_token=aws_session_token,
-                region_name=aws_region
-            )
-        else:
-            session = boto3.Session(
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key,
-                region_name=aws_region
-            )
-        sts_client = session.client('sts')
-        lambda_client = session.client('lambda')
-        s3_client = session.client('s3')
-        print("Successfully Authenticated IAM User: ", sts_client.get_caller_identity())
-    
-        # set bucket_name and lambda_function_name according to environment
-        bucket_name = f"dtis-ofop-{sts_client.get_caller_identity()['Account']}-raw-{environment}"
-        lambda_function_name = f"dtis-ofop-{environment}"
-
-    # Start the program here:
-    dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open(success_file, "w") as sf, open(error_file, "w") as ef, open(sync_output_file, "w") as syf, open(plan_file, "w") as pf:
-        sf.write(f"File Upload Success Report - {dt}\n")
-        sf.write("----------------------------\n")
-        ef.write(f"File Upload Error Report - {dt}\n")
-        ef.write("----------------------------\n")
-        syf.write(f"File Sync Report - {dt}\n")
-        syf.write("----------------------------\n")
-        pf.write(f"Data Upload Plan - {dt}\n")
-        pf.write("----------------------------\n")
-
-    # Check and validate local files
-    image_files_to_copy = []  # Populate with validated image files
-    video_files_to_copy = []  # Populate with validated video files
-    text_files_to_copy = []  # Populate with validated text files
-    image_files_to_copy = check_image_files(
-        dir=images_dir, 
-        error_file=error_file, 
-        image_patterns=patterns["image"]
-        )
-    video_files_to_copy = check_video_files(
-        dir=videos_dir, 
-        error_file=error_file, 
-        video_patterns=patterns["video"],
-        dry_run=dry_run
-        )
-    text_files_to_copy = check_ofop_files(
-        dir=ofop_dir, 
-        error_file=error_file, 
-        ofop_patterns=patterns["ofop"]
-        )
-
-    passed_image_file_count = write_validated_file_paths(
-        file_type="image", 
-        files_list=image_files_to_copy, 
-        cruise_id=cruise_id, 
-        plan_file=plan_file, 
-        success_file=success_file,
-        error_file=error_file
-        )
-    passed_video_file_count = write_validated_file_paths(
-        file_type="video", 
-        files_list=video_files_to_copy, 
-        cruise_id=cruise_id, 
-        plan_file=plan_file, 
-        success_file=success_file,
-        error_file=error_file
-        )
-    passed_text_file_count = write_validated_file_paths(
-        file_type="text", 
-        files_list=text_files_to_copy, 
-        cruise_id=cruise_id, 
-        plan_file=plan_file, 
-        success_file=success_file,
-        error_file=error_file
-        )
-    total_passed_file_counts = passed_image_file_count+passed_video_file_count+passed_text_file_count
-    print(f"{total_passed_file_counts} files in total passed location verification for S3 upload")
-    print(f"Please check plan.txt file contents for the files ready to be uploaded to S3...")
-    
-    # Verify S3 bucket
-    if dry_run == "false":
-        verify_s3_bucket(
-            s3_client=s3_client,
-            bucket_name=bucket_name
-            )
-    
-    # Upload to S3
-    upload_to_s3(
-        plan_file_to_read_from=plan_file, 
-        environment=environment, 
-        dry_run=dry_run, 
-        cruise_id=cruise_id, 
-        s3_client=s3_client,
-        bucket_name=bucket_name,
-        aws_region=aws_region,
-        sync_output_file=sync_output_file,
-        success_file=success_file,
-        error_file=error_file
-    )
-
-    if dry_run == "false":
-        # Enable Lambda
-        enable_lambda(
-            lambda_client=lambda_client, 
-            lambda_function_name=lambda_function_name, 
-            success_file=success_file, 
-            error_file=error_file
-        )
-
-    if dry_run == "true":
-        # prompt for data upload
-        confirmation = get_data_upload_confirmation(cruise_id)
-        if confirmation == "yes":
+        if dry_run == "false":
             # get aws access key and secret key
             aws_access_key_id, aws_secret_access_key, aws_session_token = get_aws_credentials()
 
@@ -759,17 +654,82 @@ if __name__ == "__main__":
             # set bucket_name and lambda_function_name according to environment
             bucket_name = f"dtis-ofop-{sts_client.get_caller_identity()['Account']}-raw-{environment}"
             lambda_function_name = f"dtis-ofop-{environment}"
-            
-            # Verify S3 bucket
+
+            # verify bucket exists and have permission
             verify_s3_bucket(
                 s3_client=s3_client,
                 bucket_name=bucket_name
                 )
+
+        # Start the program here:
+        dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        with open(success_file, "w") as sf, open(error_file, "w") as ef, open(sync_output_file, "w") as syf, open(plan_file, "w") as pf:
+            sf.write(f"File Upload Success Report - {dt}\n")
+            sf.write("----------------------------\n")
+            ef.write(f"File Upload Error Report - {dt}\n")
+            ef.write("----------------------------\n")
+            syf.write(f"File Sync Report - {dt}\n")
+            syf.write("----------------------------\n")
+            pf.write(f"Data Upload Plan - {dt}\n")
+            pf.write("----------------------------\n")
+
+        # Check and validate local files
+        image_files_to_copy = []  # Populate with validated image files
+        video_files_to_copy = []  # Populate with validated video files
+        text_files_to_copy = []  # Populate with validated text files
+        image_files_to_copy = check_image_files(
+            dir=images_dir, 
+            error_file=error_file, 
+            image_patterns=patterns["image"]
+            )
+        video_files_to_copy = check_video_files(
+            dir=videos_dir, 
+            error_file=error_file, 
+            video_patterns=patterns["video"],
+            dry_run=dry_run
+            )
+        text_files_to_copy = check_ofop_files(
+            dir=ofop_dir, 
+            error_file=error_file, 
+            ofop_patterns=patterns["ofop"]
+            )
+
+        passed_image_file_count = write_validated_file_paths(
+            file_type="image", 
+            files_list=image_files_to_copy, 
+            cruise_id=cruise_id, 
+            plan_file=plan_file, 
+            success_file=success_file,
+            error_file=error_file
+            )
+        passed_video_file_count = write_validated_file_paths(
+            file_type="video", 
+            files_list=video_files_to_copy, 
+            cruise_id=cruise_id, 
+            plan_file=plan_file, 
+            success_file=success_file,
+            error_file=error_file
+            )
+        passed_text_file_count = write_validated_file_paths(
+            file_type="text", 
+            files_list=text_files_to_copy, 
+            cruise_id=cruise_id, 
+            plan_file=plan_file, 
+            success_file=success_file,
+            error_file=error_file
+            )
+        total_passed_file_counts = passed_image_file_count+passed_video_file_count+passed_text_file_count
+        print(f"{total_passed_file_counts} files in total passed location verification for S3 upload")
+        print(f"Please check plan.txt file contents for the files ready to be uploaded to S3...")
+        
+        # Upload to s3 directly if dry_run is set to be false
+        if dry_run == "false":
+        
             # Upload to S3
             upload_to_s3(
                 plan_file_to_read_from=plan_file, 
                 environment=environment, 
-                dry_run="false", 
+                dry_run=dry_run, 
                 cruise_id=cruise_id, 
                 s3_client=s3_client,
                 bucket_name=bucket_name,
@@ -778,6 +738,7 @@ if __name__ == "__main__":
                 success_file=success_file,
                 error_file=error_file
             )
+
             # Enable Lambda
             enable_lambda(
                 lambda_client=lambda_client, 
@@ -786,6 +747,77 @@ if __name__ == "__main__":
                 error_file=error_file
             )
         else:
-            sys.exit("Dry run completed, exiting...")
+            # prompt for data upload after dry run
+            confirmation = get_data_upload_confirmation(cruise_id)
+            if confirmation == "yes":
+                # get aws access key and secret key
+                aws_access_key_id, aws_secret_access_key, aws_session_token = get_aws_credentials()
+
+                # Initialize AWS Clients
+                if aws_session_token:
+                    session = boto3.Session(
+                        aws_access_key_id=aws_access_key_id,
+                        aws_secret_access_key=aws_secret_access_key,
+                        aws_session_token=aws_session_token,
+                        region_name=aws_region
+                    )
+                else:
+                    session = boto3.Session(
+                        aws_access_key_id=aws_access_key_id,
+                        aws_secret_access_key=aws_secret_access_key,
+                        region_name=aws_region
+                    )
+                sts_client = session.client('sts')
+                lambda_client = session.client('lambda')
+                s3_client = session.client('s3')
+                print("Successfully Authenticated IAM User: ", sts_client.get_caller_identity())
             
+                # set bucket_name and lambda_function_name according to environment
+                bucket_name = f"dtis-ofop-{sts_client.get_caller_identity()['Account']}-raw-{environment}"
+                lambda_function_name = f"dtis-ofop-{environment}"
+                
+                # Verify S3 bucket
+                verify_s3_bucket(
+                    s3_client=s3_client,
+                    bucket_name=bucket_name
+                    )
+                # Upload to S3
+                upload_to_s3(
+                    plan_file_to_read_from=plan_file, 
+                    environment=environment, 
+                    dry_run="false", 
+                    cruise_id=cruise_id, 
+                    s3_client=s3_client,
+                    bucket_name=bucket_name,
+                    aws_region=aws_region,
+                    sync_output_file=sync_output_file,
+                    success_file=success_file,
+                    error_file=error_file
+                )
+                # Enable Lambda
+                enable_lambda(
+                    lambda_client=lambda_client, 
+                    lambda_function_name=lambda_function_name, 
+                    success_file=success_file, 
+                    error_file=error_file
+                )
+            else:
+                print("Dry run completed, exiting...")
+
+        # # exit program
+        # exit_confirmation = get_exit_confirmation()
+        # if exit_confirmation == "yes":
+        #     sys.exit("Closing down now, exiting...")
+        # else:
+        #     print("Sorry, please try again by setting DRY_RUN to true first...")
+        #     sys.exit("Exiting the program now...")
+    
+    except Exception as e:
+        # print full traceback in debug mode
+        print("An error occurred:")
+        traceback.print_exc()
+    
+    finally:
+        # keep the console open
+        input("Press Enter to exit...")
 
