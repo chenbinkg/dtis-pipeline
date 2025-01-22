@@ -56,14 +56,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Bash
-        run: sudo apt-get install -y bash
       - name: Set execute permissions
         run: chmod +x ./tasks
+      - name: Set up Bash
+        run: sudo apt-get install -y bash
       - name: Run Unit Tests
-        run: |
-          chmod +x ./tasks
-          ./tasks bats_alpine
+        run: ./tasks bats_alpine
       - name: Upload Unit Test Report
         uses: actions/upload-artifact@v4
         with:
@@ -92,16 +90,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v1
       - name: Set execute permissions
         run: chmod +x ./tasks
       - name: Set up Bash
         run: sudo apt-get install -y bash
       - name: Run Lambda Unit Tests
-        run: |
-          chmod +x ./tasks
-          ./tasks lambda_unit_tests_alpine
+        run: ./tasks lambda_unit_tests_alpine
       - name: Upload Lambda Unit Test Report
         uses: actions/upload-artifact@v4
         with:

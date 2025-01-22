@@ -9,6 +9,61 @@ python_image_name="python:3.9.20"
 terraform_upstream_image_name="hashicorp/terraform:1.9.8"
 terraform_image_name="hashicorp/terraform:1.9.8"
 
+# Function to install Python and pip on Ubuntu
+function ubuntu_python_install {
+  sudo apt-get update
+  sudo apt-get install -y python3 python3-venv python3-pip
+  python3 -m venv venv
+  source venv/bin/activate
+  pip3 install --upgrade pip setuptools
+}
+
+# Function to install and run Checkov on Ubuntu
+function ubuntu_python_checkov_install_and_run {
+  . venv/bin/activate
+  pip3 install checkov
+  checkov --directory infrastructure --output cli --output junitxml --output-file-path console,results.xml
+}
+
+# Function to install and run ShellCheck on Ubuntu
+function ubuntu_shellcheck_install_and_run {
+  sudo apt-get update
+  sudo apt-get install -y shellcheck xmlstarlet
+  shellcheck -e SC2181 upload/data_upload.sh || true
+  shellcheck -f checkstyle -e SC2181 upload/data_upload.sh | xmlstarlet tr misc/checkstyle/checkstyle2junit.xslt > shellcheck_report.xml
+}
+
+# Function to install and run Bats on Ubuntu
+function ubuntu_bats_install_and_run {
+  sudo apt-get update
+  sudo apt-get install -y bats
+  bats_remove_log_files
+  cd upload/test/bats/
+  bats --report-formatter junit test-data-upload.sh
+}
+
+# Function to install pyenv and Python on Ubuntu
+function ubuntu_pyenv_python_installation {
+  sudo apt-get update
+  sudo apt-get install -y git build-essential libffi-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
+  curl https://pyenv.run | bash
+  export PATH="$HOME/.pyenv/bin:$PATH"
+  eval "$(pyenv init --path)"
+  eval "$(pyenv init -)"
+  pyenv install 3.9.20
+  pyenv global 3.9.20
+  python -m venv venv
+}
+
+# Function to install and run pytest for unit tests on Ubuntu
+function ubuntu_pyenv_python_pytest_install_and_run_unit_tests {
+  source venv/bin/activate
+  cd processing
+  pip install --upgrade pip
+  pip install -r requirements.txt
+  pytest
+}
+
 function alpine_python_install (
   apk --update-cache --no-cache add python3 py3-pip
   python3 -m venv venv
@@ -101,14 +156,17 @@ case "${command}" in
       docker run --rm --entrypoint=/bin/bash -v $PWD:/tmp/niwa -ti $checkov_image_name -c /bin/bash
       ;;
   checkov_alpine)
-      alpine_python_install
-      alpine_python_checkov_install_and_run
+      # alpine_python_install
+      # alpine_python_checkov_install_and_run
+      ubuntu_python_install
+      ubuntu_python_checkov_install_and_run
       ;;
   shellcheck)
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa koalaman/shellcheck-alpine:v0.10.0 -c "shellcheck -e SC2181 /tmp/niwa/upload/data_upload.sh"
       ;;
   shellcheck_alpine)
-      alpine_shellcheck_install_and_run
+      # alpine_shellcheck_install_and_run
+      ubuntu_shellcheck_install_and_run
       ;;
   bats)
       # remove the log files first
@@ -158,8 +216,10 @@ case "${command}" in
       docker run -t --rm -v $PWD:/tmp/niwa python:3.9.20-bullseye bash -c "cd /tmp/niwa && apt update && apt install -y python3-venv && ./tasks _lambda_unit_tests"
       ;;
   lambda_unit_tests_alpine)
-      alpine_pyenv_python_installation
-      alpine_pyenv_python_pytest_install_and_run_unit_tests
+      # alpine_pyenv_python_installation
+      # alpine_pyenv_python_pytest_install_and_run_unit_tests
+      ubuntu_pyenv_python_installation
+      ubuntu_pyenv_python_pytest_install_and_run_unit_tests
       ;;
   *)
       echo "Invalid command: '${command}'"
