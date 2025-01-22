@@ -38,9 +38,10 @@ function ubuntu_bats_install_and_run {
   sudo apt-get update
   sudo apt-get install -y bats
   # Install bats-support and bats-assert
-  git clone https://github.com/bats-core/bats-support.git /usr/local/lib/bats-support
-  git clone https://github.com/bats-core/bats-assert.git /usr/local/lib/bats-assert
-  export BATS_LIB_PATH=/usr/local/lib
+  mkdir -p ./bats-libs
+  git clone https://github.com/bats-core/bats-support.git ./bats-libs/bats-support
+  git clone https://github.com/bats-core/bats-assert.git ./bats-libs/bats-assert
+  export BATS_LIB_PATH=./bats-libs
   bats_remove_log_files
   cd upload/test/bats/
   bats --report-formatter junit test-data-upload.sh
