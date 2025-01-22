@@ -177,7 +177,8 @@ case "${command}" in
       docker run -t --rm --entrypoint=/bin/sh -v $PWD:/tmp/niwa bats/bats:1.11.0 -c "cd /tmp/niwa/upload/test/bats/ && apk add -U file && bats ./*"
       ;;
   bats_alpine)
-      alpine_bats_install_and_run
+      # alpine_bats_install_and_run
+      ubuntu_bats_install_and_run
       ;;
   _lambda_package)
       # packages the lambda file and its dependencies into a zip file, so
