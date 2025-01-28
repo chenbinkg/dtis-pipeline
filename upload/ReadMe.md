@@ -3,7 +3,7 @@
 This application was written to upload the data from local or network drive (`R:`) to aws cloud,
 and is specifically catered to dtis (deep-sea towed imaging system) data.
 
-## DTIS Data Upload Inputs
+## DTIS Data Upload Inputs Test
 
 To run this application, make sure you have following inputs ready:
 1. **cruise_id**: the cruise id this data collection belongs to, e.g. `TAN2009`
