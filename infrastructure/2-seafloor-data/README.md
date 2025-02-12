@@ -12,6 +12,25 @@ This setup uses Terraform remote state, so it requires that code from the [1-ter
 ./tasks lambda_package
 cp processing/lambda_function.zip infrastructure/2-seafloor-data/
 ```
+If it doesn't work, run the following command:
+```
+cd processing
+processing_dir=$(pwd)
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+rm -f "${processing_dir}/lambda_function.zip"
+zip -r9 ${processing_dir}/lambda_function.zip "${processing_dir}/venv/lib/python3.9/site-packages/"
+zip -g ${processing_dir}/lambda_function.zip lambda_function_mongoDB_schema.py
+mv "${processing_dir}/lambda_function.zip" "$(dirname "${processing_dir}")/infrastructure/2-seafloor-data/"
+```
+For mediaconvert lambda package, please run the following command:
+```
+cd mediaconvert
+processing_dir=$(pwd)
+zip -r lambda_media_convert.zip lambda_function_media_convert.py
+mv "${processing_dir}/lambda_media_convert.zip" "$(dirname "${processing_dir}")/infrastructure/2-seafloor-data/"
+```
 
 3. Run the following:
 
