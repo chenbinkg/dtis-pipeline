@@ -47,6 +47,20 @@ resource "local_file" "raw_data_s3_bucket_name" {
   filename = "tf_output_raw_data_s3_bucket_name.txt"
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "intelligent_tiering_archive" {
+    bucket = aws_s3_bucket.raw_data.id
+
+    rule {
+        id     = "IntelligentTieringArchive"
+        status = "Enabled"
+
+        transition {
+            days          = 30
+            storage_class = "INTELLIGENT_TIERING"
+        }
+    }
+}
+
 resource "aws_sqs_queue" "queue" {
   name                       =   "dtis-ofop-${var.environment}"
   # Any message that is sent to the queue remains invisible to consumers for the duration of this delay period.
