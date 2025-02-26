@@ -48,17 +48,17 @@ resource "local_file" "raw_data_s3_bucket_name" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "intelligent_tiering_archive" {
-    bucket = aws_s3_bucket.raw_data.id
+  bucket = aws_s3_bucket.raw_data.id
 
-    rule {
-        id     = "IntelligentTieringArchive"
-        status = "Enabled"
+  rule {
+    id     = "IntelligentTieringArchive"
+    status = "Enabled"
 
-        transition {
-            days          = 30
-            storage_class = "INTELLIGENT_TIERING"
-        }
+    transition {
+      days          = 30                       // Transition after 30 days
+      storage_class = "INTELLIGENT_TIERING"
     }
+  }
 }
 
 resource "aws_sqs_queue" "queue" {
@@ -142,3 +142,31 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
     events        = ["s3:ObjectCreated:*"]
   }
 }
+
+# # S3 trigger lambda function policy
+# resource "aws_lambda_permission" "allow_s3_to_invoke_mediaconvert" {
+#   statement_id  = "AllowS3InvokeLambda"
+#   action        = "lambda:InvokeFunction"
+#   function_name = "dtis-ofop-mediaconvert-${var.environment}"
+#   principal     = "s3.amazonaws.com"
+#   source_arn    = aws_s3_bucket.raw_data.arn
+# }
+
+# resource "aws_s3_bucket_notification" "dtis_s3_notification" {
+#   # # Notification for any objects created to SQS queue
+#   # queue {
+#   #   queue_arn     = aws_sqs_queue.queue.arn
+#   #   # https://docs.aws.amazon.com/AmazonS3/latest/userguide/notification-how-to-event-types-and-destinations.html
+#   #   events        = ["s3:ObjectCreated:*"]
+#   # }
+#   bucket = aws_s3_bucket.raw_data.id
+
+#   # Notification for objects created
+#   lambda_function {
+#     lambda_function_arn = aws_lambda_function.dtis_mediaconvert.arn
+#     events              = ["s3:ObjectCreated:*"]
+
+#     filter_prefix = "dtis-ofop-${data.aws_caller_identity.current.account_id}-raw-${var.environment}"
+#   }
+
+# }

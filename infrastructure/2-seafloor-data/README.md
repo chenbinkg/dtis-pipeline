@@ -12,7 +12,7 @@ This setup uses Terraform remote state, so it requires that code from the [1-ter
 ./tasks lambda_package
 cp processing/lambda_function.zip infrastructure/2-seafloor-data/
 ```
-If it doesn't work, run the following command:
+if it doesn't work, create the lambda_funciton.zip manually:
 ```
 cd processing
 processing_dir=$(pwd)

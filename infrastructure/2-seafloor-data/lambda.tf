@@ -51,6 +51,7 @@ data "aws_iam_policy_document" "dtis_lambda_assume_role" {
   }
 }
 
+# lambda execution role for ingress lambda function
 resource "aws_iam_role" "iam_for_lambda" {
   name               = "dtis-lambda-execution-${var.environment}"
   assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
@@ -145,140 +146,126 @@ resource "aws_lambda_function" "dtis" {
 			INGRESS_COLLECTION_DTIS = "ingresses"
     }
   }
-  tags          = local.tags
+  tags = local.tags
 }
 
 
-# TODO: make it work with checkov security scanning
+  # TODO: make it work with checkov security scanning
 
-### SQS event source mapping to Lambda
+### SQS event source mapping to Preprocessing Lambda function
 resource "aws_lambda_event_source_mapping" "dtis" {
   event_source_arn = aws_sqs_queue.queue.arn
   function_name    = aws_lambda_function.dtis.arn
   enabled = true
 }
 
-data "aws_iam_policy_document" "dtis_mediaconvert_assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["mediaconvert.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-# aws_iam_role.mediaconvert_role will be created
+### MediaConvert role and policy
 resource "aws_iam_role" "mediaconvert_role" {
-  name                  = "dtis-mediaconvert-${var.environment}"
-  assume_role_policy    = data.aws_iam_policy_document.dtis_mediaconvert_assume_role.json
-  tags          = local.tags
+  name = "dtis-mediaconvert-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "mediaconvert.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
 }
 
-# aws_iam_role_policy_attachment.mediaconvert_role_policy will be destroyed
-# (because aws_iam_role_policy_attachment.mediaconvert_role_policy is not in configuration)
+resource "aws_iam_policy" "mediaconvert_policy" {
+  name        = "dtis-mediaconvert-${var.environment}"
+  description = "Policy for MediaConvert to access S3 and CloudWatch"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:PutObject"
+        ],
+        Resource = [ "${aws_s3_bucket.raw_data.arn}/*" ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "mediaconvert:*"
+        ],
+        Resource = [ "*" ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "mediaconvert_role_policy" {
   role       = aws_iam_role.mediaconvert_role.name
   policy_arn = aws_iam_policy.mediaconvert_policy.arn
 }
 
 
-# aws_cloudwatch_log_group.dtis_mediaconvert_lambda_loggroup will be created
-resource "aws_cloudwatch_log_group" "dtis_mediaconvert_lambda_loggroup" {
-  name              = "/aws/lambda/dtis-ofop-mediaconvert-${var.environment}"
-  retention_in_days = 90
-  tags          = local.tags
-}
-# aws_iam_policy.mediaconvert_policy will be updated in-place
-resource "aws_iam_policy" "mediaconvert_policy" {
-  name             = "dtis-mediaconvert-${var.environment}"
-  description      = "Policy for MediaConvert to access S3 and CloudWatch"
-  policy           = jsonencode(
-      {
-          Statement = [
-                {
-                    Action   = [
-                        "s3:ListBucket",
-                        "s3:GetObject",
-                        "s3:PutObject",
-                    ]
-                    Effect   = "Allow"
-                    Resource = [
-                        "${aws_s3_bucket.raw_data.arn}/*",
-                    ]
-                },
-              {
-                  Action   = [
-                      "mediaconvert:*",
-                    ]
-                  Effect   = "Allow"
-                  Resource = [
-                      "*",
-                    ]
-                },
-                {
-                    Action   = [
-                        "logs:CreateLogGroup",
-                        "logs:CreateLogStream",
-                        "logs:PutLogEvents",
-                    ]
-                    Effect   = "Allow"
-                    Resource = "*"
-                },
-            ]
-            Version   = "2012-10-17"
-        }
-    )
-    tags          = local.tags
-  }
-
+### MediaConvert lambda function
+# create lambda execution role for mediaconvert lambda function
 resource "aws_iam_role" "iam_for_lambda_mediaconvert" {
   name               = "dtis-lambda-mediaconvert-execution-${var.environment}"
   assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
   tags          = local.tags
 }
 
-
-# aws_iam_policy.pass_mediaconvert_permissions will be created
-resource "aws_iam_policy" "pass_mediaconvert_permissions" {
-    name             = "dtis-lambda-mediaconvert-${var.environment}"
-    path             = "/"
-    policy           = jsonencode(
-      {
-        Statement = [
-            {
-                Action   = "iam:PassRole"
-                Effect   = "Allow"
-                Resource = "${aws_iam_role.mediaconvert_role.arn}"
-            },
-        ]
-        Version   = "2012-10-17"
-      }
-    )
-
-    tags          = local.tags
-}
-  
-# aws_iam_role_policy_attachment.lambda_medianconvert_sqs_role_policy will be created
+# grant lambda execution role access to SQS
 resource "aws_iam_role_policy_attachment" "lambda_medianconvert_sqs_role_policy" {
-    role       = aws_iam_role.iam_for_lambda_mediaconvert.name
-    policy_arn = aws_iam_policy.dtis_lambda_sqs_permissions.arn
+  role       = aws_iam_role.iam_for_lambda_mediaconvert.name
+  policy_arn = aws_iam_policy.dtis_lambda_sqs_permissions.arn
 }
 
-# aws_iam_role_policy_attachment.lambda_mediaconvert_role_policy will be created
-resource "aws_iam_role_policy_attachment" "lambda_mediaconvert_role_policy" {
-    role       = aws_iam_role.iam_for_lambda_mediaconvert.name
-    policy_arn = aws_iam_policy.pass_mediaconvert_permissions.arn
-}
-
-# aws_iam_role_policy_attachment.lambda_mediaconvert_execution will be created
+# Attach mediaconvert policy to the lambda execution role
 resource "aws_iam_role_policy_attachment" "lambda_mediaconvert_execution" {
-    role       = aws_iam_role.iam_for_lambda_mediaconvert.name
-    policy_arn = aws_iam_policy.mediaconvert_policy.arn
-    
+  role       = aws_iam_role.iam_for_lambda_mediaconvert.name
+  policy_arn = aws_iam_policy.mediaconvert_policy.arn
+}
+
+# Define PassRole policy for MediaConvert to assume the lambda execution role
+data "aws_iam_policy_document" "pass_mediaconvert_role" {
+  statement {
+    effect = "Allow"
+    resources = [ "${aws_iam_role.mediaconvert_role.arn}" ]
+    actions = ["iam:PassRole"]
+  }
+}
+
+resource "aws_iam_policy" "pass_mediaconvert_permissions" {
+  name        = "dtis-lambda-mediaconvert-${var.environment}"
+  path        = "/"
+  policy      = data.aws_iam_policy_document.pass_mediaconvert_role.json
+  tags          = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_mediaconvert_role_policy" {
+  role       = aws_iam_role.iam_for_lambda_mediaconvert.name
+  policy_arn = aws_iam_policy.pass_mediaconvert_permissions.arn
+}
+
+# This is to optionally manage the CloudWatch Log Group for the Lambda Function.
+# If skipping this resource configuration, also add "logs:CreateLogGroup" to the IAM policy below.
+resource "aws_cloudwatch_log_group" "dtis_mediaconvert_lambda_loggroup" {
+  name              = "/aws/lambda/dtis-ofop-mediaconvert-${var.environment}"
+  retention_in_days = 90
+  tags          = local.tags
 }
 
 data "local_file" "lambda_mediaconvert_zip" {
@@ -288,7 +275,7 @@ data "local_file" "lambda_mediaconvert_zip" {
 resource "aws_lambda_function" "dtis_mediaconvert" {
 	depends_on = [
 		aws_iam_role_policy_attachment.lambda_logs,
-		aws_cloudwatch_log_group.dtis_lambda,
+		aws_cloudwatch_log_group.dtis_mediaconvert_lambda_loggroup,
 	]
 
   # If the file is not in the current working directory you will need to include a
@@ -313,10 +300,10 @@ resource "aws_lambda_function" "dtis_mediaconvert" {
   # defaults to 128 (MB)
   memory_size = 1024
 
-  tags          = local.tags
+  tags = local.tags
 }
 
-### SQS event source mapping to Lambda mediaconvert
+### SQS event source mapping to Mediaconvert Lambda function
 resource "aws_lambda_event_source_mapping" "dtis_mediaconvert" {
   event_source_arn = aws_sqs_queue.queue.arn
   function_name    = aws_lambda_function.dtis_mediaconvert.arn
