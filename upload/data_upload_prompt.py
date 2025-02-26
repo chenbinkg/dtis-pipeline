@@ -10,6 +10,7 @@ import subprocess
 # from botocore.exceptions import ClientError
 import sys
 import traceback
+from botocore.config import Config
 
 def get_aws_credentials():
     # prompt for aws authentication
@@ -589,11 +590,23 @@ def upload_to_s3(
 if __name__ == "__main__":
 
     try: 
-        # initialize bucket name, lambda function name, s3 client and aws region
+        # initialize bucket name, lambda function name, s3 client, s3 config and aws region
         bucket_name = "dtis-ofop-851725470721-raw-testing"
         lambda_function_name = "dtis-ofop-testing"
         s3_client = None
         aws_region = "ap-southeast-2"
+        s3_config = Config(
+            region_name=aws_region,
+            s3={
+                "max_concurrent_requests": 20,
+                "max_queue_size": 10000,
+                "multipart_threshold": 64 * 1024 * 1024,   # 64 MB in bytes
+                "multipart_chunksize": 16 * 1024 * 1024,     # 16 MB in bytes
+                "max_bandwidth": 200 * 1024 * 1024,          # 200 MB/s in bytes per second
+                "use_accelerate_endpoint": False,
+                "addressing_style": "virtual"
+            }
+        )
 
         # Initialize log files
         success_file = "success.txt"
@@ -648,7 +661,7 @@ if __name__ == "__main__":
                 )
             sts_client = session.client('sts')
             lambda_client = session.client('lambda')
-            s3_client = session.client('s3')
+            s3_client = session.client('s3', config=s3_config)
             print("Successfully Authenticated IAM User: ", sts_client.get_caller_identity())
         
             # set bucket_name and lambda_function_name according to environment
@@ -769,7 +782,7 @@ if __name__ == "__main__":
                     )
                 sts_client = session.client('sts')
                 lambda_client = session.client('lambda')
-                s3_client = session.client('s3')
+                s3_client = session.client('s3', config=s3_config)
                 print("Successfully Authenticated IAM User: ", sts_client.get_caller_identity())
             
                 # set bucket_name and lambda_function_name according to environment
