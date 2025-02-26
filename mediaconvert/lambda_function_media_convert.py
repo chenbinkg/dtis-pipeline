@@ -1,6 +1,7 @@
 import boto3
 import os
 import logging
+import json
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -8,37 +9,65 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):
     logger.info('Starting MediaConvert job')
     # Assuming the event is an S3 creation event, extract the file key from the event
-    input_key = event['Records'][0]['s3']['object']['key']
-    bucket_name = event['Records'][0]['s3']['bucket']['name']
-    # # Define the input and output settings
-    # input_file = 's3://dtis-ofop-851725470721-raw-testing/TAN2009/047/video/20200814115516.m2ts'  # or .m2ts
-    # output_file = 's3://dtis-ofop-851725470721-raw-testing/TAN2009/047/video/20200814115516'
-    # Check if the file is an M2TS file
-    if input_key.endswith('.m2ts') or input_key.endswith('.m2t'):
-        # Define the input and output settings
-        input_file = f's3://{bucket_name}/{input_key}'
-        input_filename = input_key.split("/")[-1]
-        output_filename = input_key.split("/")[-1].split(".")[0]
-        output_key = input_key.replace(input_filename, output_filename)
-        output_file = f's3://{bucket_name}/{output_key}'
-        
-        # Log the extracted input file (optional)
-        logger.info(f"Input file: {input_file}")
-        logger.info(f"Output file: {output_file}")
-        
-        # Create the MediaConvert job
-        create_video_convert_job(input_file, output_file)
-        
+    logger.info(f"{event}")
+    # Read json data
+    unprocessed_files = []
+    processed_files = []
+    for record in event["Records"]:
+        try:
+            # Parse SQS message body
+            message_body = json.loads(record["body"])
+            logger.info(f"Processing message body: {message_body}")
+
+            # If it's from S3 event notification
+            if "Records" in message_body:
+                for s3_event in message_body["Records"]:
+                    bucket_name = s3_event["s3"]["bucket"]["name"]
+                    input_key = s3_event["s3"]["object"]["key"]
+                    logger.info(
+                        "Processing S3 file - Bucket: %s, Key: %s",
+                        bucket_name,
+                        input_key,
+                    )
+                    # input_key = event['Records'][0]['s3']['object']['key']
+                    # bucket_name = event['Records'][0]['s3']['bucket']['name']
+                    # # Define the input and output settings
+                    # input_file = 's3://dtis-ofop-851725470721-raw-testing/TAN2009/047/video/20200814115516.m2ts'  # or .m2ts
+                    # output_file = 's3://dtis-ofop-851725470721-raw-testing/TAN2009/047/video/20200814115516'
+                    # Check if the file is an M2TS file
+                    if input_key.endswith('.m2ts') or input_key.endswith('.m2t'):
+                        # Define the input and output settings
+                        input_file = f's3://{bucket_name}/{input_key}'
+                        input_filename = input_key.split("/")[-1]
+                        output_filename = input_key.split("/")[-1].split(".")[0]
+                        output_key = input_key.replace(input_filename, output_filename)
+                        output_file = f's3://{bucket_name}/{output_key}'
+                        
+                        # Log the extracted input file (optional)
+                        logger.info(f"Input file: {input_file}")
+                        logger.info(f"Output file: {output_file}")
+                        
+                        # Create the MediaConvert job
+                        create_video_convert_job(input_file, output_file)
+                        processed_files.append(input_key)
+                    else:
+                        unprocessed_files.append(input_key)
+        except Exception as e:
+            logger.error(f"Error processing record: {str(e)}")
+            # Optionally, handle failed records
+            continue
+    
+    if len(processed_files)>0:
         return {
             "statusCode": 200,
-            "body": f"Processing file: {input_file}"
+            "body": f"Processing file: {processed_files}"
         }
     else:
         # If file type is unknown, log and exit
-        logger.error(f"Unrecognized file type for key: {input_key}")
+        logger.error(f"Unrecognized file type for key: {unprocessed_files}")
         return {
             "statusCode": 400,
-            "body": f"Unsupported file type for key: {input_key}"
+            "body": f"Unsupported file type for key: {unprocessed_files}"
         }
     
 def video_convert_job_setting(input_file, output_file):
