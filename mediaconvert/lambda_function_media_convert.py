@@ -9,21 +9,44 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):
     logger.info('Starting MediaConvert job')
     # Assuming the event is an S3 creation event, extract the file key from the event
-    logger.info(f"{event}")
+    logger.info(f"received event: {json.dumps(event)}")
     # Read json data
     unprocessed_files = []
     processed_files = []
     for record in event["Records"]:
         try:
             # Parse SQS message body
-            message_body = json.loads(record["body"])
+            if "body" in record.keys():
+                message_body = json.loads(record["body"])
+            else:
+                message_body = record
             logger.info(f"Processing message body: {message_body}")
 
+            # initialize
+            bucket_names = []
+            input_keys = []
             # If it's from S3 event notification
             if "Records" in message_body:
                 for s3_event in message_body["Records"]:
                     bucket_name = s3_event["s3"]["bucket"]["name"]
                     input_key = s3_event["s3"]["object"]["key"]
+                    bucket_names.append(bucket_name)
+                    input_keys.append(input_key)
+            else:
+                # If it's from customised message
+                bucket_name = message_body["s3"]["bucket"]["name"]
+                input_key = message_body["s3"]["object"]["key"]
+                bucket_names.append(bucket_name)
+                input_keys.append(input_key)
+            
+            for bucket_name, input_key in zip(bucket_names, input_keys):
+                if not bucket_name or not input_key:
+                    logger.warning(
+                        "Missing 'bucket' or 'key' in message body: %s",
+                        message_body,
+                    )
+                    continue
+                else:
                     logger.info(
                         "Processing S3 file - Bucket: %s, Key: %s",
                         bucket_name,

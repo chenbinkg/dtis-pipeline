@@ -20,7 +20,9 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 rm -f "${processing_dir}/lambda_function.zip"
-zip -r9 ${processing_dir}/lambda_function.zip "${processing_dir}/venv/lib/python3.9/site-packages/"
+cd "${processing_dir}/venv/lib/python3.9/site-packages/"
+zip -r9 ${processing_dir}/lambda_function.zip .
+cd ${processing_dir}
 zip -g ${processing_dir}/lambda_function.zip lambda_function_mongoDB_schema.py
 mv "${processing_dir}/lambda_function.zip" "$(dirname "${processing_dir}")/infrastructure/2-seafloor-data/"
 ```

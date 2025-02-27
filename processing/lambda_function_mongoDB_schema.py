@@ -33,12 +33,15 @@ from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.collection import Collection, ReturnDocument
 from pymongo.database import Database
+import boto3
+import boto3
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 START_TIME = datetime.now(timezone.utc)
 MAX_EXECUTION_TIME = 850  # 14.5 minutes (for 15-minute Lambda timeout)
+MEDIA_CONVERT_LAMBDA_FUNCTION = 'dtis-ofop-mediaconvert-testing'
 
 
 def check_timeout():
@@ -1411,6 +1414,39 @@ def lambda_handler(event, context):
                             bucket_name,
                             file_key,
                         )
+                        
+                        # call media convert lambda function for video files
+                        if file_key.endswith('.m2ts') or file_key.endswith('.m2t'):
+                            logger.info("detected video file: %s", file_key)
+                            try:
+                                # call media convert lambda function for video files
+                                lambda_client = boto3.client('lambda')
+                                lambda_payload = {
+                                    "Records": [
+                                        {
+                                            "s3": {
+                                                "bucket": {
+                                                    "name": bucket_name
+                                                },
+                                                "object": {
+                                                    "key": file_key
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                                lambda_response = lambda_client.invoke(
+                                    FunctionName=MEDIA_CONVERT_LAMBDA_FUNCTION,
+                                    InvocationType='RequestResponse',
+                                    Payload=json.dumps(lambda_payload)
+                                )
+                                logger.info("Lambda function response: %s", lambda_response)
+                            except Exception as e:
+                                logger.error(f"Error calling media convert lambda function: {str(e)}")
+                                # Depending on requirements, you might want to continue or re-raise
+                                continue
+                            
+                            continue
 
                         # Get file content from S3
                         file_content = get_file_from_s3(

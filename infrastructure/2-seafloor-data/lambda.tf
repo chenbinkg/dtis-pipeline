@@ -303,9 +303,32 @@ resource "aws_lambda_function" "dtis_mediaconvert" {
   tags = local.tags
 }
 
-### SQS event source mapping to Mediaconvert Lambda function
-resource "aws_lambda_event_source_mapping" "dtis_mediaconvert" {
-  event_source_arn = aws_sqs_queue.queue.arn
-  function_name    = aws_lambda_function.dtis_mediaconvert.arn
-  enabled = true
+# ### SQS event source mapping to Mediaconvert Lambda function
+# resource "aws_lambda_event_source_mapping" "dtis_mediaconvert" {
+#   event_source_arn = aws_sqs_queue.queue.arn
+#   function_name    = aws_lambda_function.dtis_mediaconvert.arn
+#   enabled = true
+# }
+
+# IAM policy document to invoke lambda function for media convert
+data "aws_iam_policy_document" "invoke_mediaconvert_lambda_permissions" {
+  statement {
+    effect = "Allow"
+    resources = [ aws_lambda_function.dtis_mediaconvert.arn ]
+    actions = ["lambda:InvokeFunction"]
+  }
+}
+
+# IAM policy for main lambda to invoke lambda function for media convert
+resource "aws_iam_policy" "invoke_media_convert_lambda_permissions" {
+  name        = "dtis-lambda-invoke-lambda-${var.environment}"
+  path        = "/"
+  policy      = data.aws_iam_policy_document.invoke_mediaconvert_lambda_permissions.json
+  tags          = local.tags
+}
+
+# attach the policy to the main lambda role
+resource "aws_iam_role_policy_attachment" "invoke_mediaconvert_lambda_policy" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.invoke_media_convert_lambda_permissions.arn
 }
