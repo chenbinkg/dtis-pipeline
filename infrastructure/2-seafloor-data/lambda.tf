@@ -142,8 +142,11 @@ resource "aws_lambda_function" "dtis" {
     variables = {
 			MONGODB_URI = "mongodb+srv://DTISFederation:2LzFpNbdRfvxnQze@serverlessinstance0.ta8golw.mongodb.net/"
 			MONGODB_DATABASE = "dtistest"
-			MONGODB_COLLECTION = "DTISOFOP"
-			INGRESS_COLLECTION_DTIS = "ingresses"
+			INGRESS_COLLECTION_DTIS = "dtis_metadata"
+      MONGODB_COLLECTION_IMAGE = "dtis_stills"
+      MONGODB_COLLECTION_VIDEO = "dtis_videos"
+      MONGODB_COLLECTION_OBSER = "dtis_ofop_obser"
+      MONGODB_COLLECTION_PROT = "dtis_ofop_prot"
     }
   }
   tags = local.tags

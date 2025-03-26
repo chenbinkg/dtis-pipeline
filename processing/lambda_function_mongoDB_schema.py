@@ -42,34 +42,32 @@ logger.setLevel(logging.INFO)
 START_TIME = datetime.now(timezone.utc)
 MAX_EXECUTION_TIME = 850  # 14.5 minutes (for 15-minute Lambda timeout)
 MEDIA_CONVERT_LAMBDA_FUNCTION = 'dtis-ofop-mediaconvert-testing'
-
-
-def check_timeout():
-    """Check if the function is approaching the timeout limit"""
-    elapsed_time = (datetime.now(timezone.utc) - START_TIME).total_seconds()
-    if elapsed_time > MAX_EXECUTION_TIME:
-        logger.warning("Function approaching timeout - forcing exit")
-        raise Exception("Function timeout reached")
-
-
-# Define possible date and time formats
-DATE_FORMATS = [
-    "%m/%d/%Y",  # e.g., "04/16/2022"
-    "%m/%d/%Y %H:%M:%S",  # e.g., "04/16/2022 23:08:06"
-    "%d.%m.%Y %H:%M:%S",  # e.g., "16.04.2022 23:08:06"
-    "%Y-%m-%d %H:%M:%S",  # e.g., "2022-04-16 23:08:06"
+# Define possible date and time formats for PCTime
+DATETIME_FORMATS = [
     "%d/%m/%Y %H:%M:%S",  # e.g., "16/04/2022 23:08:06"
+    "%d.%m.%Y %H:%M:%S",  # e.g., "16.04.2022 23:08:06"
+    "%m/%d/%Y %H:%M:%S",  # e.g., "04/16/2022 23:08:06"
+    "%m/%d/%Y",  # e.g., "04/16/2022"
+    "%Y-%m-%d %H:%M:%S",  # e.g., "2022-04-16 23:08:06"
     "%B %d, %Y %H:%M:%S",  # e.g., "April 16, 2022 23:08:06"
+    "%d/%m/%Y %H:%M:%S %p",  # e.g., "April 16, 2022 23:08:06"
 ]
-
+# Define possible time formats for Time
 TIME_FORMATS = [
     "%H:%M:%S",  # e.g., "23:08:06"
     "%I:%M:%S %p",  # e.g., "11:08:06 PM"
     "%H:%M",  # e.g., "23:08"
 ]
+# Define possible date formats for Date
+DATE_FORMATS = [
+    "%d/%m/%Y",  # e.g., "16/04/2022"
+    "%d.%m.%Y",  # e.g., "16.04.2022"
+    "%m/%d/%Y",  # e.g., "04/16/2022"
+    "%Y-%m-%d",  # e.g., "2022-04-16"
+]
 
 
-def parse_datetime(datetime_str: str) -> Optional[str]:
+def parse_datetime(datetime_str: str) -> Optional[datetime]:
     """
     Attempt to parse a datetime string with multiple formats.
     Parses a datetime string and returns it in ISO 8601 format.
@@ -78,9 +76,9 @@ def parse_datetime(datetime_str: str) -> Optional[str]:
         datetime_str (str): The datetime string to parse.
 
     Returns:
-        Optional[str]: The ISO formatted datetime string or None if parsing fails.
+        Optional[str]: utc datetime or None if parsing fails.
     """
-    for fmt in DATE_FORMATS:
+    for fmt in DATETIME_FORMATS:
         try:
             if datetime_str is None:
                 return None
@@ -88,7 +86,7 @@ def parse_datetime(datetime_str: str) -> Optional[str]:
             # Assume UTC timezone if not specified
             parsed_date = parsed_date.replace(tzinfo=timezone.utc)
             # logger.debug("Parsed datetime: %s", parsed_date)
-            return parsed_date.isoformat()
+            return parsed_date
         except ValueError:
             # logger.warning(f"Invalid datetime format: {datetime_str}")
             continue
@@ -96,6 +94,29 @@ def parse_datetime(datetime_str: str) -> Optional[str]:
     logger.debug(f"Failed to parse datetime: {datetime_str}")
     return None
 
+def parse_date_only(date_str: str) -> Optional[str]:
+    """
+    Attempt to parse a date string with multiple formats.
+    Parses a date string and returns as datetime object
+
+    Args:
+        date_str (str): The date string to parse.
+
+    Returns:
+        Optional[str]: The date object or None if parsing fails.
+    """
+    for fmt in DATE_FORMATS:
+        try:
+            if date_str is None:
+                return None
+            parsed_date = datetime.strptime(date_str, fmt).date()
+            return parsed_date
+        except ValueError:
+            # logger.warning(f"Invalid date format: {date_str}")
+            continue
+
+    logger.debug(f"Failed to parse date: {date_str}")
+    return None
 
 def parse_time_only(time_str: str) -> Optional[str]:
     """
@@ -107,19 +128,13 @@ def parse_time_only(time_str: str) -> Optional[str]:
         time_str (str): The time string to parse.
 
     Returns:
-        Optional[str]: ISO 8601 formatted string with the current date if
+        Optional[str]: time object if
           parsing is successful, else None.
     """
     for fmt in TIME_FORMATS:
         try:
             parsed_time = datetime.strptime(time_str, fmt).time()
-            # Assign the current UTC date
-            # current_date = datetime.now(timezone.utc).date()
-            # combined_datetime = datetime.combine(
-            #     current_date, parsed_time, tzinfo=timezone.utc
-            # )
-            # return combined_datetime.isoformat()
-            return parsed_time.isoformat()
+            return parsed_time
         except ValueError:
             logger.warning(f"Invalid time format: {time_str}")
             continue
@@ -127,50 +142,99 @@ def parse_time_only(time_str: str) -> Optional[str]:
     return None
 
 
-def prepare_for_mongodb(document):
-    """Convert any datetime/timedelta objects to strings in a document"""
-    if isinstance(document, dict):
-        return {k: prepare_for_mongodb(v) for k, v in document.items()}
-    elif isinstance(document, list):
-        return [prepare_for_mongodb(v) for v in document]
-    elif isinstance(document, datetime):
-        return document.isoformat()
-    elif isinstance(document, time):
-        return datetime.combine(datetime.today(), document).isoformat()
-    elif isinstance(document, timedelta):
-        return str(document)
-    return document
+def insert_documents_to_mongodb(
+    collection: Collection, documents: List[Dict[str, Any]]
+    ) -> List[Any]:
+    """
+    Upload and insert 'documents' (a.k.a records) to MongoDB Atlas
+    collection.
 
+    Args:
+        collection (Collection): The MongoDB collection where documents will be inserted.
+        documents List[Dict[str, Any]]: A list of documents to insert.
 
-def datetime_handler(obj):
-    """Custom JSON serializer for datetime objects"""
-    if isinstance(obj, (datetime, time)):
-        return obj.isoformat()
-    elif isinstance(obj, timedelta):
-        return str(obj)
-    elif isinstance(obj, ObjectId):
-        return str(obj)  # Convert ObjectId to string
-    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+    Returns:
+        List[Any]: A list of inserted document IDs.
+    """
+    if not documents:
+        logger.warning("No documents to insert.")
+        return []
+
+    try:
+        # Prepare sets of documents
+        existing_documents_to_update = []
+        new_documents = []
+        existing_documents_to_skip_update = []
+
+        for doc in documents:
+            existing_doc = collection.find_one({
+                "cruise": doc["cruise"],
+                "station": doc["station"],
+                "timestamp": doc["timestamp"]
+            })
+            if existing_doc:
+                obj_key = existing_doc.get("file_key")
+                if "rerun" in obj_key:
+                    existing_documents_to_skip_update.append(doc)
+                else:
+                    existing_documents_to_update.append(doc)
+            else:
+                new_documents.append(doc)
+
+        # Insert new documents into MongoDB
+        logger.info(f"New documents to insert: {len(new_documents)}")
+        inserted_doc_counts = 0
+        if len(new_documents) > 0:
+            result = collection.insert_many(new_documents)
+            inserted_doc_counts = len(result.inserted_ids)
+            logger.info(f"Inserted {inserted_doc_counts} new documents into MongoDB.")
+        # Update existing documents in MongoDB
+        logger.info(
+            f"Existing documents to skip update due to pre-existing rerun entry: "
+            f"{len(existing_documents_to_skip_update)}"
+            )
+        logger.info(f"Existing documents to update: {len(existing_documents_to_update)}")
+        updated_doc_counts = 0
+        for doc in existing_documents_to_update:
+            update_doc = doc.copy()
+            keys_to_exclude = ['_id', 'cruise', 'station', 'timestamp']
+            for key in keys_to_exclude:
+                if key in update_doc:
+                    del update_doc[key]
+            rsl = collection.update_one(
+                {"cruise": doc["cruise"], "station": doc["station"], "timestamp": doc["timestamp"]}, 
+                {"$set": update_doc}
+                )
+            if rsl.matched_count > 0:
+                if rsl.modified_count > 0:
+                    updated_doc_counts += 1
+        logger.info(f"Updated {updated_doc_counts} documents in MongoDB.")
+        # result = collection.insert_many(documents, ordered=False)
+        # logger.info(f"Inserted {len(documents)} documents into MongoDB.")
+        return inserted_doc_counts, updated_doc_counts
+    except Exception as e:
+        logger.error(f"Error inserting documents into MongoDB: {str(e)}")
+        raise e
 
 
 def get_current_ingress_id(
     ingress_collection: str,
     cruise: str,
     station: str,
-    remarks: str,
+    object_key: str,
     date_created: datetime,
 ) -> int:
     """
-    Get the current ingressId for a given cruise, station, and remarks.
+    Get the current ingressId for a given cruise, station, and object_key.
     If the document does not exist, create it with a value of 0.
     This is used to keep track of the number of ingresses
-    for a given cruise/station/remarks.
+    for a given cruise/station/object_key.
 
     Args:
         ingress_collection (Collection): The MongoDB collection for ingresses.
         cruise (str): The cruise identifier.
         station (str): The station identifier.
-        remarks (str): The remarks identifier.
+        date_created (datetime): The date the document was created.
 
     Returns:
         int: The current ingressId value.
@@ -179,7 +243,7 @@ def get_current_ingress_id(
         {
             "cruise": cruise,
             "station": station,
-            "remarks": remarks,
+            "object_key": object_key,
             # "date_created": date_created, # we don't use the date_created
         },
         {
@@ -203,16 +267,17 @@ def increment_ingress_id(
     ingress_collection,
     cruise,
     station,
-    remarks,
+    object_key,
     bounding_box,
-    count_documents,
+    document_counts,
     date_created,
+    metadata
 ):
     """
-    Increment the ingressId for a given cruise, station, and remarks.
+    Increment the ingressId for a given cruise, station, and object_key.
     If the document does not exist, create it with a value of 1.
 
-    This is used to keep track of the number of ingresses for a given cruise/station/remarks.
+    This is used to keep track of the number of ingresses for a given cruise/station/object_key.
 
     Args:
         ingress_collection (Collection):
@@ -221,20 +286,23 @@ def increment_ingress_id(
             The cruise identifier.
         station (str):
             The station identifier.
-        remarks (str):
-            The remarks identifier.
+        object_key (str):
+            The object_key identifier.
         bounding_box (dict):
-            The bounding box coordinates.
-        count_documents (int):
+            The bounding box coordinates.data.
+        document_counts (int):
             The number of documents ingested.
         date_created (datetime):
             The date the document was created.
+        metadata (dict):
+            The metadata to update in the document.
     Returns:
         int:
         The updated ingress_count.
     """
     logger.debug(
-        f"Attempting to update document with filter: {{'cruise': '{cruise}', 'station': '{station}', 'remarks': '{remarks}'}}"
+        f"Attempting to update document with filter: "
+        f"'cruise': {cruise}, 'station': {station}, 'object_key': {object_key}"
     )
     logger.debug(f"Bounding Box: {bounding_box}")
     try:
@@ -245,22 +313,23 @@ def increment_ingress_id(
                 "date_updated": datetime.now(
                     timezone.utc
                 ).isoformat(),  # Convert to ISO string
+                "metadata": metadata,
+                "document_counts": document_counts,
             },
-            "$setOnInsert": {
-                "observationCount": count_documents,
-                "date_created": (
-                    date_created.isoformat()
-                    if isinstance(date_created, datetime)
-                    else date_created
-                ),
-            },
+            # "$setOnInsert": {
+            #     "date_created": (
+            #         date_created.isoformat()
+            #         if isinstance(date_created, datetime)
+            #         else date_created
+            #     ),
+            # },
         }
         # Log the update document for debugging
         logger.debug(f"Update Document: {json.dumps(update_doc, default=str)}")
 
         # Use find_one_and_update to return the updated document
         counter = ingress_collection.find_one_and_update(
-            {"cruise": cruise, "station": station, "remarks": remarks},
+            {"cruise": cruise, "station": station, "object_key": object_key},
             update_doc,
             upsert=True,
             return_document=ReturnDocument.AFTER,
@@ -302,251 +371,6 @@ def calculate_bounding_box(coordinates):
             ]
         ],
     }
-
-
-def parse_header(header_text):
-    meta = {}
-    # Extract cruise, station, and remarks
-    meta["cruise"] = next(
-        (
-            line.split(":")[1].strip()
-            for line in header_text
-            if line.startswith("Cruise")
-        ),
-        None,
-    )
-    meta["station"] = next(
-        (
-            line.split(":")[1].strip()
-            for line in header_text
-            if line.startswith("Station")
-        ),
-        None,
-    )
-    meta["remarks"] = next(
-        (
-            line.split(":")[1].strip()
-            for line in header_text
-            if line.startswith("Remarks")
-        ),
-        None,
-    )
-
-    return meta
-
-
-def parse_data_line(
-    line: str,
-    source_key: str,
-    video_start_time: Optional[datetime] = None,
-    video_events: List[Dict[str, Any]] = [],
-    file_format: str = "original",
-) -> Tuple[Optional[Dict[str, Any]], Optional[datetime], List[Dict[str, Any]]]:
-    """
-    Parse a line of data from either original or new rerun_XX_obs format files
-    """
-    check_timeout()
-
-    # Add safety check for video_events list size
-    if len(video_events) > 1000:  # Set appropriate limit
-        logger.error("Too many video events - possible infinite loop")
-
-    if not line or line.startswith("#") or line.startswith("End ###"):
-        return None, video_start_time, video_events
-
-    fields = line.strip().split("\t")
-
-    if file_format == "original":
-        if len(fields) < 12:  # Original format requires at least 12 fields
-            return None, video_start_time, video_events
-        # logger.debug(f"Fields: {fields}, file_format = {file_format}")
-        utc_time = fields[0]
-        lon = float(fields[3])
-        lat = float(fields[2])
-        speed = float(fields[4])
-        course = float(fields[5])
-        depth = float(fields[6])
-        heading = float(fields[7])
-        sub_lon = float(fields[11])
-        sub_lat = float(fields[10])
-        observation = fields[13] if len(fields) > 12 else ""
-        current_time = datetime.strptime(utc_time, "%H:%M:%S")
-
-    else:  # new rerun_obser text file format
-        if len(fields) != 6:  # New format requires exactly 6 fields
-            return None, video_start_time, video_events
-        logger.debug(f"Fields: {fields}, file_format = {file_format}")
-
-        utc_time = fields[1]
-        # Skip date field[0] in rerun file. We will interpolate the date
-        lon = float(fields[2])
-        lat = float(fields[3])
-        speed = None
-        course = None
-        depth = None
-        heading = None
-        sub_lon = lon  # Use same coordinates for sub location
-        sub_lat = lat
-        observation = fields[5]
-        current_time = datetime.strptime(utc_time, "%H:%M:%S")
-
-    # Determine source type
-    is_prot = source_key.endswith("_prot.txt")
-    is_obs = source_key.endswith("_obser.txt")
-
-    if not (is_prot or is_obs):
-        raise ValueError("Invalid source input (text) file type")
-
-    # Initialize feature dictionary
-    feature = {
-        "media": "",
-        "mediaType": "",
-        "mediaOffset": None,
-        "observation": observation,
-        "observation2": None,
-        "observation_source": file_format,
-        "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={observation}&marine_only=true'>Try a WORMS search for {observation}</a>",
-    }
-
-    # Handle photo observations
-    if "photo" in observation.lower():
-        feature["mediaType"] = "photo"
-        # Extract voyage and station from source_key (assuming format like 'TAN2306_123_prot.txt')
-        if is_prot:
-            voyage_station = source_key.split("_prot.txt")[0]
-        elif is_obs:
-            voyage_station = source_key.split("_obser.txt")[0]
-
-        # voyage_station = source_key.split("_prot.txt")[0]
-        feature["media"] = f"/images/{voyage_station}/{voyage_station}.jpg"
-
-    # Handle video observations
-    if isinstance(video_start_time, str):
-        video_start_time = datetime.strptime(video_start_time, "%H:%M:%S")
-
-    if "video started" in observation.lower() or "start video" in observation.lower():
-        a_start_time = timedelta(seconds=0)
-        video_start_time = current_time
-        video_events.append(
-            {"event": "start", "time": current_time.strftime("%H:%M:%S")}
-        )
-        feature["mediaOffset"] = str(a_start_time)
-        feature["mediaType"] = "video"
-        # Extract voyage and station from source_key (assuming format like 'TAN2306_123_prot.txt')
-        if is_prot:
-            voyage_station = source_key.split("_prot.txt")[0]
-        elif is_obs:
-            voyage_station = source_key.split("_obser.txt")[0]
-
-        feature["media"] = f"/videos/{voyage_station}/{voyage_station}.m2t"
-
-    elif "video stopped" in observation.lower() or "stop video" in observation.lower():
-        if video_start_time:
-            media_offset = current_time - video_start_time
-            feature["mediaOffset"] = str(media_offset)
-            video_events.append(
-                {
-                    "event": "stop",
-                    "time": current_time.strftime("%H:%M:%S"),
-                    "duration": str(media_offset),
-                }
-            )
-            video_start_time = None
-
-    # Create the result dictionary
-    # Common processing for both formats
-    result = {
-        "timestamp": utc_time,
-        "shipLocation": {"type": "Point", "coordinates": [lon, lat]},
-        "speed": speed,
-        "course": course,
-        "heading": heading,
-        "depth": depth,
-        "subLocation": {"type": "Point", "coordinates": [sub_lon, sub_lat]},
-        "feature": feature,
-    }
-
-    return result, video_start_time, video_events
-
-
-def get_posi_file_content(s3: boto3.client, bucket: str, key: str) -> str:
-    """
-    We are using a companion _'posi.txt' file to look up date/time information:
-    Lambda function uses a lookup of information from a a pair of 'companion' text files.
-    get_posi_file_content() is used to find a file which has a similar file name,
-    but instead of ending in _prot.txt, it ends in _posi.txt.
-    """
-
-    try:
-        # Handle both _prot.txt and _obser.txt cases
-        if key.endswith("_prot.txt"):
-            posi_key = key.replace("_prot.txt", "_posi.txt")
-        elif key.endswith("_obser.txt"):
-            posi_key = key.replace("_obser.txt", "_posi.txt")
-        else:
-            raise ValueError(
-                f"Source file {key} is neither a _prot.txt nor _obs.txt file"
-            )
-        logger.debug(f"Looking for companion posi file: {posi_key}")
-
-        # Get the posi file content from S3
-        try:
-            response = s3.get_object(Bucket=bucket, Key=posi_key)
-            content = response["Body"].read().decode("utf-8")
-            logger.debug(f"Found posi file: {posi_key}")
-            return content  # .splitlines()
-        except s3.exceptions.NoSuchKey:
-            logger.error(f"Companion posi file not found: {posi_key}")
-            raise FileNotFoundError(f"Companion posi file not found: {posi_key}")
-
-    except Exception as e:
-        logger.error(
-            f"Error getting posi file content: {str(e)} - We cannot use date lookups. Stopping."
-        )
-        raise
-
-
-def parse_posi_file(content):
-    """
-    Parse the content of a posi file.
-
-    Args:
-        content: The content of the posi file as a string.
-
-    Returns:
-        A dictionary containing the parsed data.
-
-    Raises:
-        ValueError: If the content is not in the expected format.
-    """
-    lines = content.split("\n")
-    header = lines[0].split("\t")
-    data = {}
-
-    for line in lines[1:]:
-        fields = line.split("\t")
-        if len(fields) >= 2:
-            date = fields[0].strip()
-            time = fields[1].strip()
-            logger.debug("Date: %s, Time: %s", date, time)
-            try:
-                dt = datetime.strptime(f"{date} {time}", "%m/%d/%Y %H:%M:%S")
-                dt_utc = dt.replace(tzinfo=timezone.utc)  # Make it timezone-aware
-                data[dt_utc.isoformat()] = {
-                    "datetime": dt_utc,  # This should be a full datetime object
-                    "data": {
-                        header[i]: fields[i]
-                        for i in range(len(fields))
-                        if i < len(header)
-                    },
-                }
-            except ValueError as e:
-                logger.debug(
-                    f"Invalid date/time format - Date: {date}; Time {time}. Error: {str(e)}"
-                )
-                continue  # Skip this line and continue with the next
-
-    return data
 
 
 def initialize_resources() -> Tuple[boto3.client, MongoClient, Database]:
@@ -609,7 +433,9 @@ def detect_file_format(lines: List[str]) -> str:
     Returns:
         str: Format identifier ('original', 'new', 'latest', 'simple').
     """
-    dash_line_found = False
+    # set to true to detect the first header line for obser files
+    # for prot files dash line usually comes later
+    dash_line_found = True
 
     for line in lines:
         stripped_line = line.strip()
@@ -624,9 +450,11 @@ def detect_file_format(lines: List[str]) -> str:
                 return "original"
             elif stripped_line.startswith("#Date\tTime\tPC_Time\tSHIP_Lon"):
                 return "latest"
-            elif re.match(r"#Date\s+Time\s+PC_Time", stripped_line):
-                logger.debug("New file type detected")
-                return "new"
+            elif stripped_line.startswith("Date\tTime\tPC_Time\tSHIP_Lon"):
+                return "latest"
+            # elif re.match(r"#Date\s+Time\s+PC_Time", stripped_line):
+            #     logger.debug("New file type detected")
+            #     return "new"
             elif stripped_line.startswith(
                 "#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name"
             ):
@@ -635,7 +463,7 @@ def detect_file_format(lines: List[str]) -> str:
                 dash_line_found = (
                     False  # Reset if the line after dashes is not a header"
                 )
-    return "simple"
+    return "unknown"
 
 
 def parse_original_format(lines: List[str]) -> Dict[str, Any]:
@@ -684,8 +512,8 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
     # # Phase 4: Parse Data Rows
     # logger.debug("Phase 4: Parsing data rows ifrom data_start_idx %s.", data_start_idx)
 
-    parsed_data = parse_metadata(lines)
-    headers, header_idx = detect_header_line(lines, parsed_data[1])
+    metadata, data_start_idx = parse_metadata(lines)
+    headers, header_idx = detect_header_line(lines, data_start_idx)
     # tasks = parse_tasks(lines, header_idx)
     observations = parse_data_rows(lines, header_idx, headers)
 
@@ -720,30 +548,22 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
         bounding_box = None
         logger.warning("No valid coordinates found to calculate bounding box.")
 
-    return [
-        {
-            "metadata": parsed_data[0],
+    return {
+            "metadata": metadata,
             "bounding_box": bounding_box,
             # "tasks": tasks,
-            "detailed_data_table": observations,
-        }
-    ]
-
-
-"""
-refactored code from the original lambda function:
-
-parse_metadata: Parses the metadata section and detects the delimiter line.
-detect_header_line: Detects the header line based on known patterns.
-parse_tasks: Parses the tasks section.
-parse_data_rows: Parses the data rows based on the detected headers.
-parse_latest_format: Combines the above functions to parse the entire file.
-"""
+            "detailed_data_table": observations
+            }
 
 
 def parse_metadata(lines: List[str]) -> Tuple[Dict[str, str], int]:
     """
-    Parses the metadata section and detects the delimiter line.
+    Parses the metadata section and detects the delimiter line usually in
+    the form of a line with only dashes. "------------------"
+    metadata contains : in the text line
+
+    return metadata which contains ":" in the text line as separator
+    return data_start_idx which is the index of the line after the delimiter line
     """
     logger.debug("Parsing metadata section.")
     metadata = {}
@@ -768,13 +588,16 @@ def parse_metadata(lines: List[str]) -> Tuple[Dict[str, str], int]:
                 metadata_value = value.strip()
                 if metadata_key != "Task":
                     metadata[metadata_key] = metadata_value
-    logger.debug(f"Extracted metadata: {metadata}, data_start_idx: {data_start_idx}")
+    logger.info(f"Extracted metadata: {metadata}, data_start_idx: {data_start_idx}")
     return metadata, data_start_idx
 
 
 def detect_header_line(lines: List[str], start_idx: int) -> Tuple[List[str], int]:
     """
     Detects the header line based on known patterns.
+    header line starts with "UTC time" or "Date" or "#Date"
+
+    returns headers which is a list of strings
     """
     logger.debug("Detecting header line.")
     headers = []
@@ -792,86 +615,60 @@ def detect_header_line(lines: List[str], start_idx: int) -> Tuple[List[str], int
             or line.startswith("Date")
             or line.startswith("#Date")
         ):
-            logger.debug("Line content at idx: %s", line)
+            logger.info("Line content at idx: %s", line)
+            # removed # next to Date which is used to identify the header line
+            # some files may not contain #
             headers = line.lstrip("#").split("\t")
             headers = [header.strip() for header in headers]
             header_found = True
             return headers, idx + 1
 
     if header_found:
-        logger.debug(f"Detected headers: {headers} at line {idx}")
+        logger.info(f"Detected headers: {headers} at line {idx}")
     return headers, start_idx
 
 
-# COMMENTED OUT FOR NOW - NOT USED IN THE CURRENT IMPLEMENTATION
-# def parse_tasks(lines: List[str], start_idx: int) -> List[Dict[str, str]]:
-#     """
-#     Parses the tasks section.
+def get_pc_time(observation):
+    """
+    Get the PC time from the observation dictionary.
+    if not found, return None
+    """
+    possible_keys = ["PC_Time", "PC time", "PC Time"]
+    for key in possible_keys:
+        if key in observation.keys():
+            return observation[key]
+    return None
 
-#     Args:
-#         lines (List[str]): Lines from the text file.
-#         start_idx (int): The index to start searching for tasks.
 
-#     Returns:
-#         List[Dict[str, str]]: A list of task dictionaries.
-#     """
-#     tasks = []
-#     task_headers = [
-#         "Task",
-#         "PC Date and Time",
-#         "UTC Time",
-#         "UTC Date",
-#         "SHIP Latitude",
-#         "SHIP Longitude",
-#         "SUB_1 Latitude",
-#         "SUB_1 Longitude",
-#         "Water Depth",
-#     ]
+def get_date(observation, pc_time):
+    """
+    Get the date from the observation dictionary.
+    if not found, return the first 10 characters of the PC time.
+    """
+    possible_keys = ["Date", "UTC Date", "UTC_Date"]
+    for key in possible_keys:
+        if key in observation.keys():
+            return observation[key]
+    return pc_time[:10]
 
-#     # Compile regex patterns for matching task lines
 
-#     # Pattern Breakdown:
-#     # ^(Task|Tasks): Asserts that the line starts with either "Task" or "Tasks".
-#     # [ \t]*: Matches zero or more spaces or tabs. This ensures that any combination of spaces and tabs between "Task(s)" and the colon is accounted for.
-#     # :: Matches the colon character.
-#     # [ \t]*: Matches zero or more spaces or tabs after the colon.
-#     # (.+): Captures the rest of the line after the colon. This is the task description.
-
-#     task_pattern = re.compile(r"^(Task|Tasks)[ \t]*:[ \t]*(.+)", re.IGNORECASE)
-
-#     for idx in range(start_idx, len(lines)):
-#         line = lines[idx].strip()
-#         match = task_pattern.match(line)
-#         if match:
-#             continue  # Skip the header line
-#         if line.startswith(
-#             "----------------------------------------------------------------"
-#         ) or line.startswith("UTC time"):
-#             break  # End of tasks section
-
-#         fields = re.split(r"[ \t]{2,}", line)
-#         if len(fields) != len(task_headers):
-#             logger.warning(f"Skipping malformed task line {idx}: {line}")
-#             continue
-
-#         task = dict(zip(task_headers, fields))
-
-#         # Parse and format datetime fields using helper functions
-#         task["PC Date and Time"] = parse_datetime(task.get("PC Date and Time", ""))
-#         task["UTC Time"] = parse_time_only(task.get("UTC Time", ""))
-#         task["UTC Date"] = parse_datetime(task.get("UTC Date", ""))
-
-#         tasks.append(task)
-#         logger.debug(f"Parsed task at line {idx}: {task}")
-
-#     return tasks
+def get_time(observation):
+    """
+    Get the time from the observation dictionary.
+    if not found, return None
+    """
+    possible_keys = ["Time", "UTC Time", "UTC_Time", "time"]
+    for key in possible_keys:
+        if key in observation.keys():
+            return observation[key]
+    return None
 
 
 def parse_data_rows(
-    lines: List[str], start_idx: int, headers: List[str]
+    lines: List[str], start_idx: int, headers: List[str], skip_mismatched=False
 ) -> List[Dict[str, Any]]:
     """
-    Parses the data rows based on the detected headers.
+    Parses the data rows based on the detected headers for prot files.
 
     Args:
         lines (List[str]): Lines containing data.
@@ -882,31 +679,57 @@ def parse_data_rows(
         List[Dict[str, Any]]: List of parsed data records.
     """
     logger.debug("Parsing data rows.")
-
-    detailed_data_table = []
-    delimiter_pattern = re.compile(r"^-+$")
     observations = []
+    skipped_lines = 0
 
     for idx in range(start_idx, len(lines)):
         line = lines[idx].strip()
+        # detect empty lines 
+        # or comments, which usually is the header line
         if not line or line.startswith("#"):
+            skipped_lines += 1
             continue  # Skip empty lines or comments
+        # detect end of the data section (in obser.txt files)
+        if line.startswith("End ###"):
+            skipped_lines += 1
+            break  # End of data section
 
         fields = line.split("\t")
         # Check if the number of fields matches the number of headers
         if len(fields) != len(headers):
-            logger.warning("Skipping malformed data line %s, %s", idx, line)
-            logger.warning(
-                "Is this an 'original format file? They have fewer headers than columns."
-            )
-            # continue
+            logger.warning("Malformed data line %s, %s", idx, line)
+            if len(fields) > len(headers):
+                logger.warning(
+                    "It has more fields than headers."
+                )
+            else:
+                logger.warning(
+                    "It has fewer field than headers."
+                )
+            if skip_mismatched:
+                logger.warning("Skipping line %s due to mismatched fields", idx)
+                skipped_lines += 1
+                continue
 
         observation = dict(zip(headers, fields))
 
+        # "original": "UTC time, PC time
+        # "latest": "#Date, Time, PC_Time
+        # "new": "#Date, Time, PC_Time"
+        # "simple": "#Date, Time"
+
         # Parse datetime fields
-        observation["PC_Time"] = parse_datetime(observation.get("PC_Time", ""))
-        observation["Date"] = parse_datetime(observation.get("Date", ""))
-        observation["Time"] = parse_time_only(observation.get("Time", ""))
+        pc_time = get_pc_time(observation)
+        if pc_time is not None:
+            observation["PC_Time"] = parse_datetime(pc_time)
+        try:
+            date = get_date(observation, pc_time)
+            observation["Date"] = parse_date_only(date)
+            time = get_time(observation)
+            observation["Time"] = parse_time_only(time)
+        except:
+            logger.error(f"Failed to parse Date and Time at line {idx}: {line}")
+            continue
 
         for i, (header, part) in enumerate(zip(headers, fields)):
             header = header.strip()
@@ -955,7 +778,7 @@ def parse_data_rows(
         observations.append(observation)
         logger.debug(f"Parsed observation at line {idx}: {observation}")
 
-    logger.debug(f"Parsed {len(observations)} data rows.")
+    logger.info(f"Parsed {len(observations)} data rows, skipped {skipped_lines} rows, total {len(lines)} rows.")
 
     return observations
 
@@ -979,14 +802,12 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
             List of observation dictionaries.
     """
     logger.debug("Searching for METADATA. Parsing 'latest' format file.")
-    parsed_data = parse_metadata(lines)
+    metadata, data_start_idx = parse_metadata(lines)
 
     logger.debug("Searching for HEADER. Parsing 'latest' format file.")
-    headers, header_idx = detect_header_line(lines, parsed_data[1])
-    logger.debug(
-        "Finished Searching for HEADER at datastartidx %s. Parsing 'latest' format file.",
-        header_idx,
-    )
+    headers, header_idx = detect_header_line(lines, data_start_idx)
+    logger.info(f"Detected headers: {headers} at line {header_idx}")
+
     if not headers:
         logger.error("Header detection failed. Returning empty data.")
         return []
@@ -999,13 +820,75 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
     coordinates = []
     for obs in observations:
         try:
-            lat = float(obs.get("SHIP_Lat", 0))
-            lon = float(obs.get("SHIP_Lon", 0))
+            # If there are SHIP coordinates
+            lat = float(obs.get("SHIP_Lat"))
+            lon = float(obs.get("SHIP_Lon"))
             coordinates.append((lon, lat))
+        except (TypeError, ValueError) as e:
+            try:
+                # If there are SUB1 coordinates
+                sub_lat = float(obs.get("SUB1_Lat"))
+                sub_lon = float(obs.get("SUB1_Lon"))
+                coordinates.append((sub_lon, sub_lat))
+            except (TypeError, ValueError) as e:
+                logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
+                continue
 
+    # Calculate bounding box
+    if coordinates:
+        bounding_box = calculate_bounding_box(coordinates)
+        logger.debug(f"Calculated Bounding Box: {bounding_box}")
+    else:
+        bounding_box = None
+        logger.warning("No valid coordinates found to calculate bounding box.")
+
+    return {
+            "metadata": metadata,
+            "bounding_box": bounding_box,
+            "detailed_data_table": observations
+            }
+
+
+def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
+    """
+    Parses files adhering to the "simple" format.
+    This is used for obser.txt files in original and rerun formats.
+    TO-DO:
+    - metadata needs modification, for obser.txt files, metadata must come from file name
+    - filename in the format {cruise}_{station}_*_obser.txt
+    - for simple format, need to store in a separate table
+    - how current ingestion is done for obser.txt files?
+    - for ID_Name needs to remove ID_Number and a space in front of specis name
+    - for ID_Number needs to remove []
+
+    Args:
+        lines (List[str]): Lines from the file content.
+
+    Returns:
+        Dict[str, Any]: Structured data with empty metadata and detailed data table suitable for MongoDB insertion.
+    """
+    metadata = {} # no metadata in simple format
+    data_start_idx = 0 # searching for header line index starts from line 0
+
+    logger.debug("Searching for HEADER. Parsing 'simple' format file.")
+    headers, header_idx = detect_header_line(lines, data_start_idx)
+    logger.info(f"Detected headers: {headers} at line {header_idx}")
+
+    if not headers:
+        logger.error("Header detection failed. Returning empty data.")
+        return []
+
+    logger.debug("Parsing DATA ROWS. Parsing 'latest' format file.")
+    observations = parse_data_rows(lines, header_idx, headers, skip_mismatched=True)
+
+    # Extract coordinate pairs
+    # coordinate_keys = ["SHIP_Lat", "SHIP_Lon", "SUB1_Lat", "SUB1_Lon"]  # Update based on actual keys
+    coordinates = []
+    for obs in observations:
+        try:
             # If there are SUB1 coordinates
-            sub_lat = float(obs.get("SUB1_Lat", 0))
-            sub_lon = float(obs.get("SUB1_Lon", 0))
+            sub_lat = float(obs.get("SUB1_Lat"))
+            sub_lon = float(obs.get("SUB1_Lon"))
             coordinates.append((sub_lon, sub_lat))
         except (TypeError, ValueError) as e:
             logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
@@ -1018,89 +901,11 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
     else:
         bounding_box = None
         logger.warning("No valid coordinates found to calculate bounding box.")
-
-    return [
-        {
-            "metadata": parsed_data[0],
-            "bounding_box": bounding_box,
-            "detailed_data_table": observations,
-        }
-    ]
-
-
-def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
-    """
-    Parses files adhering to the "simple" format.
-
-    Args:
-        lines (List[str]): Lines from the file content.
-
-    Returns:
-        Dict[str, Any]: Structured data with empty metadata and detailed data table suitable for MongoDB insertion.
-    """
-    logger.debug("Parsing 'simple' format file.")
-    metadata = {}
-    detailed_data_table = []
-    start_idx = 0
-    # Parse metadata
-    for idx, line in enumerate(lines):
-        stripped_line = line.strip()
-
-        if not stripped_line:
-            continue
-
-        logger.debug("Processing line %s: %s", idx, line)
-
-        if stripped_line.startswith("End ###"):
-            break  # Reached the end of the data section
-        else:
-            if ":" in stripped_line:
-                parts = stripped_line.split("\t", 1)
-                if len(parts) == 2:
-                    key, value = parts
-                    metadata[key.strip().rstrip(":")] = value.strip()
-                else:
-                    logger.warning(
-                        "Unexpected metadata line in 'simple' format file at line %s: %s",
-                        idx,
-                        line,
-                    )
-            else:
-                logger.debug(
-                    "Skipping non-key-value line ( in 'simple' format file) at line %s: %s",
-                    idx,
-                    line,
-                )
-
-    # Parse header
-    header = lines[start_idx]
-    columns = header.split("\t")
-
-    # Parse data lines
-    for line in lines[start_idx + 1 :]:
-        if line.startswith("End ###"):
-            break
-        parts = line.split("\t")
-        if len(parts) < len(columns):
-            logger.debug(
-                "Some columns are missing in the line: %s. Skipping this line.",
-                line,
-            )
-            continue
-        record = {
-            "Date": parse_datetime(parts[0]),
-            "Time": parse_time_only(parts[1]),
-            "SUB1_Lon": float(parts[2]),
-            "SUB1_Lat": float(parts[3]),
-            "ID_Number": parts[4],
-            "ID_Name": parts[5],
-        }
-        detailed_data_table.append(prepare_for_mongodb(record))
-
+    
     return {
         "metadata": metadata,
-        # "bounding_box": bounding_box,
-        "detailed_output_table": detailed_data_table,
+        "bounding_box": bounding_box,
+        "detailed_data_table": observations,
     }
 
 
@@ -1110,6 +915,7 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     tuple,  # bounding_box / tuple of coordinates
     str,  # cruise_from_name
     str,  # station_from_name
+    dict,   # metadata
 ]:
     """
     Parses the file content and returns a list of documents
@@ -1135,16 +941,20 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     logger.debug(f"file_content: {file_content[:100]}...")
 
     try:
-        cruise_from_name, station_from_name = key.split("_")[0:2]
-        cruise_from_name = cruise_from_name.split("/")[0]
+        cruise = key.split("/")[0]
+        cruise = cruise.upper()
+        station = key.split("/")[1]
+        station = station.upper()
+        # cruise, station = key.split("_")[0:2]
+        # cruise = cruise.split("/")[0]
     except ValueError:
         logger.error(f"Invalid key format: {key}")
         return {}
 
     logger.debug(
         "From file name we know - cruise: %s, station: %s",
-        cruise_from_name,
-        station_from_name,
+        cruise,
+        station,
     )
 
     # split the file content into indivdual lines
@@ -1153,36 +963,30 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     # Detect file format
     file_format = detect_file_format(lines)
     logger.info(
-        "Detected file format (in 'parse_file_content'): %s",
-        file_format,
+        "Detected file format: %s", file_format,
     )
-
+    documents = []
     # Parse based on file format:
     if file_format == "original":
         logger.info("Parsing 'original' format file.")
-        parsed_data_list = parse_original_format(lines)
-        documents = []
+        parsed_data = parse_original_format(lines)
     elif file_format == "latest":
         logger.info("Parsing 'latest' format file.")
-        parsed_data_list = parse_latest_format(lines)
-        documents = []
+        parsed_data = parse_latest_format(lines)
     elif file_format == "simple":
         logger.info("Parsing 'simple' format file.")
-        parsed_data_list = parse_simple_format(lines)
-        documents = []
+        parsed_data = parse_simple_format(lines)
     else:
         logger.error("Unknown file format - cannot parse.")
         return []
 
     # Prepare documents for MongoDB insertion
-    for parsed_data in parsed_data_list:
-        logging.debug("Preparing document for MongoDB insertion. %s", parsed_data)
-        # Add metadata from file name
-        parsed_data["metadata"]["Cruise"] = cruise_from_name
-        parsed_data["metadata"]["Station"] = station_from_name
-        document = prepare_documents(parsed_data, key, ingress_collection)
-        if document:
-            documents.extend(document)
+    logging.debug("Preparing document for MongoDB insertion. %s", parsed_data)
+    # Add metadata from file name
+    parsed_data["metadata"]["Cruise"] = cruise
+    parsed_data["metadata"]["Station"] = station
+    documents, metadata,\
+         image_docs, video_docs = prepare_documents(parsed_data, key, ingress_collection)
 
     # # We will return the bounding box from the last parsed document
     bounding_box = parsed_data.get("bounding_box")
@@ -1190,7 +994,8 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     if not documents:
         logger.error("No parsed data found to create documents.")
 
-    return documents, file_format, bounding_box, cruise_from_name, station_from_name
+    return documents, file_format, bounding_box, cruise, \
+        station, metadata, image_docs, video_docs
 
 
 def remove_brackets(text, default=""):
@@ -1208,6 +1013,199 @@ def remove_brackets(text, default=""):
     cleaned = re.sub(r"\[.*?\]\s*", "", text)
     # Return cleaned text if not empty, else return default
     return cleaned if cleaned else default
+
+
+def check_source_key(source_key):
+    is_rerun = "rerun" in source_key
+    is_prot = source_key.endswith("_prot.txt")
+    is_obs = source_key.endswith("_obser.txt")
+    
+    return is_rerun, is_prot, is_obs
+
+
+def prepare_img_document(
+        document,
+        obs_text
+):
+    """
+    Construct a document for MongoDB insertion for image data.
+    add img_key to the document after extracting img_key from obs_text
+    limitation: the generated img_key has 1000 image cap
+    Args:
+        document (Dict[str, Any]): The structured document.
+        obs_text (str): The observation text containing the image key
+        the image key is made up of cruise, station, and image number
+        e.g. TAN2009_002_001.JPG
+
+    Returns:
+        Dict[str, Any]:
+            A structured document ready for MongoDB insertion.
+        img_num:
+            The image number extracted from the observation
+    """
+    cruise = document["cruise"]
+    station = document["station"]
+    if "DTIS photo:" not in obs_text:
+        img_num = int(obs_text.split("photo")[-1].strip())
+    else:
+        img_num = int(obs_text.split("DTIS photo:")[-1].split(";")[0].strip())
+    img_key = f"{cruise}/{station}/images/{cruise}_{station}_{img_num:03d}.JPG"
+    document["img_key"] = img_key
+
+    return document, img_num
+
+
+def prepare_video_document(
+        document,
+        obs_text
+):
+    """
+    Construct a document for MongoDB insertion for video data.
+    
+    Args:
+        document (Dict[str, Any]): The structured document.
+        obs_text (str): The observation text containing the video key.
+            the video key is made up of timestamp in %Y%m%d%H%M%S format
+            the filename will not match with actual filename in S3 due to
+            timestamp difference when video is actually generated, but 
+            the filename can be used as a reference for further video
+            filename identification, e.g. find filename with closest timestamp
+            to the video key
+        limitations: some older voyages may not use timestamp in video
+            file name, in that case, the video key will not be useful in
+            matching the video file in S3.
+            in the latest voyage from 2025, the video file name was changed to
+            something like "20250123 - 023521_1.mpg", the timestamp is
+            20250123 - 023521, need to standardize the video file name
+            in the future, e.g. TAN2009_002_001.mpg
+    Returns:
+        Dict[str, Any]: A structured document ready for MongoDB insertion.
+    """
+    cruise = document["cruise"]
+    station = document["station"]
+    timestamp = document["timestamp"].strftime("%Y%m%d%H%M%S")
+    video_key = f"{cruise}/{station}/video/{timestamp}.m2ts"
+    document["video_key"] = video_key
+    return document
+
+
+def prepare_prot_document(
+        cruise, 
+        station, 
+        timestamp, 
+        observation, 
+        cleaned_observation, 
+        file_key, 
+        is_rerun
+        ):
+    """
+    Construct a document for MongoDB insertion for prot data.
+
+    Args:
+        cruise (str): The cruise name.
+        station (str): The station name.
+        timestamp (str): The timestamp of the observation.
+        observation (Dict[str, Any]): The raw observation data.
+        cleaned_observation (Dict[str, Any]): The cleaned observation data.
+        file_key (str): The S3 key of the input file.
+        is_rerun (bool): Whether the data is from a rerun file.
+
+    Returns:
+        Dict[str, Any]:
+            A structured document ready for MongoDB insertion.
+    """
+    time_str = observation.get("Time")
+    time_str = time_str.strftime("%H:%M:%S")
+    date_str = observation.get("Date")
+    date_str = date_str.strftime("%Y-%m-%d")
+    document = {
+        "file_key": file_key,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "cruise": cruise,
+        "station": station,
+        "timestamp": timestamp,
+        "pc_time": observation.get("PC_Time"),
+        "date": date_str,
+        "time": time_str,
+        # "tasks": tasks,
+        "shipLocation": {
+            "type": "Point",
+            "coordinates": [
+                float(observation.get("SHIP_Lon", 0.0)),
+                float(observation.get("SHIP_Lat", 0.0)),
+            ],
+        },
+        "speed": float(observation.get("SHIP_SOG", 0.0)),
+        "course": float(observation.get("SHIP_COG", 0.0)),
+        "heading": float(observation.get("SHIP_Hdg", 0.0)),
+        "depth": float(observation.get("Water_Depth", 0.0)),
+        "subLocation": {
+            "type": "Point",
+            "coordinates": [
+                float(observation.get("SUB1_Lon", 0.0)),
+                float(observation.get("SUB1_Lat", 0.0)),
+            ],
+        },
+        "subDepth": float(observation.get("SUB1_Depth", 0.0)),
+        "subAltitude": float(observation.get("SUB1_Altitude", 0.0)),
+    }
+    if is_rerun:
+        document["observation2"] = cleaned_observation
+    else:
+        document["observation"] = cleaned_observation
+    return document
+
+
+def prepare_obser_document(
+        cruise, 
+        station, 
+        timestamp, 
+        observation, 
+        cleaned_observation, 
+        file_key, 
+        is_rerun
+        ):
+    """
+    Construct a document for MongoDB insertion for obser data.
+
+    Args:
+        cruise (str): The cruise name.
+        station (str): The station name.
+        timestamp (str): The timestamp of the observation.
+        observation (Dict[str, Any]): The raw observation data.
+        cleaned_observation (Dict[str, Any]): The cleaned observation data.
+        file_key (str): The S3 key of the input file.
+        is_rerun (bool): Whether the data is from a rerun file.
+
+    Returns:
+        Dict[str, Any]:
+            A structured document ready for MongoDB insertion.
+    """
+    time_str = observation.get("Time")
+    time_str = time_str.strftime("%H:%M:%S")
+    date_str = observation.get("Date")
+    date_str = date_str.strftime("%Y-%m-%d")
+    document = {
+        "file_key": file_key,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "cruise": cruise,
+        "station": station,
+        "timestamp": timestamp,
+        "date": date_str,
+        "time": time_str,
+        "subLocation": {
+            "type": "Point",
+            "coordinates": [
+                float(observation.get("SUB1_Lon", 0.0)),
+                float(observation.get("SUB1_Lat", 0.0)),
+            ],
+        },
+    }
+    if is_rerun:
+        document["observation2"] = cleaned_observation
+    else:
+        document["observation"] = cleaned_observation
+    return document
 
 
 def prepare_documents(
@@ -1229,18 +1227,31 @@ def prepare_documents(
             A list of structured documents ready for MongoDB insertion
             (or None if preparation fails).
     """
+    is_rerun, is_prot, is_obs = check_source_key(file_key)
     metadata = parsed_data.get("metadata", {})
     bounding_box = parsed_data.get("bounding_box")
     observations = parsed_data.get("detailed_data_table", [])
+    # Extracted metadata
+    logger.info("Extracted metadata: %s", metadata)
+    # Extract key info out from metadata or file_key
+    if "Cruise" in metadata:
+        cruise = metadata.get("Cruise")
+    else:
+        cruise = file_key.split("/")[0]
+    if "Station" in metadata:
+        station = metadata.get("Station")
+    else:
+        station = file_key.split("/")[1]
+    logger.info("Extracted cruise: %s, station: %s", cruise, station)
+    # Remove keys that are not needed in metadata
+    keys_to_remove = ["Cruise", "Station"]
+    metadata = {k: v for k, v in metadata.items() if k not in keys_to_remove}
 
     # Initialize the list of documents
     documents = []
 
     logger.debug("Preparing document for MongoDB insertion.")
     logger.info("Assembling document")
-
-    # Extracted metadata
-    logger.info("Extracted metadata: %s", metadata)
 
     # Extracted bounding box (coordinates)
     logger.info("Extracted bounding box: %s", str(bounding_box))
@@ -1249,6 +1260,9 @@ def prepare_documents(
     logger.info("Extracted %s observations.", len(observations))
 
     documents = []
+    image_docs = [] # store image docs only for original prot file
+    video_docs = [] # store video docs only for original prot file
+    image_nums = [] # store image numbers only for original prot file
 
     # Get the current ingressId
     current_ingress_id = 1
@@ -1256,14 +1270,18 @@ def prepare_documents(
     # Extract ingressID from  MongoDB (using ingress_collection)
     if ingress_collection is not None:
         try:
-            current_ingress_id = get_current_ingress_id(
-                ingress_collection,
-                metadata.get("Cruise"),
-                metadata.get("Station"),
-                metadata.get("Remarks"),
-                observations[0].get("PC_Time"),
+            date_created_dt = datetime.combine(
+                observations[0].get("Date"), observations[0].get("Time")
             )
-            logger.debug(
+            current_ingress_id = get_current_ingress_id(
+                ingress_collection=ingress_collection,
+                cruise=cruise,
+                station=station,
+                object_key=file_key,
+                date_created=date_created_dt,
+            )
+
+            logger.info(
                 "Updated ingress document with ingress_id: %s",
                 current_ingress_id,
             )
@@ -1271,130 +1289,101 @@ def prepare_documents(
             logger.error("Failed to get current ingressId: %s", e)
             return []  # Return empty list if ingressId retrieval fails
         finally:
-            logger.debug("Current ingressId: %s", current_ingress_id)
+            logger.info("Current ingressId: %s", current_ingress_id)
 
-    # Initialize default values
-    try:
-        first_data = parsed_data["detailed_data_table"][0]
-        ship_lon = float(first_data.get("SHIP Longitude", 0.0))
-        ship_lat = float(first_data.get("SHIP Latitude", 0.0))
-        sub1_lon = float(first_data.get("SUB_1 Longitude", 0.0))
-        sub1_lat = float(first_data.get("SUB_1 Latitude", 0.0))
-        ship_sog = float(first_data.get("SHIP SOG", 0.0))
-        ship_cog = float(first_data.get("SHIP COG", 0.0))
-        ship_hdg = float(first_data.get("SHIP Hdg", 0.0))
-        water_depth = float(first_data.get("Water Depth", 0.0))
-        sub1_depth = float(first_data.get("SUB1_Depth", 0.0))
-    except (ValueError, KeyError, IndexError) as e:
-        logger.warning(f"Invalid or missing data in detailed_data_table: {e}")
-        # Assign default values
-        ship_lon, ship_lat, sub1_lon, sub1_lat = 0.0, 0.0, 0.0, 0.0
-        ship_sog, ship_cog, ship_hdg, water_depth, sub1_depth = 0.0, 0.0, 0.0, 0.0, 0.0
-
-    mediatype = ""
-    mediafile = ""
     for observation in observations:
-        obstype = observation.get("Image-Video Path", "Some observation")
-
-        # Clean up the observation text
-        cleaned_observation = remove_brackets(obstype, "None")
-
-        if "video" in obstype.lower():
-            mediatype = "video"
-            mediafile = f"/videos/{cleaned_observation}.m2t"
-        elif "photo" in obstype.lower():
-            mediatype = "photo"
-            name_of_media = (
-                cleaned_observation.split(";")[0]
-                .split("photo")[1]
-                .split(":")[1]
-                .strip()
-            )
-            mediafile = f"/images/photo{name_of_media}.jpg"
-        else:
-            mediatype = "None"
-            mediafile = "None"
-
+        # Extract timestamp from observation
+        timestamp = datetime.combine(
+            observation.get("Date"), observation.get("Time")
+        )
         # Initialize the document
-        document = {
-            "file_key": file_key,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "metadata": metadata,
-            # "tasks": tasks,
-            "timestamp": observation.get("PC_Time"),
-            "shipLocation": {
-                "type": "Point",
-                "coordinates": [
-                    float(observation.get("SHIP_Lon", 0.0)),
-                    float(observation.get("SHIP_Lat", 0.0)),
-                ],
-            },
-            "speed": float(observation.get("SHIP_SOG", 0.0)),
-            "course": float(observation.get("SHIP_COG", 0.0)),
-            "heading": float(observation.get("SHIP_Hdg", 0.0)),
-            "depth": float(observation.get("Water_Depth", 0.0)),
-            "subLocation": {
-                "type": "Point",
-                "coordinates": [
-                    float(observation.get("SUB1_Lon", 0.0)),
-                    float(observation.get("SUB1_Lat", 0.0)),
-                ],
-            },
-            "subDepth": float(observation.get("SUB1_Depth", 0.0)),
-            "feature":
-            # observation,  # Assign observation based on 'detailed_data_table' content
-            {
-                "media": mediafile,
-                "mediaType": mediatype,
-                "mediaOffset": 0,
-                "observation": observation.get(
-                    "Observations/Comments", "Observations/Comments"
-                ),
-                "observation2": cleaned_observation,
-                "observation_source": file_key,
-                "observationRef": f"<a href='https://www.marinespecies.org/rest/AphiaRecordsByMatchNames?scientificnames%5B%5D={cleaned_observation}&marine_only=true'>Try a WORMS search for {cleaned_observation}</a>",
-            },
-        }
-        documents.append(document)
+        if is_prot:
+            obs_text = observation.get("Image-Video Path", "")
+            # Clean up the observation text
+            cleaned_observation = remove_brackets(obs_text, "None")
+            document = prepare_prot_document(
+                cruise=cruise,
+                station=station,
+                timestamp=timestamp,
+                observation=observation,
+                cleaned_observation=cleaned_observation,
+                file_key=file_key,
+                is_rerun=is_rerun
+            )
+            documents.append(document)
+            if "photo" in obs_text:
+                img_doc, img_num = prepare_img_document(document, obs_text)
+                image_docs.append(img_doc)
+                image_nums.append(img_num)
+            if "video" in obs_text:
+                video_doc = prepare_video_document(document, obs_text)
+                video_docs.append(video_doc)
+        elif is_obs:
+            obs_text = observation.get("ID_Name", "")
+            # Clean up the observation text
+            cleaned_observation = remove_brackets(obs_text, "None")
+            document = prepare_obser_document(
+                cruise=cruise,
+                station=station,
+                timestamp=timestamp,
+                observation=observation,
+                cleaned_observation=cleaned_observation,
+                file_key=file_key,
+                is_rerun=is_rerun
+            )
+            documents.append(document)
+        else:
+            logger.error("Unknown file type. Cannot prepare document.")
+            continue
+
         logger.debug(f"Prepared document for observation: {document}")
+    # count max image number
+    max_img_num = max(image_nums) if image_nums else 0
+    if max_img_num > 0:
+        metadata["image_count"] = max_img_num
+    # count video using start and stop entry documents
+    if len(video_docs) > 0:
+        metadata["video_count"] = int(len(video_docs)/2)
 
     logger.info(f"Total documents prepared for insertion: {len(documents)}")
-    return documents
+    return documents, metadata, image_docs, video_docs
 
 
-def insert_documents_to_mongodb(
-    collection: Collection, documents: List[Dict[str, Any]]
-) -> List[Any]:
+def generate_lambda_payload(bucket_name, file_key):
     """
-    Upload and insert 'documents' (a.k.a records) to MongoDB Atlas
-    collection.
+    Generate the payload for the MediaConvert Lambda function.
 
     Args:
-        collection (Collection): The MongoDB collection where documents will be inserted.
-        documents List[Dict[str, Any]]: A list of documents to insert.
+        bucket_name (str): The name of the S3 bucket.
+        file_key (str): The S3 object key.
 
     Returns:
-        List[Any]: A list of inserted document IDs.
+        dict: The payload for the MediaConvert Lambda function.
     """
-    if not documents:
-        logger.warning("No documents to insert.")
-        return []
-
-    try:
-        result = collection.insert_many(documents, ordered=False)
-        # logger.info(f"Inserted {len(documents)} documents into MongoDB.")
-        return result.inserted_ids
-    except Exception as e:
-        logger.error(f"Error inserting documents into MongoDB: {str(e)}")
-        raise e
-
+    return {
+        "Records": [
+            {
+                "s3": {
+                    "bucket": {
+                        "name": bucket_name
+                    },
+                    "object": {
+                        "key": file_key
+                    }
+                }
+            }
+        ]
+    }
 
 def lambda_handler(event, context):
     logger.info("Received event: %s", json.dumps(event))
     try:
         s3_client, mongo_client, db = initialize_resources()
-        collection = db[os.environ["MONGODB_COLLECTION"]]
+        collection_prot = db[os.environ["MONGODB_COLLECTION_PROT"]]
+        collection_obser = db[os.environ["MONGODB_COLLECTION_OBSER"]]
         ingress_collection = db[os.environ["INGRESS_COLLECTION_DTIS"]]
+        collection_image = db[os.environ["MONGODB_COLLECTION_IMAGE"]]
+        collection_video = db[os.environ["MONGODB_COLLECTION_VIDEO"]]
 
         all_documents = []  # Collect all documents to insert at once
 
@@ -1415,37 +1404,33 @@ def lambda_handler(event, context):
                             file_key,
                         )
                         
-                        # call media convert lambda function for video files
+                        # call media convert lambda function for .m2t video files
                         if file_key.endswith('.m2ts') or file_key.endswith('.m2t'):
-                            logger.info("detected video file: %s", file_key)
+                            logger.info("Detected video file: %s", file_key)
                             try:
                                 # call media convert lambda function for video files
                                 lambda_client = boto3.client('lambda')
-                                lambda_payload = {
-                                    "Records": [
-                                        {
-                                            "s3": {
-                                                "bucket": {
-                                                    "name": bucket_name
-                                                },
-                                                "object": {
-                                                    "key": file_key
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
+                                lambda_payload = generate_lambda_payload(
+                                    bucket_name, 
+                                    file_key
+                                    )
                                 lambda_response = lambda_client.invoke(
                                     FunctionName=MEDIA_CONVERT_LAMBDA_FUNCTION,
                                     InvocationType='RequestResponse',
                                     Payload=json.dumps(lambda_payload)
                                 )
+                                logger.info("Triggered media convert for .m2t .m2ts file")
                                 logger.info("Lambda function response: %s", lambda_response)
                             except Exception as e:
                                 logger.error(f"Error calling media convert lambda function: {str(e)}")
                                 # Depending on requirements, you might want to continue or re-raise
                                 continue
-                            
+                            logger.info("Skip MongoDB ingress for video files")
+                            continue
+                        # detection image files and skip MongoDB ingress
+                        elif file_key.endswith('.jpg') or file_key.endswith('.jpeg'):
+                            logger.info("Detected image file: %s", file_key)
+                            logger.info("Skip MongoDB ingress for image files")
                             continue
 
                         # Get file content from S3
@@ -1460,7 +1445,8 @@ def lambda_handler(event, context):
                         )  # Log first 100 chars for brevity
 
                         # Parse file content
-                        documents, file_format, bounding_box, cruise, station = (
+                        documents, file_format, bounding_box, cruise, station, \
+                            metadata, image_docs, video_docs = (
                             parse_file_content(
                                 file_content,
                                 file_key,
@@ -1468,101 +1454,95 @@ def lambda_handler(event, context):
                             )
                         )
 
-                        all_documents.extend(documents)
-                        logger.info("Parsed file format: %s", file_format)
-                        logger.info(
-                            "Bounding Box: %s",
-                            bounding_box,
-                        )
+                        if len(documents) > 0:
+                            # Verify if prot or obser file, use corresponding collection
+                            is_rerun, is_prot, is_obs = check_source_key(file_key)
+                            if is_prot:
+                                ofop_collection = collection_prot
+                            elif is_obs:
+                                ofop_collection = collection_obser
+                            else:
+                                logger.error("Unknown file type. Cannot insert documents.")
+                                return {
+                                    "statusCode": 500,
+                                    "body": json.dumps("An error occurred."),
+                                }
+                            # Insert new documents, old documents need to update, take care of obs and obs2
+                            inserted_counts, updated_counts = insert_documents_to_mongodb(
+                                collection=ofop_collection, 
+                                documents=documents
+                                )
+                            logger.info(
+                                "Inserted %s docs, updated %s docs in MongoDB, total %s docs.",
+                                inserted_counts,
+                                updated_counts,
+                                len(documents),
+                            )
+                            # Insert image documents
+                            if len(image_docs) > 0:
+                                inserted_image_counts, updated_image_counts = insert_documents_to_mongodb(
+                                    collection=collection_image,
+                                    documents=image_docs
+                                )
+                                logger.info(
+                                    "Inserted %s docs, updated %s docs in MongoDB, total %s image docs.",
+                                    inserted_image_counts,
+                                    updated_image_counts,
+                                    len(image_docs),
+                                )
+                            # Insert video documents
+                            if len(video_docs) > 0:
+                                inserted_video_counts, updated_video_counts = insert_documents_to_mongodb(
+                                    collection=collection_video,
+                                    documents=video_docs
+                                )
+                                logger.info(
+                                    "Inserted %s docs, updated %s docs in MongoDB, total %s video docs.",
+                                    inserted_video_counts,
+                                    updated_video_counts,
+                                    len(video_docs),
+                                )
+                            
+                            # Try to generate document summary and insert or update to MongoDB
+                            try:
+                                object_key = file_key.strip() if file_key else None
+                                cruise = cruise.strip()
+                                station = station.strip()
 
-                # If it's your custom message format
-                else:
-                    bucket_name = message_body["bucket"]
-                    file_key = message_body["key"]
-                    if not bucket_name or not file_key:
-                        logger.warning(
-                            "Missing 'bucket' or 'key' in message body: %s",
-                            message_body,
-                        )
-                        continue
-                    logger.info(
-                        "Processing custom message - Bucket: %s, Key: %s",
-                        bucket_name,
-                        file_key,
-                    )
+                                # Update the ingress document with the additional info such as file_key, metadata, etc.
+                                logger.info(
+                                    "Incrementing ingressId for cruise: %s, station: %s, object_key: %s, bounding_box: %s",
+                                    cruise,
+                                    station,
+                                    object_key,
+                                    bounding_box,
+                                )
+                                ingress_count = increment_ingress_id(
+                                    ingress_collection=ingress_collection,
+                                    cruise=cruise,
+                                    station=station,
+                                    object_key=object_key,
+                                    bounding_box=bounding_box,
+                                    document_counts=len(documents),
+                                    date_created=datetime.now(timezone.utc),
+                                    metadata=metadata
+                                )
+                                logger.info(f"Final Ingress Count: {ingress_count}")
+                                logger.info("Parsed file format: %s", file_format)
+                                logger.info(
+                                    "Bounding Box: %s",
+                                    bounding_box,
+                                )
+                            except Exception as inner_e:
+                                logger.error(f"Error processing record {record}: {str(inner_e)}")
+                        else:
+                            logger.info("No documents to insert...")
 
-                    # Get file content from S3
-                    file_content = get_file_from_s3(
-                        s3_client,
-                        bucket_name,
-                        file_key,
-                    )
-
-                    # Parse the file content
-                    documents, file_format, bounding_box, cruise, station = (
-                        parse_file_content(
-                            file_content,
-                            file_key,
-                            ingress_collection,  # Pass the ingress collection
-                        )
-                    )
-
-                    all_documents.extend(documents)
-
-                    logger.info("Parsed file format: %s", file_format)
-                    logger.info(
-                        "Bounding Box: %s",
-                        bounding_box,
-                    )
-
+                        
             except Exception as e:
                 logger.error(f"Error processing record: {str(e)}")
                 # Optionally, handle failed records
                 continue
-
-        if all_documents:
-            inserted_actual = insert_documents_to_mongodb(collection, all_documents)
-            logger.info(
-                "Inserted %s documents of %s into MongoDB.",
-                len(inserted_actual),
-                len(all_documents),
-            )
-        else:
-            logger.info("No documents to insert.")
-
-        # Increment the ingressId
-
-        # remarks = metadata.get("Remarks", "")
-        remarks = "No remarks captured"
-        try:
-            remarks = remarks.strip() if remarks else None
-            cruise = cruise.strip()  # if cruise else "TAN2206"  # DEBUG ONLY - REMOVE
-            station = (
-                station.strip() if station else "DefaultStation"
-            )  # Ensure station is handled
-
-            # Increment the ingressId
-            logger.info(
-                "Incrementing ingressId for cruise: %s, station: %s, remarks: %s, bounding_box: %s",
-                cruise,
-                station,
-                remarks,
-                bounding_box,
-            )
-            ingress_count = increment_ingress_id(
-                ingress_collection,
-                cruise,
-                station,
-                remarks,
-                bounding_box,
-                len(inserted_actual),
-                date_created=datetime.now(timezone.utc),
-            )
-            logger.info(f"Final Ingress Count: {ingress_count}")
-
-        except Exception as inner_e:
-            logger.error(f"Error processing record {record}: {str(inner_e)}")
-            # Depending on requirements, you might want to continue or re-raise
 
         # Close the MongoDB client
         mongo_client.close()
