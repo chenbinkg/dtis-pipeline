@@ -147,6 +147,7 @@ resource "aws_lambda_function" "dtis" {
       MONGODB_COLLECTION_VIDEO = "dtis_videos"
       MONGODB_COLLECTION_OBSER = "dtis_ofop_obser"
       MONGODB_COLLECTION_PROT = "dtis_ofop_prot"
+      MEDIA_CONVERT_LAMBDA_FUNCTION = "dtis-ofop-mediaconvert-${var.environment}"
     }
   }
   tags = local.tags
@@ -192,9 +193,14 @@ resource "aws_iam_policy" "mediaconvert_policy" {
         Action = [
           "s3:ListBucket",
           "s3:GetObject",
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:GetObjectTagging",
+          "s3:PutObjectTagging"
         ],
-        Resource = [ "${aws_s3_bucket.raw_data.arn}/*" ]
+        Resource = [ 
+          "${aws_s3_bucket.raw_data.arn}/*",
+          "${aws_s3_bucket.dtis_model.arn}/*"
+           ]
       },
       {
         Effect = "Allow",
@@ -302,7 +308,12 @@ resource "aws_lambda_function" "dtis_mediaconvert" {
   timeout = 900
   # defaults to 128 (MB)
   memory_size = 1024
-
+  environment {
+    variables = {
+			MEDIA_CONVERT_ROLE = aws_iam_role.mediaconvert_role.arn
+      OUTPUT_BUCKET = aws_s3_bucket.dtis_model.id
+    }
+  }
   tags = local.tags
 }
 

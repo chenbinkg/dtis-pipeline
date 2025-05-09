@@ -6,10 +6,13 @@ import json
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+
 def lambda_handler(event, context):
     logger.info('Starting MediaConvert job')
     # Assuming the event is an S3 creation event, extract the file key from the event
     logger.info(f"received event: {json.dumps(event)}")
+    # read output bucket name from environment variable
+    output_bucket = os.environ['OUTPUT_BUCKET']
     # Read json data
     unprocessed_files = []
     processed_files = []
@@ -57,21 +60,58 @@ def lambda_handler(event, context):
                     # # Define the input and output settings
                     # input_file = 's3://dtis-ofop-851725470721-raw-testing/TAN2009/047/video/20200814115516.m2ts'  # or .m2ts
                     # output_file = 's3://dtis-ofop-851725470721-raw-testing/TAN2009/047/video/20200814115516'
+                    # after mp4 conversion, the output file will be:
+                    # 's3://dtis-ofop-851725470721-raw-testing/TAN2009/047/video/20200814115516.mp4'
+                    
+                    # Define the input and output settings
+                    input_file = f's3://{bucket_name}/{input_key}'
+                    # Define the output location for frames
+                    base_output_key = os.path.splitext(input_key)[0] # Remove the file extension
+                    output_frames_key = f'{base_output_key}/frames'
+                    output_frames_dir = f's3://{output_bucket}/{output_frames_key}'
                     # Check if the file is an M2TS file
                     if input_key.endswith('.m2ts') or input_key.endswith('.m2t'):
-                        # Define the input and output settings
-                        input_file = f's3://{bucket_name}/{input_key}'
-                        input_filename = input_key.split("/")[-1]
-                        output_filename = input_key.split("/")[-1].split(".")[0]
-                        output_key = input_key.replace(input_filename, output_filename)
-                        output_file = f's3://{bucket_name}/{output_key}'
+                        # input_filename = input_key.split("/")[-1] # Get the filename from the key
+                        # output_filename = input_key.split("/")[-1].split(".")[0] # Remove the file extension
+                        # output_key = input_key.replace(input_filename, output_filename) # Remove the file extension from the key
+                        # output_file = f's3://{bucket_name}/{output_key}' # output key has file name only without extension
+
+                        output_file = f's3://{output_bucket}/{base_output_key}'
                         
                         # Log the extracted input file (optional)
                         logger.info(f"Input file: {input_file}")
                         logger.info(f"Output file: {output_file}")
+                        logger.info(f"Output frames location: {output_frames_dir}")
                         
-                        # Create the MediaConvert job
-                        create_video_convert_job(input_file, output_file)
+                        # Create the MediaConvert job for M2TS to MP4 conversion and frame extraction
+                        create_video_convert_job(
+                            input_file=input_file, 
+                            output_file=output_file,
+                            output_frames_dir=output_frames_dir,
+                            frame_rate=1
+                            )
+                        processed_files.append(input_key)
+                    elif input_key.endswith('.mp4'):
+                        # Process MP4 files for frame extraction
+                        input_file = f's3://{bucket_name}/{input_key}'
+                        
+                        # Define the output location for frames
+                        base_output_key = os.path.splitext(input_key)[0] # Remove the file extension
+                        # Create a directory for frames
+                        # output_frames_key = f'{base_output_key}/frames'
+                        # output_frames = f's3://{bucket_name}/{output_frames_key}'
+                        output_video_prefix = f's3://{output_bucket}/{base_output_key}'
+
+                        logger.info(f"Input file: {input_file}")
+                        logger.info(f"Output frames location: {output_frames_dir}")
+                        logger.info(f"Minimal output video prefix: {output_video_prefix}")
+                        
+                        # Extract frames from the video
+                        extract_video_frames(
+                            input_file=input_file, 
+                            output_frames_dir=output_frames_dir, 
+                            output_video_prefix=output_video_prefix
+                            )
                         processed_files.append(input_key)
                     else:
                         unprocessed_files.append(input_key)
@@ -92,11 +132,12 @@ def lambda_handler(event, context):
             "statusCode": 400,
             "body": f"Unsupported file type for key: {unprocessed_files}"
         }
-    
-def video_convert_job_setting(input_file, output_file):
+
+
+def video_convert_job_setting(input_file, output_file, output_frames_dir, frame_rate=1):
     # Create the job settings
     job_settings = {
-        'Role': 'arn:aws:iam::851725470721:role/dtis-mediaconvert-testing',
+        'Role': os.environ['MEDIA_CONVERT_ROLE'],
         'Settings': {
             'Inputs': [
                 {
@@ -135,8 +176,8 @@ def video_convert_job_setting(input_file, output_file):
                                     'Codec': 'H_264',
                                     'H264Settings': {
                                         'RateControlMode': 'QVBR',
-                                        'QualityTuningLevel': 'SINGLE_PASS',
-                                        'MaxBitrate': 5000000
+                                        'QualityTuningLevel': 'MULTI_PASS_HQ',#'SINGLE_PASS',
+                                        'MaxBitrate': 10000000
                                     }
                                 }
                             },
@@ -154,13 +195,54 @@ def video_convert_job_setting(input_file, output_file):
                             ]
                         }
                     ]
+                },
+                {
+                    'Name': 'Frame Capture Group',
+                    'OutputGroupSettings': {
+                        'Type': 'FILE_GROUP_SETTINGS',
+                        'FileGroupSettings': {
+                            'Destination': f'{output_frames_dir}/',
+                            'DestinationSettings': {
+                                'S3Settings': {
+                                    'StorageClass': 'STANDARD_IA'
+                                }
+                            }
+                        }
+                    },
+                    'Outputs': [
+                        {
+                            'Extension': 'jpg',
+                            'NameModifier': '_frame-$dt$',
+                            'ContainerSettings': {
+                                'Container': 'RAW'
+                            },
+                            'VideoDescription': {
+                                'ScalingBehavior': 'DEFAULT',
+                                'TimecodeInsertion': 'DISABLED',
+                                'AntiAlias': 'ENABLED',
+                                'CodecSettings': {
+                                    'Codec': 'FRAME_CAPTURE',
+                                    'FrameCaptureSettings': {
+                                        'FramerateNumerator': frame_rate,
+                                        'FramerateDenominator': 1,
+                                        'MaxCaptures': 10000,  # Adjust as needed
+                                        'Quality': 100  # JPEG quality (1-100)
+                                    }
+                                }
+                            }
+                        }
+                    ]
                 }
             ]
         }
     }
     return job_settings
 
-def create_video_convert_job(input_file, output_file, region_name='ap-southeast-2'):
+
+def create_video_convert_job(
+        input_file, output_file, output_frames_dir, 
+        frame_rate=1, region_name='ap-southeast-2'
+        ):
     # Initialize the MediaConvert client
     mediaconvert_client = boto3.client('mediaconvert', region_name=region_name)
 
@@ -173,7 +255,12 @@ def create_video_convert_job(input_file, output_file, region_name='ap-southeast-
                                 verify=False)
 
     # Get video job settings
-    job_settings = video_convert_job_setting(input_file, output_file)
+    job_settings = video_convert_job_setting(
+        input_file=input_file, 
+        output_file=output_file,
+        output_frames_dir=output_frames_dir, 
+        frame_rate=frame_rate
+        )
     
     # Create the MediaConvert job
     response = mediaconvert_client.create_job(
@@ -182,3 +269,168 @@ def create_video_convert_job(input_file, output_file, region_name='ap-southeast-
     )
 
     logger.info(f"Job created: {response['Job']['Id']}")
+
+
+def frame_extraction_job_settings(input_file, output_frames_dir, base_output_video, frame_rate=1):
+    """
+    Create MediaConvert job settings for frame extraction AND a minimal video output.
+
+    Args:
+        input_file: S3 URI of the input video
+        output_frames_dir: S3 URI of the output directory for frames
+        base_output_video: S3 URI prefix for a minimal video output (e.g., 's3://your-bucket/output/video_')
+        frame_rate: Number of frames to extract per second (default: 1 frame per second)
+
+    Returns:
+        Job settings dictionary for MediaConvert
+    """
+    job_settings = {
+        'Role': os.environ['MEDIA_CONVERT_ROLE'],
+        'Settings': {
+            'Inputs': [
+                {
+                    'FileInput': input_file,
+                    'VideoSelector': {
+                        'ColorSpace': 'FOLLOW'
+                    },
+                    'AudioSelectors': {
+                        'Audio Selector 1': {
+                            'SelectorType': 'TRACK',  # Specify the selector type as TRACK
+                            'Tracks': [1]             # Select the first audio track
+                        }
+                    }
+                }
+            ],
+            'OutputGroups': [
+                {
+                    'Name': 'Frame Capture Group',
+                    'OutputGroupSettings': {
+                        'Type': 'FILE_GROUP_SETTINGS',
+                        'FileGroupSettings': {
+                            'Destination': f'{output_frames_dir}/',
+                            'DestinationSettings': {
+                                'S3Settings': {
+                                    'StorageClass': 'STANDARD_IA'
+                                }
+                            }
+                        }
+                    },
+                    'Outputs': [
+                        {
+                            'Extension': 'jpg',
+                            'NameModifier': '_frame-$dt$',
+                            'ContainerSettings': {
+                                'Container': 'RAW'
+                            },
+                            'VideoDescription': {
+                                'ScalingBehavior': 'DEFAULT',
+                                'TimecodeInsertion': 'DISABLED',
+                                'AntiAlias': 'ENABLED',
+                                'CodecSettings': {
+                                    'Codec': 'FRAME_CAPTURE',
+                                    'FrameCaptureSettings': {
+                                        'FramerateNumerator': frame_rate,
+                                        'FramerateDenominator': 1,
+                                        'MaxCaptures': 10000,  # Adjust as needed
+                                        'Quality': 100  # JPEG quality (1-100)
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    'Name': 'Minimal Video Output Group',
+                    'OutputGroupSettings': {
+                        'Type': 'FILE_GROUP_SETTINGS',
+                        'FileGroupSettings': {
+                            'Destination': f'{base_output_video}',
+                            'DestinationSettings': {
+                                'S3Settings': {
+                                    'StorageClass': 'STANDARD_IA'
+                                }
+                            }
+                        }
+                    },
+                    'Outputs': [
+                        {
+                            'ContainerSettings': {
+                                'Container': 'MOV' # or 'MP4'
+                            },
+                            'VideoDescription': {
+                                'CodecSettings': {
+                                    'Codec': 'H_264',
+                                    'H264Settings': {
+                                        'RateControlMode': 'QVBR',
+                                        'QualityTuningLevel': 'SINGLE_PASS',
+                                        'MaxBitrate': 1000000
+                                    }
+                                },
+                                'Width': 640,   # Minimal width
+                                'Height': 360  # Minimal height
+                            },
+                            'AudioDescriptions': [
+                                {
+                                    'CodecSettings': {
+                                        'Codec': 'AAC',
+                                        'AacSettings': {
+                                            'Bitrate': 64000, # Minimal bitrate
+                                            'CodingMode': 'CODING_MODE_2_0',
+                                            'SampleRate': 48000
+                                        }
+                                    },
+                                    # 'AudioSelectorName': 'Audio Selector 1'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+    return job_settings
+
+
+def extract_video_frames(
+        input_file, output_frames_dir, output_video_prefix, 
+        frame_rate=1, region_name='ap-southeast-2'
+        ):
+    """
+    Create a MediaConvert job to extract frames from a video.
+    
+    Args:
+        input_file: S3 URI of the input video
+        output_frames_dir: S3 URI of the output directory for frames
+        frame_rate: Number of frames to extract per second (default: 1)
+        region_name: AWS region name
+    
+    Returns:
+        MediaConvert job ID
+    """
+    # Initialize the MediaConvert client
+    mediaconvert_client = boto3.client('mediaconvert', region_name=region_name)
+
+    # Update the client with the endpoint URL
+    endpoints = boto3.client('mediaconvert', region_name=region_name).describe_endpoints()
+    mediaconvert_client = boto3.client('mediaconvert', 
+                                      region_name=region_name, 
+                                      endpoint_url=endpoints['Endpoints'][0]['Url'], 
+                                      verify=False)
+
+    # Get frame extraction job settings
+    job_settings = frame_extraction_job_settings(
+        input_file=input_file, 
+        output_frames_dir=output_frames_dir, 
+        base_output_video=output_video_prefix,
+        frame_rate=frame_rate
+    )
+    
+    # Create the MediaConvert job
+    response = mediaconvert_client.create_job(
+        Role=job_settings['Role'],
+        Settings=job_settings['Settings']
+    )
+
+    logger.info(f"Frame extraction job created: {response['Job']['Id']}")
+    return response['Job']['Id']
