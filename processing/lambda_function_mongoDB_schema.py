@@ -41,7 +41,6 @@ logger.setLevel(logging.INFO)
 
 START_TIME = datetime.now(timezone.utc)
 MAX_EXECUTION_TIME = 850  # 14.5 minutes (for 15-minute Lambda timeout)
-MEDIA_CONVERT_LAMBDA_FUNCTION = 'dtis-ofop-mediaconvert-testing'
 # Define possible date and time formats for PCTime
 DATETIME_FORMATS = [
     "%d/%m/%Y %H:%M:%S",  # e.g., "16/04/2022 23:08:06"
@@ -452,9 +451,8 @@ def detect_file_format(lines: List[str]) -> str:
                 return "latest"
             elif stripped_line.startswith("Date\tTime\tPC_Time\tSHIP_Lon"):
                 return "latest"
-            # elif re.match(r"#Date\s+Time\s+PC_Time", stripped_line):
-            #     logger.debug("New file type detected")
-            #     return "new"
+            elif stripped_line.startswith("#Date\tTime\tPC_Time\tSHIP_Lat"):
+                return "latest"
             elif stripped_line.startswith(
                 "#Date\tTime\tSUB1_Lon\tSUB1_Lat\tID_Number\tID_Name"
             ):
@@ -1405,7 +1403,7 @@ def lambda_handler(event, context):
                         )
                         
                         # call media convert lambda function for .m2t video files
-                        if file_key.endswith('.m2ts') or file_key.endswith('.m2t'):
+                        if file_key.endswith('.m2ts') or file_key.endswith('.m2t') or file_key.endswith('.mp4'):
                             logger.info("Detected video file: %s", file_key)
                             try:
                                 # call media convert lambda function for video files
@@ -1415,11 +1413,11 @@ def lambda_handler(event, context):
                                     file_key
                                     )
                                 lambda_response = lambda_client.invoke(
-                                    FunctionName=MEDIA_CONVERT_LAMBDA_FUNCTION,
+                                    FunctionName=os.environ['MEDIA_CONVERT_LAMBDA_FUNCTION'],
                                     InvocationType='RequestResponse',
                                     Payload=json.dumps(lambda_payload)
                                 )
-                                logger.info("Triggered media convert for .m2t .m2ts file")
+                                logger.info("Triggered media convert for .m2t .m2ts or .mp4 file")
                                 logger.info("Lambda function response: %s", lambda_response)
                             except Exception as e:
                                 logger.error(f"Error calling media convert lambda function: {str(e)}")
@@ -1431,6 +1429,11 @@ def lambda_handler(event, context):
                         elif file_key.endswith('.jpg') or file_key.endswith('.jpeg'):
                             logger.info("Detected image file: %s", file_key)
                             logger.info("Skip MongoDB ingress for image files")
+                            continue
+                        # check if .ts file
+                        elif file_key.endswith('.ts'):
+                            logger.info("Detected .ts file: %s", file_key)
+                            logger.info("Skip MongoDB ingress for .ts files")
                             continue
 
                         # Get file content from S3

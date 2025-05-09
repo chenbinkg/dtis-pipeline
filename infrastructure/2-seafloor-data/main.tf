@@ -143,30 +143,159 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   }
 }
 
-# # S3 trigger lambda function policy
-# resource "aws_lambda_permission" "allow_s3_to_invoke_mediaconvert" {
-#   statement_id  = "AllowS3InvokeLambda"
-#   action        = "lambda:InvokeFunction"
-#   function_name = "dtis-ofop-mediaconvert-${var.environment}"
-#   principal     = "s3.amazonaws.com"
-#   source_arn    = aws_s3_bucket.raw_data.arn
-# }
+# S3 bucket for dtis model
+resource "aws_s3_bucket" "dtis_model" {
+  bucket        = "dtis-model-${data.aws_caller_identity.current.account_id}-${var.environment}"
+  tags          = local.tags
+  force_destroy = true
+}
 
-# resource "aws_s3_bucket_notification" "dtis_s3_notification" {
-#   # # Notification for any objects created to SQS queue
-#   # queue {
-#   #   queue_arn     = aws_sqs_queue.queue.arn
-#   #   # https://docs.aws.amazon.com/AmazonS3/latest/userguide/notification-how-to-event-types-and-destinations.html
-#   #   events        = ["s3:ObjectCreated:*"]
-#   # }
-#   bucket = aws_s3_bucket.raw_data.id
+resource "aws_s3_bucket_server_side_encryption_configuration" "dtis_model" {
+  bucket = aws_s3_bucket.dtis_model.id
 
-#   # Notification for objects created
-#   lambda_function {
-#     lambda_function_arn = aws_lambda_function.dtis_mediaconvert.arn
-#     events              = ["s3:ObjectCreated:*"]
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+  }
+}
 
-#     filter_prefix = "dtis-ofop-${data.aws_caller_identity.current.account_id}-raw-${var.environment}"
-#   }
+resource "aws_s3_bucket_versioning"  "dtis_model" {
+  bucket = aws_s3_bucket.dtis_model.id
 
-# }
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "dtis_model_s3_setup" {
+  bucket                  = aws_s3_bucket.dtis_model.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "dtis_model" {
+  bucket = aws_s3_bucket.dtis_model.id
+
+  rule {
+    id     = "IntelligentTieringArchive"
+    status = "Enabled"
+
+    transition {
+      days          = 30   // Transition after 30 days
+      storage_class = "INTELLIGENT_TIERING"
+    }
+  }
+}
+
+# S3 bucket policy for data access to rekognition
+# This policy allows the Rekognition service to access the S3 bucket for read/write operations
+# for the dtis model and annotations
+resource "aws_s3_bucket_policy" "rekognition_s3_access_policy" {
+  bucket = aws_s3_bucket.dtis_model.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ],
+        Effect   = "Allow",
+        Principal = {
+          AWS = aws_iam_role.rekognition_role.arn
+        },
+        Resource = [
+          "${aws_s3_bucket.dtis_model.arn}",
+          "${aws_s3_bucket.dtis_model.arn}/*"
+        ]
+      },
+    ]
+  })
+}
+
+# IAM role for Rekognition Custom Labels
+# This role allows Rekognition to access the S3 bucket for read/write operations
+resource "aws_iam_role" "rekognition_role" {
+  name = "dtis-rekognition-execution-${var.environment}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect   = "Allow",
+        Principal = {
+          Service = "rekognition.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  tags = local.tags
+}
+
+# IAM policy for Rekognition Custom Label
+# This policy allows Rekognition to read/write access to dtis-model bucket
+# and read access to raw data bucket
+resource "aws_iam_policy" "rekognition_policy" {
+  name        = "dtis-rekognition-custom-label-${var.environment}"
+  description = "Permissions for Rekognition Custom Labels to access S3 buckets"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ],
+        Effect   = "Allow",
+        Resource = [
+          "${aws_s3_bucket.dtis_model.arn}",
+          "${aws_s3_bucket.dtis_model.arn}/*"
+        ]
+      },
+      {
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ],
+        Effect   = "Allow",
+        Resource = [
+          "${aws_s3_bucket.raw_data.arn}",
+          "${aws_s3_bucket.raw_data.arn}/*"
+        ]
+      },
+      {
+        Action = [
+          "rekognition:CreateProject",
+          "rekognition:DescribeProject",
+          "rekognition:UpdateProject",
+          "rekognition:DeleteProject",
+          "rekognition:CreateDataset",
+          "rekognition:DescribeDataset",
+          "rekognition:UpdateDatasetEntries",
+          "rekognition:DeleteDataset",
+          "rekognition:CreateProjectVersion",
+          "rekognition:DescribeProjectVersion",
+          "rekognition:StartProjectVersion",
+          "rekognition:StopProjectVersion",
+          "rekognition:DeleteProjectVersion",
+          "rekognition:DetectCustomLabels"
+        ],
+        Effect   = "Allow",
+        Resource = "*" # Consider narrowing down the scope if possible
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "rekognition_policy_attachment" {
+  role       = aws_iam_role.rekognition_role.name
+  policy_arn = aws_iam_policy.rekognition_policy.arn
+}
