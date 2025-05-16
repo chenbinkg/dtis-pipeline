@@ -10,7 +10,15 @@ This setup uses Terraform remote state, so it requires that code from the [1-ter
 2. Download the lambda python dependencies, and package them with the lambda function code into a zip file, so that it is available for Terraform:
 ```
 ./tasks lambda_package
-cp processing/lambda_function.zip infrastructure/2-seafloor-data/
+cp lambda/lambda_functions/ingress/lambda_function.zip infrastructure/2-seafloor-data/
+
+Alternatively, please run the following at the main repo directory:
+```
+function_name="ingress" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
+function_name="media_convert" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
+function_name="pretrained_annotation" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
+```
+
 ```
 if it doesn't work, create the lambda_funciton.zip manually:
 ```

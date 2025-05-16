@@ -63,7 +63,7 @@ function ubuntu_pyenv_python_installation {
 # Function to install and run pytest for unit tests on Ubuntu
 function ubuntu_pyenv_python_pytest_install_and_run_unit_tests {
   source venv/bin/activate
-  cd processing
+  cd lambda/lambda_functions/ingress
   pip install --upgrade pip
   pip install -r requirements.txt
   pytest
@@ -144,7 +144,7 @@ function alpine_pyenv_python_installation (
 
 function alpine_pyenv_python_pytest_install_and_run_unit_tests (
   source venv/bin/activate
-  cd processing
+  cd lambda/lambda_functions/ingress
   pip install --upgrade pip
   pip install -r requirements.txt
   pytest
@@ -189,7 +189,7 @@ case "${command}" in
       # packages the lambda file and its dependencies into a zip file, so
       # it can be uploaded into AWS
 
-      cd processing/
+      cd lambda/lambda_functions/ingress/
       python3 -m venv venv
       source venv/bin/activate
       pip install -r requirements.txt
@@ -199,18 +199,18 @@ case "${command}" in
 
       docker run -t --rm -v $PWD:/tmp/niwa python:3.9.20-bullseye bash -c "cd /tmp/niwa && apt update && apt install -y python3-venv && ./tasks _lambda_package"
 
-      processing_dir=$(realpath ./processing/)
-      rm -f "${processing_dir}/lambda_function.zip"
+      processing_dir=$(realpath ./lambda/lambda_functions/ingress/)
+      rm -f "${processing_dir}/lambda_ingress.zip"
       cd "${processing_dir}/venv/lib/python3.9/site-packages"
-      zip -r9 ${processing_dir}/lambda_function.zip .
+      zip -r9 ${processing_dir}/lambda_ingress.zip .
       cd ${processing_dir}
-      zip -g lambda_function.zip lambda_function_mongoDB_schema.py
+      zip -g lambda_ingress.zip lambda_function_mongoDB_schema.py
       ;;
   _lambda_unit_tests)
       # runs pytest unit tests of the Lambda function locally
 
       # TODO: invoke _lambda_package here instead
-      cd processing/
+      cd lambda/lambda_functions/ingress/
       python3 -m venv venv
       source venv/bin/activate
       pip install -r requirements.txt

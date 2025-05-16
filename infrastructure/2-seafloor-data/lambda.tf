@@ -106,8 +106,8 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_role_policy" {
 #   output_path = "lambda_function.zip"
 # }
 
-data "local_file" "lambda_function_zip" {
-  filename = "lambda_function.zip"
+data "local_file" "lambda_ingress_zip" {
+  filename = "lambda_ingress.zip"
 }
 
 resource "aws_lambda_function" "dtis" {
@@ -118,7 +118,7 @@ resource "aws_lambda_function" "dtis" {
 
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
-  filename      = "lambda_function.zip"
+  filename      = "lambda_ingress.zip"
   function_name = "dtis-ofop-${var.environment}"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "lambda_function_mongoDB_schema.lambda_handler"
@@ -127,7 +127,7 @@ resource "aws_lambda_function" "dtis" {
   ## doing it in Bash):
   # source_code_hash = data.archive_file.lambda.output_base64sha256
 
-  source_code_hash = data.local_file.lambda_function_zip.content_sha256
+  source_code_hash = data.local_file.lambda_ingress_zip.content_sha256
 
   runtime = "python3.9"
 
@@ -345,4 +345,91 @@ resource "aws_iam_policy" "invoke_media_convert_lambda_permissions" {
 resource "aws_iam_role_policy_attachment" "invoke_mediaconvert_lambda_policy" {
   role       = aws_iam_role.iam_for_lambda.name
   policy_arn = aws_iam_policy.invoke_media_convert_lambda_permissions.arn
+}
+
+### Pretrained Annotation lambda function
+# create lambda execution role for pretrained-annotation lambda function
+resource "aws_iam_role" "iam_for_lambda_pretrained_annotation" {
+  name               = "dtis-lambda-pretrained-annotation-execution-${var.environment}"
+  assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
+  tags          = local.tags
+}
+
+# Grant lambda execution role for sagemaker pipeline
+resource "aws_iam_policy" "lambda_sagemaker_trigger_policy" {
+  name = "LambdaSageMakerTriggerPolicy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = "sagemaker:StartPipelineExecution",
+        Resource = [
+          "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:pipeline/DTIS-Annotation-Pipeline-${var.environment}"
+        ]
+      },
+      { # Permissions for Lambda to write logs to CloudWatch Logs
+          Effect = "Allow",
+          Action = [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents"
+          ],
+          Resource = "arn:aws:logs:*:*:*" # Consider restricting this to specific log groups
+      },
+    ]
+  })
+}
+
+# Attach the policy to the lambda execution role
+resource "aws_iam_role_policy_attachment" "lambda_sagemaker_trigger_policy_attachment" {
+  role       = aws_iam_role.iam_for_lambda_pretrained_annotation.name
+  policy_arn = aws_iam_policy.lambda_sagemaker_trigger_policy.arn
+}
+
+# Create a CloudWatch Log Group for the Pretrained Annotation Lambda function
+resource "aws_cloudwatch_log_group" "pretrained_annotation_lambda_loggroup" {
+  name              = "/aws/lambda/dtis-pretrained-annotation-${var.environment}"
+  retention_in_days = 90
+  tags          = local.tags
+}
+
+# lambda function to trigger sagemaker pipeline upon mediaconvert job completion
+data "local_file" "lambda_pretrained_annotation_zip" {
+  filename = "lambda_pretrained_annotation.zip"
+}
+
+resource "aws_lambda_function" "pretrained_annotation" {
+	depends_on = [
+		aws_iam_role_policy_attachment.lambda_logs,
+		aws_cloudwatch_log_group.pretrained_annotation_lambda_loggroup,
+	]
+
+  # If the file is not in the current working directory you will need to include a
+  # path.module in the filename.
+  filename      = "lambda_pretrained_annotation.zip"
+  function_name = "dtis-pretrained-annotation-${var.environment}"
+  role          = aws_iam_role.iam_for_lambda_pretrained_annotation.arn
+  handler       = "lambda_function_pretrained_annotation.lambda_handler"
+
+  ## use this if we want Terraform to generate the zip file (instead of us
+  ## doing it in Bash):
+  # source_code_hash = data.archive_file.lambda.output_base64sha256
+
+  source_code_hash = data.local_file.lambda_pretrained_annotation_zip.content_sha256
+
+  runtime = "python3.9"
+
+  reserved_concurrent_executions = 1
+  # defaults to 3 (seconds)
+  timeout = 900
+  # defaults to 128 (MB)
+  memory_size = 1024
+  environment {
+    variables = {
+			PIPELINE_NAME = "DTIS-Annotation-Pipeline-${var.environment}"
+    }
+  }
+  tags = local.tags
 }
