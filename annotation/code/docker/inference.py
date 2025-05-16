@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from PIL import Image
 import os
 import json
@@ -104,6 +106,10 @@ def main():
                 input_file_path = os.path.join(root, file)
                 relative_path = os.path.relpath(input_file_path, input_data_path)
                 output_file_path = os.path.join(output_data_path, f"{os.path.splitext(relative_path)[0]}.json")
+                
+                if os.path.exists(output_file_path):
+                    print(f"Skipping {relative_path}, already processed")
+                    continue
                 
                 # Ensure output directory for this file exists
                 os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
