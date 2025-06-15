@@ -1,0 +1,26 @@
+# Generic parameters
+boto_profile: "alanaws"
+manifest_bucket: "dtis-model-851725470721-testing"
+
+# Parameters for creating manifest file from single-file annotation files on S3
+annotation_source_folder: "TAN0616/095/video/TAN0616_095/validated_annotations/"
+img_path: "s3://dtis-model-851725470721-testing/TAN0616/095/video/TAN0616_095/frames/"
+manifest_file: "tan0616_95_validated_annotations.manifest"
+dst_s3_folder: "TAN0616/095/video/TAN0616_095"
+# Note, this is primary so that the train and test dataet can overlap.
+filter_labels: ["Bathysiphon", "Zoroasteridae", "Four-Rayed Rattail", "Rattail", "Spineback eel", "Astropectinidae", "Trachyrincus longirostris"]
+
+# For creating a project from scatch
+project_name: "dtis_detection_model"
+
+# For creating dataset using SageMaker Groundtruth manifest file
+dataset_type: "train"
+#manifest_file: "dtis-detection-training-data/DTIS_starfish_subset_tan0616_095.manifest"
+
+# For other tasks. If using script to create project, will need to manually replace project arn value
+project_arn: "arn:aws:rekognition:ap-southeast-2:851725470721:project/dtis_detection_model/1749820152475"
+version_name: "dtis-detection-model"
+model_output_bucket: "dtis-model-851725470721-testing"
+model_output_folder: "models/dtis-detection-rekognition-model/"
+tag_name: "project"
+tag_value: "DTIS"

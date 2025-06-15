@@ -1,0 +1,4 @@
+#image_bucket: "dtis-model-851725470721-testing"
+#image_folder: "TAN0616/092/video/TAN0616_092/frames"
+rekognition_results_file: "/var/folders/qb/n0lvmxgn2gsf1zfxj_n9ct_h0000gq/T/detection_results.json"
+local_output_folder: "/Users/alan.tan/data/dtis_data/rekognition_test_output"

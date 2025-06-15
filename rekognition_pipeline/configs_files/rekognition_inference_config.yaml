@@ -1,0 +1,17 @@
+# Change the following according to the type of model to use
+project_arn: "arn:aws:rekognition:ap-southeast-2:851725470721:project/dtis_detection_model/1749820152475"
+model_arn: "arn:aws:rekognition:ap-southeast-2:851725470721:project/dtis_detection_model/version/dtis-detection-model/1749878120940"
+model_version: "dtis-detection-model"
+# Target destination to store output to
+output_bucket: "dtis-model-851725470721-testing"
+output_folder: "TAN0616/092/video/TAN0616_092/frames"
+output_file: "detection_results.json"
+
+# Inference compute settings
+min_inference_unit: 1
+max_inference_unit: 2
+min_confidence: 50
+
+# Target dataset to run inference on
+dataset_bucket: "dtis-model-851725470721-testing"
+dataset_folder: "TAN0616/092/video/TAN0616_092/frames"
