@@ -80,7 +80,14 @@ resource "aws_iam_policy" "sagemaker_pipeline_policy" {
           # Add other SageMaker actions required by your pipeline steps
         ],
         Resource = "*" # Adjust this to be more restrictive if possible
-      }
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue",
+        ],
+        Resource = "*" # Adjust this to be more restrictive if possible
+      },
     ]
   })
 }
