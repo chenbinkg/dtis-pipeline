@@ -212,7 +212,7 @@ def video_convert_job_setting(input_file, output_file, output_frames_dir, frame_
                     'Outputs': [
                         {
                             'Extension': 'jpg',
-                            'NameModifier': '_frame-$dt$',
+                            'NameModifier': '_frame_',
                             'ContainerSettings': {
                                 'Container': 'RAW'
                             },

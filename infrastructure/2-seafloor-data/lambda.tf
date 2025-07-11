@@ -428,7 +428,11 @@ resource "aws_lambda_function" "pretrained_annotation" {
   memory_size = 1024
   environment {
     variables = {
-			PIPELINE_NAME = "DTIS-Annotation-Pipeline-${var.environment}"
+			PIPELINE_NAME = "DTIS-Annotation-Pipeline-${var.environment}",
+      MONGODB_DATABASE = "dtistest"
+			MONGODB_COLLECTION_MASTER = "dtis_master"
+      MONGODB_COLLECTION_VIDEO = "dtis_videos"
+      MONGODB_COLLECTION_OBSER = "dtis_ofop_obser"
     }
   }
   tags = local.tags
