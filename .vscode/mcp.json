@@ -1,0 +1,20 @@
+{
+    "servers": {
+        "MongoDB": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mongodb-mcp-server",
+                "--connectionString",
+                "mongodb+srv://DTISFederation:2LzFpNbdRfvxnQze@serverlessinstance0.ta8golw.mongodb.net/"
+            ]
+        },
+        "sequential-thinking": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ]
+            }
+    }
+}
