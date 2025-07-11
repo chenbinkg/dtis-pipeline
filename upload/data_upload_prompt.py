@@ -344,6 +344,7 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
         # exit(1)
 
     # Find all the files in the videos directory with the selected file extensions
+    # TO-DO: need to accommodate .mts
     files_with_matching_extension = []
     for root, _, files in os.walk(dir):
         for file in files:
@@ -706,10 +707,11 @@ if __name__ == "__main__":
             error_file=error_file, 
             ofop_patterns=patterns["ofop"]
             )
-
-        passed_image_file_count = write_validated_file_paths(
-            file_type="image", 
-            files_list=image_files_to_copy, 
+        # write ofop files first, video upload will trigger lambda function
+        # which processes video files and will need ofop obser data for annotation
+        passed_text_file_count = write_validated_file_paths(
+            file_type="text", 
+            files_list=text_files_to_copy, 
             cruise_id=cruise_id, 
             plan_file=plan_file, 
             success_file=success_file,
@@ -723,14 +725,16 @@ if __name__ == "__main__":
             success_file=success_file,
             error_file=error_file
             )
-        passed_text_file_count = write_validated_file_paths(
-            file_type="text", 
-            files_list=text_files_to_copy, 
+        passed_image_file_count = write_validated_file_paths(
+            file_type="image", 
+            files_list=image_files_to_copy, 
             cruise_id=cruise_id, 
             plan_file=plan_file, 
             success_file=success_file,
             error_file=error_file
             )
+
+
         total_passed_file_counts = passed_image_file_count+passed_video_file_count+passed_text_file_count
         print(f"{total_passed_file_counts} files in total passed location verification for S3 upload")
         print(f"Please check plan.txt file contents for the files ready to be uploaded to S3...")

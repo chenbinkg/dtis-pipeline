@@ -14,6 +14,7 @@ tf_output*
 **/__pycache__/
 **/venv/
 **.pytest_cache
+**.vscode/
 **/auth_env_vars
 
 error.txt

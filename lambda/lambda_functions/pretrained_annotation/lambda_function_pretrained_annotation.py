@@ -12,6 +12,10 @@ sagemaker_client = boto3.client("sagemaker")
 
 def lambda_handler(event, context):
     pipeline_name = os.environ.get("PIPELINE_NAME")
+    db_name = os.environ.get("MONGODB_DATABASE")
+    collection_obser = os.environ["MONGODB_COLLECTION_OBSER"]
+    collection_video = os.environ["MONGODB_COLLECTION_VIDEO"]
+    collection_master = os.environ["MONGODB_COLLECTION_MASTER"]
     if not pipeline_name:
         logger.error("Environment variable PIPELINE_NAME is not set.")
         return {"statusCode": 500, "body": "Missing PIPELINE_NAME environment variable."}
@@ -56,10 +60,17 @@ def lambda_handler(event, context):
 
         # Define parameters for the SageMaker pipeline
         annotation_s3_url = frame_capture_output_url.replace("/frames", "/annotations")
+        matched_annotation_s3_url = frame_capture_output_url.replace("/frames", "/matched_annotations")
         pipeline_parameters = [
             {"Name": "S3InputURI", "Value": frame_capture_output_url},
             {"Name": "S3OutputURI", "Value": annotation_s3_url},
             {"Name": "InferenceInstanceType", "Value": "ml.m5.xlarge"},
+            {"Name": "S3MatchedAnnoURI", "Value": matched_annotation_s3_url},
+            {"Name": "DBName", "Value": db_name},
+            {"Name": "OFOPObserCollectionName", "Value": collection_obser},
+            {"Name": "VideoCollectionName", "Value": collection_video},
+            {"Name": "MasterCollectionName", "Value": collection_master}
+
         ]
 
         # Start the SageMaker pipeline execution

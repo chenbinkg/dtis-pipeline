@@ -2,11 +2,14 @@ from pymongo.mongo_client import MongoClient
 import logging
 import pandas as pd
 import boto3
+import os
+import sys
 from io import StringIO
 import json
+import argparse
 
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 _logger = logging.getLogger()
-_logger.setLevel(logging.INFO)
 
 class MongoDBOps:
 
@@ -60,7 +63,7 @@ def get_video_start_time(df, start_prompt="Start video"):
     df = df[df["observation"].str.contains(start_prompt)]
     return df["timestamp"].tolist()
 
-def sync_obser_with_video_frame(df_obs, vide_start_times):
+def sync_obser_with_video_frame(df_obs, df_master, vide_start_times):
     """
     sync video observation with video start times
     generate video frame names for each video at each time stamp
@@ -70,155 +73,198 @@ def sync_obser_with_video_frame(df_obs, vide_start_times):
         # latest video comes first, filter from bottom
         df = df_obs[df_obs["timestamp"]>video_start_time]
         df["video_time"] = df["timestamp"] - video_start_time
-        df["frame_num"] = df["video_time"].apply(lambda x: x.total_seconds())
-        df["frame_file"] = df["frame_num"].apply(lambda x: f"frame_{int(x):04}.jpeg")
+        df["frame_num"] = df["video_time"].apply(lambda x: x.total_seconds()) - 1 # minus 1sec for better match
+        df["frame_file"] = df["frame_num"].apply(lambda x: f"{int(x):05}.jpeg")
+        df = pd.merge(left=df, 
+                      right=df_master, 
+                      left_on="observation", 
+                      right_on="Observation_2", 
+                      how="left"
+                     )
+        df = df.dropna(subset=["Observation_2"], axis=0)
         video_labels[video_start_time] = df
         df_obs = df_obs[~df_obs.index.isin(df.index)] # exclude df index
     return video_labels
 
-def read_csv_from_s3(bucket_name, file_key):
+def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_collection):
     """
-    Reads a CSV file from an S3 bucket and returns it as a pandas DataFrame.
-
-    :param bucket_name: Name of the S3 bucket
-    :param file_key: Key (path) of the CSV file in the S3 bucket
-    :return: pandas DataFrame containing the CSV data
+    Main function to perform annotation matching.
+    This function reads video metadata and master labels from MongoDB,
+    retrieves observation data, and matches human labels with pretrained annotations.
+    It processes the video frames and saves the matched annotations to S3.
+    The function expects the S3 input URI to contain cruise and station information,
+    which it uses to query the relevant data from MongoDB collections.
+    It also expects the MongoDB collections to contain specific fields for video metadata,
+    master labels, and observation data.
+    The matched annotations are saved in the output directory specified by the SageMaker processing job.
+    Args:
+        s3_input_uri (str): S3 URI for input data, e.g. "s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/frames/"
+        db_name (str): Name of the MongoDB database.
+        video_collection (str): Name of the MongoDB collection for video metadata.
+        master_collection (str): Name of the MongoDB collection for master labels.
+        ofop_obser_collection (str): Name of the MongoDB collection for observation data.
     """
-    # Create a session using boto3
-    s3 = boto3.client('s3')
-    # Get the object from the S3 bucket
-    response = s3.get_object(Bucket=bucket_name, Key=file_key)
-    # Read the CSV data
-    csv_data = response['Body'].read().decode('utf-8')
-    # Convert the CSV data to a pandas DataFrame
-    df = pd.read_csv(StringIO(csv_data))
-    return df
+    _logger.info("Starting RFDETR annotation matching job")
+    cruise = s3_input_uri.split('/')[3]  # Extract cruise from S3 URI
+    station = s3_input_uri.split('/')[4]  # Extract station from S3 URI
+    _logger.info(f"Processing images for cruise: {cruise}, station: {station}")
 
-def read_manifest(manifest_path):
-    with open(manifest_path, 'r') as file:
-        data = [json.loads(line) for line in file]
-    return data
+    # SageMaker paths
+    input_data_path = '/opt/ml/processing/pretrained_annotations'
+    output_data_path = '/opt/ml/processing/matched_annotations'
+    os.makedirs(output_data_path, exist_ok=True)
+    _logger.info(f"Input data path: {input_data_path}")
+    _logger.info(f"Output data path: {output_data_path}")
 
-def convert_float32(obj):
-    if isinstance(obj, np.float32):
-        return float(obj)
-    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+    # generate query from MongoDB (dtis_videos) for video start time
+    mongo_ops = MongoDBOps()
+    columns = ["cruise", "station", "timestamp", "date", "time", "observation"]
+    query_cols = ["cruise", "station"]
+    query_vals = [cruise, station]
+    query_filter = mongo_ops.gen_query_filter(columns=query_cols, values=query_vals)
+    column_filter = mongo_ops.gen_column_filter(columns=columns)
+    df_video_meta = mongo_ops.read_to_df(
+        db_name=db_name, 
+        collection_name=video_collection, 
+        query_filter=query_filter, 
+        column_filter=column_filter
+    )
 
-# generate query from MongoDB (dtis_videos) for video start time
-mongo_ops = MongoDBOps()
-columns = ["cruise", "station", "timestamp", "date", "time", "observation"]
-query_cols = ["cruise", "station"]
-query_vals = ["TAN0616", "095"]
-query_filter = mongo_ops.gen_query_filter(columns=query_cols, values=query_vals)
-column_filter = mongo_ops.gen_column_filter(columns=columns)
-df_video_meta = mongo_ops.read_to_df(
-    db_name="dtistest", 
-    collection_name="dtis_videos", 
-    query_filter=query_filter, 
-    column_filter=column_filter
-)
+    # generate query from MongoDB (dtis_master) for labels
+    mongo_ops = MongoDBOps()
+    columns = ["Observation_2", "Category", "biigle_tree_id"]
+    query_cols = ["Category"]
+    query_vals = ["Fish"]
+    query_filter = mongo_ops.gen_query_filter(columns=query_cols, values=query_vals)
+    column_filter = mongo_ops.gen_column_filter(columns=columns)
+    df_master_fish = mongo_ops.read_to_df(
+        db_name=db_name, 
+        collection_name=master_collection, 
+        query_filter=query_filter, 
+        column_filter=column_filter
+    )
+    query_cols = ["Category"]
+    query_vals = ["Invertebrate"]
+    query_filter = mongo_ops.gen_query_filter(columns=query_cols, values=query_vals)
+    column_filter = mongo_ops.gen_column_filter(columns=columns)
+    df_master_invert = mongo_ops.read_to_df(
+        db_name=db_name, 
+        collection_name=master_collection, 
+        query_filter=query_filter, 
+        column_filter=column_filter
+    )
 
-# generate query from MongoDB (dtis_ofop_obser) for labelled data
-mongo_ops = MongoDBOps()
-columns = ["cruise", "station", "timestamp", "date", "time", "observation", "observation2"]
-query_cols = ["cruise", "station"]
-query_vals = ["TAN0616", "095"]
-query_filter = mongo_ops.gen_query_filter(columns=query_cols, values=query_vals)
-column_filter = mongo_ops.gen_column_filter(columns=columns)
-df_ofop_obser = mongo_ops.read_to_df(
-    db_name="dtistest", 
-    collection_name="dtis_ofop_obser", 
-    query_filter=query_filter, 
-    column_filter=column_filter
-)
-df_ofop_obser = df_ofop_obser.sort_values("timestamp").reset_index(drop=True)
+    df_master = pd.concat([df_master_fish, df_master_invert], axis=0)
 
-vide_start_times = get_video_start_time(df_video_meta)
-video_labels = sync_obser_with_video_frame(df_ofop_obser, vide_start_times)
+    # generate query from MongoDB (dtis_ofop_obser) for labelled data
+    mongo_ops = MongoDBOps()
+    columns = ["cruise", "station", "timestamp", "date", "time", "observation", "observation2"]
+    query_cols = ["cruise", "station"]
+    query_vals = [cruise, station]
+    query_filter = mongo_ops.gen_query_filter(columns=query_cols, values=query_vals)
+    column_filter = mongo_ops.gen_column_filter(columns=columns)
+    df_ofop_obser = mongo_ops.read_to_df(
+        db_name=db_name, 
+        collection_name=ofop_obser_collection, 
+        query_filter=query_filter, 
+        column_filter=column_filter
+    )
+    _logger.info(f"ofop headers: {df_ofop_obser.columns}")
+    # keep observation2 if both observation and observation2 exist
+    if "observation2" in df_ofop_obser.columns:
+        if "observation" in df_ofop_obser.columns:
+            df_ofop_obser = df_ofop_obser.drop("observation", axis=1)
+        df_ofop_obser = df_ofop_obser.rename(columns={"observation2": "observation"})
+    df_ofop_obser = df_ofop_obser.sort_values("timestamp").reset_index(drop=True)
 
-# read ofop master file
-bucket_name = 'dtis-ofop'
-file_key = 'button_files/ofop-master.csv'
-df_master = read_csv_from_s3(bucket_name, file_key)
-df_master = df_master[df_master["Category"].isin(['Fish', 'Invertebrate'])]
+    vide_start_times = get_video_start_time(df_video_meta)
+    video_labels = sync_obser_with_video_frame(df_ofop_obser, df_master, vide_start_times)
 
-# read grounding dino labels, already filtered by detection area pct (0.001)
-manifest_path = "output_rekognition.manifest"
-dino_anno = read_manifest(manifest_path)
+    # read from json file for species and bounding boxes identified
+    # validate the video labels vs pretrained annotation labels
+    # annotation_path = "annotated_images/TAN0616_095/"
+    # annotation_path_output = "annotated_images/TAN0616_095_matched_ofop/"
 
-# read from json file for species and bounding boxes identified
-# validate the video labels vs groundingdino labels
-matched_anno = dino_anno.copy()
-for video_start_time, df in video_labels.items():
-    print(video_start_time)
-    # get human label video frames
-    # keep only Fish and Invertebrate
-    df1 = df[
-    (df["observation2"].isin(df_master["Observation_1"])) | 
-    (df["observation2"].isin(df_master["Observation_2"]))
-    ]
-    # find labels matches with video label
-    human_labels_found = []
-    human_labels_not_found = []
-    for i, row in df1.iterrows():
-        file_name = row["frame_file"]
-        file_counter = int(file_name.split("_")[-1].split(".")[0])
-        if "observation2" in row.keys():
-            human_anno = row["observation2"]
-        else:
-            human_anno = row["observation"]
-        # check if file_name is found in dino label set
-        # file_found = [file_name for e in dino_anno if file_name in e["source-ref"]
-        file_found = []
-        for i, e in enumerate(dino_anno):
-            if file_name in e["source-ref"]:
-                # if file_name of human label can be found in dino label
-                file_found.append(file_name)
-                for key in list(e.keys()):
-                    if key != "source-ref":
-                        if "-metadata" in key:
-                            # modify metadata key
-                            new_metadata_key = f"{human_anno}-metadata"
-                            e[new_metadata_key] = e.pop(key)
-                            e[new_metadata_key]['human-annotated'] = 'yes'
-                            # matched_anno[i][new_metadata_key] = e[key]
-                            # del matched_anno[i][key]
-                        else:
-                            # modify anno key
-                            new_key = f"{human_anno}"
-                            e[new_key] = e.pop(key)
-                            # matched_anno[i][new_key] = e[key]
-                            # del matched_anno[i][key]
-                            
-        if file_counter < 2000:
-            if file_found:
-                human_labels_found.append(file_name)
-            else:
-                human_labels_not_found.append(file_name)
+    pretrained_anno_files = os.listdir(input_data_path)
+
+    for video_start_time, df in video_labels.items():
+        print(video_start_time)
+        # get human label video frames
+        # find labels matches with video label
+        human_labels_found = 0
+        total_annotations = 0
+        unique_frames = df["frame_file"].unique()
+        for file_name in sorted(unique_frames):
+            _logger.info(f"processing {file_name} for annotation matching")
+            df_1 = df[df["frame_file"] == file_name]
+            file_counter = file_name.split(".")[0]
+            anno_file_found = [e for e in pretrained_anno_files if f"{file_counter}.json" in e]
+            if len(anno_file_found) == 0:
+                _logger.info(f"*{file_counter}.json not found!")
+                continue
+            _logger.info(f"anno file found: {anno_file_found[0]}")
+            # load pretrained anno file
+            anno_file = os.path.join(input_data_path, anno_file_found[0])
+            with open(anno_file) as f:
+                pretrained_anno_json = json.load(f)
+            _logger.info(f"loaded pretrained annotation file: {pretrained_anno_json}")
+            # check if there is annotation
+            if isinstance(pretrained_anno_json, list):
+                _logger.info(f"annotation not in dictionary format for: {file_name}! Skipping...")
+                continue
+            if "bounding-box-metadata" not in pretrained_anno_json.keys():
+                _logger.info(f"no object detected for pretrained model at: {file_name}!")
+                continue
+            # find all available labels
+            class_map = pretrained_anno_json['bounding-box-metadata']['class-map']
+            pretrained_annos = pretrained_anno_json['bounding-box']['annotations']
+            class_ids = list(class_map.keys())
+            class_labels = list(class_map.values())
+            biigle_tree_ids = df_1["biigle_tree_id"].tolist()
+            human_annos = df_1["observation"].tolist()
+            # loop through pretrained annotation class
+            # simple way to perform 1-to-1 detection matching
+            class_map_1 = class_map.copy()
+            pretrained_annos_1 = pretrained_annos.copy()
+            total_annotations+=len(pretrained_annos)
+            for cid, cname, btid, anno in zip(class_ids, class_labels, biigle_tree_ids, human_annos):
+                class_map_1.pop(cid) # remove pretrain class id
+                btid_int = int(btid) # convert to int
+                class_map_1[btid_int] = anno # assign human annotation and biigle tree id
+                _logger.info(f"***changing class {cname} to {anno} at: {file_name}***")
+                # loop through bounding box and replace
+                for i, anno_x in enumerate(pretrained_annos_1):
+                    if anno_x["class_id"] == cid:
+                        pretrained_annos_1[i]["class_id"] = btid_int
+                        human_labels_found+=1
+            pretrained_anno_json['bounding-box-metadata']['class-map'] = class_map_1
+            pretrained_anno_json['bounding-box']['annotations'] = pretrained_annos_1
+
+            matched_manifest_path = os.path.join(output_data_path, anno_file_found[0])
+            # Save new results
+            with open(matched_manifest_path, 'w') as f:
+                json.dump(pretrained_anno_json, f)
+        _logger.info(
+            f"total human labels matched with pretrained annotations: {human_labels_found}\n"
+            f"total pretrained annotations not matched: {total_annotations-human_labels_found}\n"
+            f"total pretrained annotations: {total_annotations}"
+        )
 
 
-matched_manifest_path = "matched_rekognition.manifest"
-for json_line in matched_anno:
-    with open(matched_manifest_path, 'a') as f:
-        f.write(json.dumps(json_line, default=convert_float32) + '\n')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--s3_input_uri", type=str, default=None)
+    parser.add_argument("--db_name", type=str, default=None)
+    parser.add_argument("--video_collection_name", type=str, default=None)
+    parser.add_argument("--master_collection_name", type=str, default=None)
+    parser.add_argument("--ofop_obser_collection_name", type=str, default=None)
+    args, _ = parser.parse_known_args()
 
-df1[df1["frame_file"].isin(human_labels_not_found)]
-
-'''
-TO-DO: architecture
-
-triggered by media-convert completion event
-set up event bridge rule to trigger lambda --> sagemaker pipeline when conversion completes (for latest trips, raw format is .mpeg, need to convert to .mp4 to reduce bit rate maybe?)
-TO-DO: Sagemaker pipeline
-
-create container
-retrieve model weights
-filter master list
-activate groundingDINO for pre-labellng job: label_bbox
-perform label filtering: remove labels with low detection area
-only keep fish and inverterbrate in ofop obser using ofop_master file
-match labelled frames with ofop labels for additional validation/filtering
-save labelled images to s3, create connection with biigle
-manual labelling
-with labelled images, train the models
-'''
+    _logger.info("Received arguments {}".format(args))
+    main(
+        s3_input_uri=args.s3_input_uri,
+        db_name=args.db_name,
+        video_collection=args.video_collection_name,
+        master_collection=args.master_collection_name,
+        ofop_obser_collection=args.ofop_obser_collection_name
+        )
