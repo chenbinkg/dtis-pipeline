@@ -88,6 +88,10 @@ if __name__ == "__main__":
         name="ModelS3URI",
         default_value=default_model_s3_uri
         )
+    mongodb_uri_ssm = ParameterString(
+        name="MongoDBURI",
+        default_value="/dtis/mongodb/uri"  # SSM parameter for MongoDB
+        )
     db_name = ParameterString(
         name="DBName",
         default_value="dtistest"
@@ -216,7 +220,8 @@ if __name__ == "__main__":
             "--db_name", db_name,
             "--video_collection_name", video_collection_name,
             "--master_collection_name", master_collection_name,
-            "--ofop_obser_collection_name", ofop_obser_collection_name
+            "--ofop_obser_collection_name", ofop_obser_collection_name,
+            "--ssm_param_mongodb_uri", mongodb_uri_ssm,
         ]
     )
 

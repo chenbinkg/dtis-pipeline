@@ -164,8 +164,7 @@ resource "aws_lambda_function" "dtis" {
 
   environment {
     variables = {
-			# MONGODB_URI = "mongodb+srv://DTISFederation:2LzFpNbdRfvxnQze@serverlessinstance0.ta8golw.mongodb.net/"
-      ENVIRONMENT = var.environment
+      MONGODB_URI_SSM_PARAM = "/dtis/mongodb/uri" # SSM parameter for MongoDB URI
 			MONGODB_DATABASE = "dtis${var.environment}"
 			INGRESS_COLLECTION_DTIS = "dtis_metadata"
       MONGODB_COLLECTION_IMAGE = "dtis_stills"

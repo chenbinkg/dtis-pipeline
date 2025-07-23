@@ -376,11 +376,10 @@ def initialize_resources() -> Tuple[boto3.client, MongoClient, Database]:
     """
     Initialize resources like MongoDB client, S3 client, etc.
     """
-    env = os.environ.get("ENVIRONMENT", "dev").lower()
 
     s3_client = boto3.client("s3")
     ssm = boto3.client('ssm', region_name='ap-southeast-2')
-    parameter_name = f'/{env}/mongodb/uri'
+    parameter_name = os.environ.get("MONGODB_URI_SSM_PARAM")
     # Get parameter (with decryption if it's a SecureString)
     response = ssm.get_parameter(
         Name=parameter_name,
@@ -389,7 +388,7 @@ def initialize_resources() -> Tuple[boto3.client, MongoClient, Database]:
     
     # Extract the MongoDB URI
     mongo_uri = response['Parameter']['Value']
-    # mongo_uri = os.environ.get("MONGODB_URI")
+    
     mongo_db_name = os.environ.get("MONGODB_DATABASE")
 
     if not mongo_uri or not mongo_db_name:

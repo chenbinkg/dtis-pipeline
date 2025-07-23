@@ -14,7 +14,7 @@ export ENVIRONMENT=dev
 3. Upload the MongoDB connection string to AWS Systems Manager using CLI as shown below
 ```
 aws ssm put-parameter \
-    --name "/${ENVIRONMENT}/mongodb/uri" \
+    --name "/dtis/mongodb/uri" \
     --value "mongodb+srv://username:password@cluster.example.mongodb.net" \
     --type "SecureString" \
     --description "MongoDB connection string" \
