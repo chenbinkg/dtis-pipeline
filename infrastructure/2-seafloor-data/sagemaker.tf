@@ -85,6 +85,9 @@ resource "aws_iam_policy" "sagemaker_pipeline_policy" {
         Effect = "Allow",
         Action = [
           "secretsmanager:GetSecretValue",
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParameterHistory"
         ],
         Resource = "*" # Adjust this to be more restrictive if possible
       },

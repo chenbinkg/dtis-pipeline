@@ -376,8 +376,20 @@ def initialize_resources() -> Tuple[boto3.client, MongoClient, Database]:
     """
     Initialize resources like MongoDB client, S3 client, etc.
     """
+    env = os.environ.get("ENVIRONMENT", "dev").lower()
+
     s3_client = boto3.client("s3")
-    mongo_uri = os.environ.get("MONGODB_URI")
+    ssm = boto3.client('ssm', region_name='ap-southeast-2')
+    parameter_name = f'/{env}/mongodb/uri'
+    # Get parameter (with decryption if it's a SecureString)
+    response = ssm.get_parameter(
+        Name=parameter_name,
+        WithDecryption=True
+    )
+    
+    # Extract the MongoDB URI
+    mongo_uri = response['Parameter']['Value']
+    # mongo_uri = os.environ.get("MONGODB_URI")
     mongo_db_name = os.environ.get("MONGODB_DATABASE")
 
     if not mongo_uri or not mongo_db_name:
@@ -1403,7 +1415,7 @@ def lambda_handler(event, context):
                         )
                         
                         # call media convert lambda function for .m2t video files
-                        if file_key.endswith('.m2ts') or file_key.endswith('.m2t') or file_key.endswith('.mp4'):
+                        if file_key.endswith(('.m2ts', '.m2t', '.avi', '.MTS', '.mpg', '.MPG')):
                             logger.info("Detected video file: %s", file_key)
                             try:
                                 # call media convert lambda function for video files
@@ -1417,7 +1429,7 @@ def lambda_handler(event, context):
                                     InvocationType='RequestResponse',
                                     Payload=json.dumps(lambda_payload)
                                 )
-                                logger.info("Triggered media convert for .m2t .m2ts or .mp4 file")
+                                logger.info("Triggered media convert for video file")
                                 logger.info("Lambda function response: %s", lambda_response)
                             except Exception as e:
                                 logger.error(f"Error calling media convert lambda function: {str(e)}")

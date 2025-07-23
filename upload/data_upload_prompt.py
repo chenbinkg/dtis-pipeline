@@ -88,17 +88,19 @@ def get_data_upload_info():
     images_dir = None
     videos_dir = None
     ofop_dir = None
+    ofop_rerun_dir = None
     while (not images_dir) and (not videos_dir) and (not ofop_dir):
-        images_dir = input("Enter image directory: ")
-        videos_dir = input("Enter video directory: ")
-        ofop_dir = input("Enter ofop directory: ")
+        images_dir = input("Enter image directory (press enter to skip): ")
+        videos_dir = input("Enter video directory (press enter to skip): ")
+        ofop_dir = input("Enter ofop directory (press enter to skip): ")
+        ofop_rerun_dir = input("Enter ofop rerun directory (press enter to skip): ")
         # Check input directories
-        if (not images_dir) and (not videos_dir) and (not ofop_dir):
-            print("At least one of the directories must be set for image/video/ofop. Please set it explicitly")
+        if (not images_dir) and (not videos_dir) and (not ofop_dir) and (not ofop_rerun_dir):
+            print("At least one of the directories must be set for image/video/ofop/rerun. Please set it explicitly")
     # Setup environment configurations
     environment = None
-    while environment not in ["testing", "production"]:
-        environment = input("Enter ENVIRONMENT (testing or production): ")
+    while environment not in ["dev", "test", "prod", "development", "testing", "production"]:
+        environment = input("Enter ENVIRONMENT (dev, test or prod): ")
         environment = environment.lower()
     # Set up Dry Run configuration
     dry_run = None
@@ -106,7 +108,7 @@ def get_data_upload_info():
         dry_run = input("Enter DRY_RUN (true or false), setting it to false will directly upload files to S3: ")
         dry_run = dry_run.lower()
 
-    return cruise_id, images_dir, videos_dir, ofop_dir, environment, dry_run
+    return cruise_id, images_dir, videos_dir, ofop_dir, ofop_rerun_dir, environment, dry_run
 
 def get_data_upload_confirmation(cruise_id):
     # prompt for data upload confirmation
@@ -133,80 +135,6 @@ def get_file_type(file_path):
     # file_type = mine.from_file(file_path)
     file_type, _ = mimetypes.guess_type(file_path)
     return file_type
-
-# def get_station_id(file_path, cruise_id):
-#     # Make the file path fully upper case
-#     file_path_upper_case = file_path.upper()
-
-#     # Check if the file path matches the NIWA_CRUISE_ID
-#     if cruise_id not in file_path_upper_case:
-#         error_message = f"Error: File: {file_path} does not come from the cruise of ID: {cruise_id}"
-#         print(error_message)
-#         with open(error_file, 'a') as ef:
-#             ef.write(error_message + '\n')
-#         return ""
-
-#     # Method 1
-#     # e.g. Video/TAN0616/TAN0616_003/TAN0616_045.m2ts
-#     # this gives, e.g. /TAN0616_003/
-#     match = re.search(rf"/{cruise_id}_[0-9]{{3,}}/", file_path_upper_case)
-#     if match:
-#         station_id = match.group(0).split('_')[1].strip('/')
-#         return station_id
-
-#     # Method 2
-#     # e.g. images/dir with space/TAN1802_Stn_160_001.jpg
-#     # this gives, e.g. /TAN1802_Stn_160
-#     match = re.search(rf"/{cruise_id}_STN_[0-9]{{3,}}_", file_path_upper_case)
-#     if match:
-#         station_id = match.group(0).split('_')[2].strip()
-#         return station_id
-
-#     # Method 3
-#     # e.g. images/dir with space/TAN1802_160_DTIS__004.jpeg
-#     # this gives, e.g. /TAN1802_160_
-#     match = re.search(rf"/{cruise_id}_[0-9]{{3,}}_", file_path_upper_case)
-#     if match:
-#         station_id = match.group(0).split('_')[1].strip()
-#         return station_id
-
-#     # Method 4
-#     # e.g. text/TAN2203/OFOP text files/TAN2203_001.sth_rerun.sth_obser.txt
-#     # this gives, e.g. /TAN2203_001.sth_rerun
-#     match = re.search(rf"/{cruise_id}_[0-9]{{3,}}.*_RERUN", file_path_upper_case)
-#     if match:
-#         station_id = match.group(0).split('_')[1].split('.')[0].strip()
-#         return station_id
-
-#     # Method 5
-#     # e.g. TAN2203/Stn003/1234.m2t
-#     # this gives, e.g. /TAN1802/STN003/
-#     match = re.search(rf"/{cruise_id}/STN[0-9]{{3,}}/", file_path_upper_case)
-#     if match:
-#         station_id = re.search(r"[0-9]{3,}", match.group(0).split('/')[2]).group(0).strip()
-#         return station_id
-
-#     # Method 6
-#     # e.g. /Stn002/11-04-2022/20220411191258.m2ts
-#     # this gives, e.g. /STN002/11-04-2022/
-#     match = re.search(rf"/STN[0-9]{{3,}}/[0-9]{{2}}-[0-9]{{2}}-[0-9]{{4}}/.*\.M", file_path_upper_case)
-#     if match:
-#         station_id = re.search(r"[0-9]{3,}", match.group(0).split('/')[1]).group(0).strip()
-#         return station_id
-
-#     # Method 7
-#     # e.g. /STN_002/1234.m2t
-#     # this gives, e.g. /STN_002/
-#     match = re.search(r"/STN_[0-9]{3,}/", file_path_upper_case)
-#     if match:
-#         station_id = re.search(r"[0-9]{3,}", match.group(0).split('/')[1]).group(0).strip()
-#         return station_id
-
-#     error_message = f"Error: Could not get station id for the file: {file_path} (file path matches no pattern, potential cruise ID mismatch)"
-#     print(error_message)
-#     with open(error_file, 'a') as ef:
-#         ef.write(error_message + '\n')
-#     return ""
 
 def get_station_id(file_path, cruise_id, error_file):
     # Normalize the file path to use the correct separator for the OS
@@ -348,7 +276,7 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
     files_with_matching_extension = []
     for root, _, files in os.walk(dir):
         for file in files:
-            if file.lower().endswith(('.m2t', '.m2ts')):
+            if file.lower().endswith(('.m2ts', '.m2t', '.avi', '.MTS', '.mpg', '.MPG')):
                 files_with_matching_extension.append(os.path.join(root, file))
 
     video_files_to_copy = []
@@ -356,30 +284,33 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
     for file in tqdm(files_with_matching_extension, total=len(files_with_matching_extension)):
         file_no_trailing_whitespace = file.rstrip()
 
-        file_name = os.path.basename(file)
-        file_path_upper_case = file_name.upper()
+        # file_name = os.path.basename(file)
+        # file_path_upper_case = file_name.upper()
 
-        if not any(re.match(pattern, file_path_upper_case) for pattern in video_patterns):
-            with open(error_file, 'a') as ef:
-                ef.write(f"Error: File does not match video naming convention: {file_no_trailing_whitespace}\n")
-            print(f"Error: File does not match video naming convention: {file_no_trailing_whitespace}")
-            continue
+        # if not any(re.match(pattern, file_path_upper_case) for pattern in video_patterns):
+        #     with open(error_file, 'a') as ef:
+        #         ef.write(f"Error: File does not match video naming convention: {file_no_trailing_whitespace}\n")
+        #     print(f"Error: File does not match video naming convention: {file_no_trailing_whitespace}")
+        #     continue
+        
+        # remove video file name and type verification for now
+        video_files_to_copy.append(file_no_trailing_whitespace)
 
-        if dry_run == "true":
-            print("DRY_RUN is set, so skipping video file type verification")
-            video_files_to_copy.append(file_no_trailing_whitespace)
-            continue
+        # if dry_run == "true":
+        #     print("DRY_RUN is set, so skipping video file type verification")
+        #     video_files_to_copy.append(file_no_trailing_whitespace)
+        #     continue
 
-        # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace], 
-        #                            capture_output=True, text=True, shell=True).stdout.strip()
-        file_type = get_file_type(file_no_trailing_whitespace)
-        if file_type not in ["video/MP2T", "application/octet-stream"]:
-            with open(error_file, 'a') as ef:
-                ef.write(f"Error: File is not a valid .m2t or .m2ts file: {file_no_trailing_whitespace} (Detected type: {file_type})\n")
-            print(f"Error: File is not a valid .m2t or .m2ts file: {file_no_trailing_whitespace} (Detected type: {file_type})")
-            continue
-        else:
-            video_files_to_copy.append(file_no_trailing_whitespace)
+        # # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace], 
+        # #                            capture_output=True, text=True, shell=True).stdout.strip()
+        # file_type = get_file_type(file_no_trailing_whitespace)
+        # if file_type not in ["video/MP2T", "application/octet-stream"]:
+        #     with open(error_file, 'a') as ef:
+        #         ef.write(f"Error: File is not a valid .m2t or .m2ts file: {file_no_trailing_whitespace} (Detected type: {file_type})\n")
+        #     print(f"Error: File is not a valid .m2t or .m2ts file: {file_no_trailing_whitespace} (Detected type: {file_type})")
+        #     continue
+        # else:
+        #     video_files_to_copy.append(file_no_trailing_whitespace)
 
     return video_files_to_copy
 
@@ -625,22 +556,29 @@ if __name__ == "__main__":
                 r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$", # e.g. TAN1802_160_004.jpg
                 r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$", # e.g. TAN1802_160_004.jpeg
             ],
-            "video": [
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}\.M2T[S]?$", # e.g. TAN1802_001.m2t or TAN1802_001.m2ts
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_[0-9]{1}\.M2T[S]?$", # e.g. TAN1802_001_1.m2t or TAN1802_001_2.m2ts
-                r"^[0-9]{4,}\.M2T[S]?$", # e.g. 201012220153001.m2t or 201012220153001.m2ts (only digits)
-            ],
+
+            "video": [],
+
+            # "video": [
+            #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001.m2t, TAN1802_001.m2ts, or TAN1802_001.mpg
+            #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_[0-9]{1}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001_1.m2t, TAN1802_001_2.m2ts, or TAN1802_001_1.mpg
+            #     r"^[0-9]{4,}\.(M2T[S]?|MPG)$", # e.g. 201012220153001.m2t, 201012220153001.m2ts, or 201012220153001.mpg (only digits)
+            # ],
+
             "ofop": [
                 r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\.TXT$", # e.g. TAN1802_001_posi.txt
                 r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\.TXT$", # e.g. TAN1802_001_prot.txt
                 r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\.TXT$", # e.g. TAN1802_001_obser.txt
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_OBSER\.TXT$", # e.g. TAN1802_001.sth_rerun.sth_obser.txt
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_RERUN.*_PROT\.TXT$", # e.g. TAN1802_001.sth_rerun.sth_prot.txt
-            ]
+            ],
+            
+            "ofop_rerun": [
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_OBSER.*\.TXT$", # e.g. TAN1802_001.sth_obser.txt
+                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_PROT.*\.TXT$", # e.g. TAN1802_001.sth_prot.txt
+            ],
         }
 
         # get upload info
-        cruise_id, images_dir, videos_dir, ofop_dir, environment, dry_run = get_data_upload_info()
+        cruise_id, images_dir, videos_dir, ofop_dir, ofop_rerun_dir, environment, dry_run = get_data_upload_info()
 
         if dry_run == "false":
             # get aws access key and secret key
@@ -702,11 +640,17 @@ if __name__ == "__main__":
             video_patterns=patterns["video"],
             dry_run=dry_run
             )
-        text_files_to_copy = check_ofop_files(
+        ofop_files_to_copy = check_ofop_files(
             dir=ofop_dir, 
             error_file=error_file, 
             ofop_patterns=patterns["ofop"]
             )
+        rerun_files_to_copy = check_ofop_files(
+            dir=ofop_rerun_dir, 
+            error_file=error_file, 
+            ofop_patterns=patterns["ofop_rerun"]
+            )
+        text_files_to_copy = ofop_files_to_copy + rerun_files_to_copy
         # write ofop files first, video upload will trigger lambda function
         # which processes video files and will need ofop obser data for annotation
         passed_text_file_count = write_validated_file_paths(
