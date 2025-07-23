@@ -34,6 +34,14 @@
 5. run `python`
 6. try to import libraries going to be used in the inference.py using `import ... `, check any errors
 
+## Upload Credential and Secrets to AWS
+```bash
+aws secretsmanager create-secret \
+    --name "aws-credentials/biigle/create-user-disk" \
+    --description "AWS Access Key ID and Secret Access Key for my application" \
+    --secret-string '{"access_key_id":"XXXXXXXXXXXXXXX","secret_access_key":"XXXXXXXXXXXXXX”}’
+```
+
 ## Create Pipeline
 1. run `cd annotation`
 2. run `python sagemaker_pipeline_job.py`

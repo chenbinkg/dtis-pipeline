@@ -69,8 +69,8 @@ def lambda_handler(event, context):
                     base_output_key = os.path.splitext(input_key)[0] # Remove the file extension
                     output_frames_key = f'{base_output_key}/frames'
                     output_frames_dir = f's3://{output_bucket}/{output_frames_key}'
-                    # Check if the file is an M2TS file
-                    if input_key.endswith('.m2ts') or input_key.endswith('.m2t'):
+                    # Check if the file is a supported video format
+                    if input_key.endswith(('.m2ts', '.m2t', '.avi', '.MTS', '.mpg', '.MPG')):
                         # input_filename = input_key.split("/")[-1] # Get the filename from the key
                         # output_filename = input_key.split("/")[-1].split(".")[0] # Remove the file extension
                         # output_key = input_key.replace(input_filename, output_filename) # Remove the file extension from the key

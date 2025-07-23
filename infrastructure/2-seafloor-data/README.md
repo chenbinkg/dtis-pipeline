@@ -7,7 +7,21 @@ This setup uses Terraform remote state, so it requires that code from the [1-ter
 ## How to run this?
 
 1. Make sure you are authenticated with the right AWS account. You might want to check it with `aws sts get-caller-identity`
-2. Download the lambda python dependencies, and package them with the lambda function code into a zip file, so that it is available for Terraform:
+2. Define environment variable, as either dev, test or prod, for example
+```
+export ENVIRONMENT=dev
+```
+3. Upload the MongoDB connection string to AWS Systems Manager using CLI as shown below
+```
+aws ssm put-parameter \
+    --name "/dtis/mongodb/uri" \
+    --value "mongodb+srv://username:password@cluster.example.mongodb.net" \
+    --type "SecureString" \
+    --description "MongoDB connection string" \
+    --region ap-southeast-2
+
+```
+4. Download the lambda python dependencies, and package them with the lambda function code into a zip file, so that it is available for Terraform:
 ```
 ./tasks lambda_package
 cp lambda/lambda_functions/ingress/lambda_function.zip infrastructure/2-seafloor-data/
@@ -42,16 +56,15 @@ zip -r lambda_media_convert.zip lambda_function_media_convert.py
 mv "${processing_dir}/lambda_media_convert.zip" "$(dirname "${processing_dir}")/infrastructure/2-seafloor-data/"
 ```
 
-3. Run the following:
+5. Run the following:
 
 ```
 cd infrastructure/2-seafloor-data
 
-export NIWA_ENVIRONMENT=testing
-export TF_VAR_environment=${NIWA_ENVIRONMENT}
+export TF_VAR_environment=${ENVIRONMENT}
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-terraform init -backend-config="bucket=niwa-dtis-ofop-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${NIWA_ENVIRONMENT}/${NIWA_ENVIRONMENT}.tfstate"
+terraform init -backend-config="bucket=niwa-dtis-ofop-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${ENVIRONMENT}/${ENVIRONMENT}.tfstate"
 
 terraform plan -out=plan.tfplan
 terraform apply plan.tfplan
@@ -63,11 +76,11 @@ You may want to run the commands directly from your laptop, or use a [Dojo](http
 
 Similar to above, the Terraform commands are:
 ```
-export NIWA_ENVIRONMENT=testing
-export TF_VAR_environment=${NIWA_ENVIRONMENT}
+export ENVIRONMENT=testing
+export TF_VAR_environment=${ENVIRONMENT}
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-terraform init -backend-config="bucket=niwa-dtis-ofop-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${NIWA_ENVIRONMENT}/${NIWA_ENVIRONMENT}.tfstate"
+terraform init -backend-config="bucket=niwa-dtis-ofop-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${ENVIRONMENT}/${ENVIRONMENT}.tfstate"
 
 terraform plan -destroy -out=plan.tfplan
 terraform apply plan.tfplan

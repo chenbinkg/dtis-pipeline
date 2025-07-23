@@ -98,6 +98,30 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_role_policy" {
   policy_arn = aws_iam_policy.dtis_lambda_s3_permissions.arn
 }
 
+resource "aws_iam_policy_document" "dtis_systems_manager_permissions" {
+  statement {
+    effect = "Allow"
+    resources = ["arn:aws:ssm:*"]
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:GetParameterHistory"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "dtis_systems_manager_permissions" {
+  name        = "dtis-systems-manager-${var.environment}"
+  path        = "/"
+  policy      = data.aws_iam_policy_document.dtis_systems_manager_permissions.json
+  tags          = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_systems_manager_role_policy" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.dtis_systems_manager_permissions.arn
+}
+
 ## use this if we want Terraform to generate the zip file (instead of us
 ## doing it in Bash):
 # data "archive_file" "lambda" {
@@ -140,8 +164,8 @@ resource "aws_lambda_function" "dtis" {
 
   environment {
     variables = {
-			MONGODB_URI = "mongodb+srv://DTISFederation:2LzFpNbdRfvxnQze@serverlessinstance0.ta8golw.mongodb.net/"
-			MONGODB_DATABASE = "dtistest"
+      MONGODB_URI_SSM_PARAM = "/dtis/mongodb/uri" # SSM parameter for MongoDB URI
+			MONGODB_DATABASE = "dtis${var.environment}"
 			INGRESS_COLLECTION_DTIS = "dtis_metadata"
       MONGODB_COLLECTION_IMAGE = "dtis_stills"
       MONGODB_COLLECTION_VIDEO = "dtis_videos"
@@ -429,7 +453,7 @@ resource "aws_lambda_function" "pretrained_annotation" {
   environment {
     variables = {
 			PIPELINE_NAME = "DTIS-Annotation-Pipeline-${var.environment}",
-      MONGODB_DATABASE = "dtistest"
+      MONGODB_DATABASE = "dtis${var.environment}"
 			MONGODB_COLLECTION_MASTER = "dtis_master"
       MONGODB_COLLECTION_VIDEO = "dtis_videos"
       MONGODB_COLLECTION_OBSER = "dtis_ofop_obser"

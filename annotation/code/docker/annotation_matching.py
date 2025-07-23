@@ -13,14 +13,24 @@ _logger = logging.getLogger()
 
 class MongoDBOps:
 
-    def __init__(self, read_secondary=False):
-        self.user = "niwa-admin"
-        self.password = "12345"
-        if read_secondary:
-            # read from secondary node to reduce CPU 
-            self.conn_string = f"mongodb+srv://{self.user}:{self.password}@serverlessinstance0.ta8golw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0?readPreference=secondary"
-        else:
-            self.conn_string = f"mongodb+srv://{self.user}:{self.password}@serverlessinstance0.ta8golw.mongodb.net"
+    def __init__(self, ssm_param="/dtis/mongodb/uri", region_name="ap-southeast-2"):
+        """Initialize MongoDBOps with connection string from AWS SSM Parameter Store.
+        Args:
+            ssm_param (str): The SSM parameter name for the MongoDB connection string.
+            This should be the full path to the parameter, e.g., '/dtis/mongodb/uri'.
+            The connection string should be in the format:
+            'mongodb+srv://username:password@cluster0.mongodb.net/test?retryWrites=true&w=majority'
+        """
+        ssm = boto3.client('ssm', region_name=region_name)
+        parameter_name = ssm_param
+        # Get parameter (with decryption if it's a SecureString)
+        response = ssm.get_parameter(
+            Name=parameter_name,
+            WithDecryption=True
+        )
+        
+        # Extract the MongoDB URI
+        self.conn_string = response['Parameter']['Value']
         # self.client = MongoClient(self.conn_string)
 
     def read_to_df(self, db_name, collection_name, query_filter, column_filter):
@@ -86,7 +96,7 @@ def sync_obser_with_video_frame(df_obs, df_master, vide_start_times):
         df_obs = df_obs[~df_obs.index.isin(df.index)] # exclude df index
     return video_labels
 
-def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_collection):
+def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_collection, ssm_param_mongodb_uri):
     """
     Main function to perform annotation matching.
     This function reads video metadata and master labels from MongoDB,
@@ -117,7 +127,7 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     _logger.info(f"Output data path: {output_data_path}")
 
     # generate query from MongoDB (dtis_videos) for video start time
-    mongo_ops = MongoDBOps()
+    mongo_ops = MongoDBOps(ssm_param=ssm_param_mongodb_uri)
     columns = ["cruise", "station", "timestamp", "date", "time", "observation"]
     query_cols = ["cruise", "station"]
     query_vals = [cruise, station]
@@ -131,7 +141,6 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     )
 
     # generate query from MongoDB (dtis_master) for labels
-    mongo_ops = MongoDBOps()
     columns = ["Observation_2", "Category", "biigle_tree_id"]
     query_cols = ["Category"]
     query_vals = ["Fish"]
@@ -157,7 +166,6 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     df_master = pd.concat([df_master_fish, df_master_invert], axis=0)
 
     # generate query from MongoDB (dtis_ofop_obser) for labelled data
-    mongo_ops = MongoDBOps()
     columns = ["cruise", "station", "timestamp", "date", "time", "observation", "observation2"]
     query_cols = ["cruise", "station"]
     query_vals = [cruise, station]
@@ -258,6 +266,7 @@ if __name__ == "__main__":
     parser.add_argument("--video_collection_name", type=str, default=None)
     parser.add_argument("--master_collection_name", type=str, default=None)
     parser.add_argument("--ofop_obser_collection_name", type=str, default=None)
+    parser.add_argument("--ssm_param_mongodb_uri", type=str, default="/dtis/mongodb/uri")
     args, _ = parser.parse_known_args()
 
     _logger.info("Received arguments {}".format(args))
@@ -266,5 +275,6 @@ if __name__ == "__main__":
         db_name=args.db_name,
         video_collection=args.video_collection_name,
         master_collection=args.master_collection_name,
-        ofop_obser_collection=args.ofop_obser_collection_name
+        ofop_obser_collection=args.ofop_obser_collection_name,
+        ssm_param_mongodb_uri=args.ssm_param_mongodb_uri
         )
