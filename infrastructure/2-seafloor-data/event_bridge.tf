@@ -1,6 +1,6 @@
 # EventBridge Rule to capture MediaConvert Job Completion
 resource "aws_cloudwatch_event_rule" "mediaconvert_complete_rule" {
-  name          = "DTIS-MediaConvertJobCompleteRule-${var.environment}"
+  name          = "${local.name_prefix}-mediaconvert-job-complete-rule"
   description   = "Captures MediaConvert job completion events to trigger Lambda function"
   event_bus_name = "default"
 
@@ -27,7 +27,7 @@ resource "aws_cloudwatch_event_target" "lambda-function-pretrained-annotation-ta
 
 # Permission for EventBridge to invoke Lambda function for pretrained annotation
 resource "aws_lambda_permission" "allow_invoke_pretrained_annotation_lambda" {
-  statement_id  = "DTIS-AllowExecutionFromEventBridge-${var.environment}"
+  statement_id  = "${local.name_prefix}-allow-invoke-pretrained-annotation-lambda"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.pretrained_annotation.function_name
   principal     = "events.amazonaws.com"
@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "eventbridge_to_logs_policy" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "eventbridge_to_logs_resource_policy" {
-  policy_name = "EventBridgeToMediaConvertCompleteLogGroupPolicy-${var.environment}"
+  policy_name = "${local.name_prefix}-eventbridge-to-logs-policy"
   policy_document = data.aws_iam_policy_document.eventbridge_to_logs_policy.json
 }
 

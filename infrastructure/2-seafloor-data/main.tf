@@ -1,9 +1,14 @@
 locals {
   tags = {
     creation_method  = "terraform"
-    project_name = var.project_name
-    environment = var.environment
+    Authors       = var.authors
+    ServiceOwner = var.service_owner
+    ServiceCategory = var.service_category
+    Project = var.project_id
+    ProjectName = var.project_name
+    Environment = var.environment
   }
+  name_prefix = "${var.project_name}-${var.environment}"
 }
 
 resource "aws_s3_bucket" "raw_data" {
@@ -11,7 +16,7 @@ resource "aws_s3_bucket" "raw_data" {
   #checkov:skip=CKV_AWS_144: "Ensure that S3 bucket has cross-region replication enabled"
   #checkov:skip=CKV2_AWS_61: "Ensure that an S3 bucket has a lifecycle configuration"
   #checkov:skip=CKV2_AWS_62: "Ensure S3 buckets should have event notifications enabled"
-  bucket        = "dtis-ofop-${data.aws_caller_identity.current.account_id}-raw-${var.environment}"
+  bucket        = "${local.name_prefix}-${data.aws_caller_identity.current.account_id}-raw-data"
   tags          = local.tags
   force_destroy = true
 }
@@ -62,7 +67,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "intelligent_tiering_archive" {
 }
 
 resource "aws_sqs_queue" "queue" {
-  name                       =   "dtis-ofop-${var.environment}"
+  name                       =   "${local.name_prefix}-sqs-queue"
   # Any message that is sent to the queue remains invisible to consumers for the duration of this delay period.
   delay_seconds              = 10
   # It determines the duration during which a message remains invisible to other consumers after it has been retrieved by a consumer. This allows the consumer enough time to process the message before it becomes available for other consumers to retrieve.
@@ -145,7 +150,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 # S3 bucket for dtis model
 resource "aws_s3_bucket" "dtis_model" {
-  bucket        = "dtis-model-${data.aws_caller_identity.current.account_id}-${var.environment}"
+  bucket        = "${local.name_prefix}-${data.aws_caller_identity.current.account_id}-model-data"
   tags          = local.tags
   force_destroy = true
 }
@@ -221,7 +226,7 @@ resource "aws_s3_bucket_policy" "rekognition_s3_access_policy" {
 # IAM role for Rekognition Custom Labels
 # This role allows Rekognition to access the S3 bucket for read/write operations
 resource "aws_iam_role" "rekognition_role" {
-  name = "dtis-rekognition-execution-${var.environment}"
+  name = "${local.name_prefix}-rekognition-execution"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -242,7 +247,7 @@ resource "aws_iam_role" "rekognition_role" {
 # This policy allows Rekognition to read/write access to dtis-model bucket
 # and read access to raw data bucket
 resource "aws_iam_policy" "rekognition_policy" {
-  name        = "dtis-rekognition-custom-label-${var.environment}"
+  name        = "${local.name_prefix}-rekognition-custom-label-policy"
   description = "Permissions for Rekognition Custom Labels to access S3 buckets"
   policy = jsonencode({
     Version = "2012-10-17",

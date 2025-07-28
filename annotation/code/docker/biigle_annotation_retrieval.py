@@ -455,7 +455,6 @@ if __name__ == '__main__':
     endpoint = f'https://{bucket_name}.s3.{region}.amazonaws.com'
     label_tree_to_add_id = 3270
     storage_disk_id = 84
-    member_user_id = "c23fd811-d417-417e-8410-1c3577983e1d" # Caroline's UUID
     user_pattern = "Caroline"
     user_lastname = "Chin"
     frames_prefix = "TAN0616/092/video/TAN0616_092/frames/"

@@ -1,8 +1,9 @@
 terraform {
   required_version = "= 1.5.6"
   backend "s3" {
-    encrypt = true
+    encrypt        = true
     region         = "ap-southeast-2"
+    # The bucket name and key will be provided via -backend-config parameters
   }
   required_providers {
     aws = {
