@@ -6,11 +6,69 @@ from datetime import datetime
 from tqdm import tqdm
 import mimetypes
 import subprocess
+
 # import magic
 # from botocore.exceptions import ClientError
 import sys
 import traceback
 from botocore.config import Config
+import argparse
+import yaml
+
+
+# initialize bucket name, lambda function name, s3 client, s3 config and aws region
+bucket_name = "dtis-ofop-851725470721-raw-testing"
+lambda_function_name = "dtis-ofop-testing"
+s3_client = None
+aws_region = "ap-southeast-2"
+s3_config = Config(
+    region_name=aws_region,
+    s3={
+        "max_concurrent_requests": 20,
+        "max_queue_size": 10000,
+        "multipart_threshold": 64 * 1024 * 1024,  # 64 MB in bytes
+        "multipart_chunksize": 16 * 1024 * 1024,  # 16 MB in bytes
+        "max_bandwidth": 200 * 1024 * 1024,  # 200 MB/s in bytes per second
+        "use_accelerate_endpoint": False,
+        "addressing_style": "virtual",
+    },
+)
+
+# Initialize log files
+success_file = "success.txt"
+error_file = "error.txt"
+sync_output_file = "sync_logs.txt"
+plan_file = "plan.txt"
+
+# Initialize log patterns
+patterns = {
+    "image": [
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$",  # e.g. TAN1802_160_DTIS__004.jpeg
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPG$",  # e.g. TAN1802_160_DTIS__004.jpg
+        r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPEG$",  # e.g. TAN1802_Stn_160_004.jpeg
+        r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPG$",  # e.g. TAN1802_Stn_160_004.jpg
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$",  # e.g. TAN1802_160_004.jpg
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$",  # e.g. TAN1802_160_004.jpeg
+    ],
+    "video": [],
+    # "video": [
+    #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001.m2t, TAN1802_001.m2ts, or TAN1802_001.mpg
+    #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_[0-9]{1}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001_1.m2t, TAN1802_001_2.m2ts, or TAN1802_001_1.mpg
+    #     r"^[0-9]{4,}\.(M2T[S]?|MPG)$", # e.g. 201012220153001.m2t, 201012220153001.m2ts, or 201012220153001.mpg (only digits)
+    # ],
+    "ofop": [
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\.TXT$",  # e.g. TAN1802_001_posi.txt
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\.TXT$",  # e.g. TAN1802_001_prot.txt
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\.TXT$",  # e.g. TAN1802_001_obser.txt
+    ],
+    "ofop_rerun": [
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_OBSER.*\.TXT$",  # e.g. TAN1802_001.sth_obser.txt
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_PROT.*\.TXT$",  # e.g. TAN1802_001.sth_prot.txt
+    ],
+}
+
+data_types_list = ["images", "videos", "ofop", "ofop_rerun"]
+
 
 def get_aws_credentials():
     # prompt for aws authentication
@@ -18,11 +76,13 @@ def get_aws_credentials():
     print("Or Set Up An AWS Profile With AWS Credentials?")
     auth_option = None
     while auth_option not in ["1", "2", "3"]:
-        auth_option = input("Please Enter Your Authentication Options (1, 2, or 3):\n"+
-                            "1 - by Environment Variables\n"+
-                            "2 - by AWS profile\n"+
-                            "3 - by Inputting AWS Credentials\n"+
-                            "Enter Your Option: ")
+        auth_option = input(
+            "Please Enter Your Authentication Options (1, 2, or 3):\n"
+            + "1 - by Environment Variables\n"
+            + "2 - by AWS profile\n"
+            + "3 - by Inputting AWS Credentials\n"
+            + "Enter Your Option: "
+        )
 
     if auth_option == "1":
         # attempt to get environment variables for aws access key and secret
@@ -30,10 +90,12 @@ def get_aws_credentials():
         aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
         aws_session_token = os.getenv("AWS_SESSION_TOKEN")
         if not aws_access_key_id or not aws_secret_access_key or not aws_session_token:
-            print("AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY or AWS_SESSION_TOKEN was not set. Please set a correct value")
+            print(
+                "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY or AWS_SESSION_TOKEN was not set. Please set a correct value"
+            )
             # sys.exit(1)
         return aws_access_key_id, aws_secret_access_key, aws_session_token
-    
+
     if auth_option == "2":
         # attempt to get aws credentials from aws profile
         aws_profile = input("Enter your AWS profile name: ")
@@ -52,10 +114,13 @@ def get_aws_credentials():
                 os.environ["AWS_SESSION_TOKEN"] = aws_session_token
             return aws_access_key_id, aws_secret_access_key, aws_session_token
         except Exception as e:
-            print(f"Failed to get AWS credentials from profile {aws_profile}", file=sys.stderr)
+            print(
+                f"Failed to get AWS credentials from profile {aws_profile}",
+                file=sys.stderr,
+            )
             print(e, file=sys.stderr)
             # sys.exit(1)
-    
+
     if auth_option == "3":
         # prompt for aws access key
         aws_access_key_id = input("Enter your AWS Access Key ID: ")
@@ -78,37 +143,99 @@ def get_aws_credentials():
         os.environ["AWS_SESSION_TOKEN"] = aws_session_token
         return aws_access_key_id, aws_secret_access_key, aws_session_token
 
-def get_data_upload_info():
-    # prompt for data upload inputs
-    cruise_id = None
-    while not cruise_id:
-        cruise_id = input("Enter cruise id: ")
-    cruise_id = cruise_id.upper()
-    # prompt for input directories
-    images_dir = None
-    videos_dir = None
-    ofop_dir = None
-    ofop_rerun_dir = None
-    while (not images_dir) and (not videos_dir) and (not ofop_dir):
-        images_dir = input("Enter image directory (press enter to skip): ")
-        videos_dir = input("Enter video directory (press enter to skip): ")
-        ofop_dir = input("Enter ofop directory (press enter to skip): ")
-        ofop_rerun_dir = input("Enter ofop rerun directory (press enter to skip): ")
-        # Check input directories
-        if (not images_dir) and (not videos_dir) and (not ofop_dir) and (not ofop_rerun_dir):
-            print("At least one of the directories must be set for image/video/ofop/rerun. Please set it explicitly")
-    # Setup environment configurations
-    environment = None
-    while environment not in ["dev", "test", "prod", "development", "testing", "production"]:
-        environment = input("Enter ENVIRONMENT (dev, test or prod): ")
-        environment = environment.lower()
-    # Set up Dry Run configuration
-    dry_run = None
-    while dry_run not in ["true", "false"]:
-        dry_run = input("Enter DRY_RUN (true or false), setting it to false will directly upload files to S3: ")
-        dry_run = dry_run.lower()
 
-    return cruise_id, images_dir, videos_dir, ofop_dir, ofop_rerun_dir, environment, dry_run
+def get_dirs(cruise_id, data_types):
+    dirs_dict = {i_data_type: None for i_data_type in data_types}
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))
+    yml_file_path = os.path.join(current_file_dir, "cruise_config.yml")
+    if not os.path.isfile(yml_file_path):
+        print("Warning: cruise_config.yml file not found in the current directory.")
+        for i_data_type in data_types:
+            dirs_dict[i_data_type] = get_dirs_from_interactive_input(i_data_type)
+        return dirs_dict
+    with open(yml_file_path, "r") as file:
+        config = yaml.safe_load(file)
+        # check if cruise_id exists in config
+        if cruise_id not in config["cruises"]:
+            print(
+                f"Warning: Cruise ID {cruise_id} not found in config file(cruise_config.yml)."
+            )
+            for i_data_type in data_types:
+                dirs_dict[i_data_type] = get_dirs_from_interactive_input(i_data_type)
+            return dirs_dict
+        else:
+            # get dirs from the config file
+            dirs = config["cruises"][cruise_id]
+            for i_data_type in data_types:
+                dirs_dict[i_data_type] = dirs.get(f"{i_data_type}_dir", None)
+                if dirs_dict[i_data_type] is not None:
+                    print(f"  {i_data_type}_dir: '{dirs_dict[i_data_type]}'")
+                else:
+                    dirs_dict[i_data_type] = get_dirs_from_interactive_input(
+                        i_data_type
+                    )
+    return dirs_dict
+
+
+def get_data_upload_info_from_args():
+    p = argparse.ArgumentParser(
+        description="""
+    Upload DTIS data to AWS S3 bucket.
+    Example usage:
+    python data_upload_prompt.py TAN0906
+    python data_upload_prompt.py TAN0906 --data_types images videos ofop --environment dev --dry_run
+    """,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    p.add_argument("cruise_id", type=str, help="Cruise ID")
+    p.add_argument(
+        "--data_types",
+        nargs="+",
+        choices=data_types_list,
+        default=data_types_list,
+        help="List of data types to upload",
+    )
+    p.add_argument(
+        "--environment",
+        type=str,
+        choices=["dev", "test", "prod", "development", "testing", "production"],
+        default="dev",
+        help="Environment type",
+    )
+    p.add_argument(
+        "--dry_run",
+        action="store_true",
+        help="Dry run",
+    )
+    args = p.parse_args()
+
+    args.cruise_id = args.cruise_id.upper()
+    print(f"Uploading Cruise ID: {args.cruise_id}")
+    source_dirs_dict = get_dirs(args.cruise_id, args.data_types)
+
+    for i_key, i_value in source_dirs_dict.items():
+        if i_value is not None:
+            break
+        print(
+            "At least one of the directories must be set for image/video/ofop/rerun. Please set it explicitly"
+        )
+        exit(1)
+    args.environment = args.environment.lower()
+    return (
+        args.cruise_id,
+        source_dirs_dict,
+        args.environment,
+        args.dry_run,
+    )
+
+
+def get_dirs_from_interactive_input(data_type):
+    input_str = input(f"Enter {data_type} directory (press enter to skip): ").strip()
+    if input_str == "":
+        return None
+    else:
+        return re.sub(r"[\"']", "", input_str)
+
 
 def get_data_upload_confirmation(cruise_id):
     # prompt for data upload confirmation
@@ -119,6 +246,7 @@ def get_data_upload_confirmation(cruise_id):
         confirmation = confirmation.lower()
     return confirmation
 
+
 def get_exit_confirmation():
     # prompt for exit confirmation
     confirmation = None
@@ -128,6 +256,7 @@ def get_exit_confirmation():
         confirmation = confirmation.lower()
     return confirmation
 
+
 def get_file_type(file_path):
     # file type check for windows OS
     # Initialize the magic object
@@ -136,6 +265,7 @@ def get_file_type(file_path):
     file_type, _ = mimetypes.guess_type(file_path)
     return file_type
 
+
 def get_station_id(file_path, cruise_id, error_file):
     # Normalize the file path to use the correct separator for the OS
     file_path_normalized = os.path.normpath(file_path).upper()
@@ -143,34 +273,42 @@ def get_station_id(file_path, cruise_id, error_file):
 
     # Check if the file path matches the cruise ID
     if cruise_id_normalized not in file_path_normalized:
-        error_message = f"Error: File: {file_path} does not come from the cruise of ID: {cruise_id}"
+        error_message = (
+            f"Error: File: {file_path} does not come from the cruise of ID: {cruise_id}"
+        )
         print(error_message)
-        with open(error_file, 'a') as ef:
-            ef.write(error_message + '\n')
+        with open(error_file, "a") as ef:
+            ef.write(error_message + "\n")
         return ""
-    
+
     # Method 1
     # e.g. Video/TAN0616/TAN0616_003/TAN0616_045.m2ts
     # this gives, e.g. /TAN0616_003/
-    match = re.search(rf"{re.escape(cruise_id_normalized)}_[0-9]{{3,}}", file_path_normalized)
+    match = re.search(
+        rf"{re.escape(cruise_id_normalized)}_[0-9]{{3,}}", file_path_normalized
+    )
     if match:
-        station_id = match.group(0).split('_')[1].strip()
+        station_id = match.group(0).split("_")[1].strip()
         return station_id
 
     # Method 2
     # e.g. images/dir with space/TAN1802_Stn_160_001.jpg
     # this gives, e.g. /TAN1802_Stn_160
-    match = re.search(rf"{re.escape(cruise_id_normalized)}_STN_[0-9]{{3,}}_", file_path_normalized)
+    match = re.search(
+        rf"{re.escape(cruise_id_normalized)}_STN_[0-9]{{3,}}_", file_path_normalized
+    )
     if match:
-        station_id = match.group(0).split('_')[2].strip()
+        station_id = match.group(0).split("_")[2].strip()
         return station_id
 
     # Method 3
     # e.g. images/dir with space/TAN1802_160_DTIS__004.jpeg
     # this gives, e.g. /TAN1802_160_
-    match = re.search(rf"{re.escape(cruise_id_normalized)}_[0-9]{{3,}}_", file_path_normalized)
+    match = re.search(
+        rf"{re.escape(cruise_id_normalized)}_[0-9]{{3,}}_", file_path_normalized
+    )
     if match:
-        station_id = match.group(0).split('_')[1].strip()
+        station_id = match.group(0).split("_")[1].strip()
         return station_id
 
     # # Method 4
@@ -182,7 +320,10 @@ def get_station_id(file_path, cruise_id, error_file):
     # Method 5
     # e.g. TAN2203/Stn003/1234.m2t
     # this gives, e.g. /TAN1802/STN003/
-    match = re.search(rf"{re.escape(cruise_id_normalized)}[\\/]STN[0-9]{{3,}}[\\/]", file_path_normalized)
+    match = re.search(
+        rf"{re.escape(cruise_id_normalized)}[\\/]STN[0-9]{{3,}}[\\/]",
+        file_path_normalized,
+    )
     if match:
         station_id = match.group(0).split(os.sep)[1].split("STN")[-1].strip()
         return station_id
@@ -205,9 +346,10 @@ def get_station_id(file_path, cruise_id, error_file):
 
     error_message = f"Error: Could not get station id for the file: {file_path} (file path matches no pattern, potential cruise ID mismatch)"
     print(error_message)
-    with open(error_file, 'a') as ef:
-        ef.write(error_message + '\n')
+    with open(error_file, "a") as ef:
+        ef.write(error_message + "\n")
     return ""
+
 
 # Function to verify image files
 def check_image_files(dir, error_file, image_patterns):
@@ -218,7 +360,7 @@ def check_image_files(dir, error_file, image_patterns):
         return []
 
     if not os.path.isdir(dir):
-        with open(error_file, 'a') as ef:
+        with open(error_file, "a") as ef:
             ef.write(f"Error: Images directory: {dir} does not exist.\n")
         print(f"Error: Images directory: {dir} does not exist.")
         # exit(1)
@@ -227,35 +369,48 @@ def check_image_files(dir, error_file, image_patterns):
     files_with_matching_extension = []
     for root, _, files in os.walk(dir):
         for file in files:
-            if file.lower().endswith(('.jpg', '.jpeg')):
+            if file.lower().endswith((".jpg", ".jpeg")):
                 files_with_matching_extension.append(os.path.join(root, file))
 
     image_files_to_copy = []
 
-    for file in tqdm(files_with_matching_extension, total=len(files_with_matching_extension)):
+    for file in tqdm(
+        files_with_matching_extension, total=len(files_with_matching_extension)
+    ):
         file_no_trailing_whitespace = file.rstrip()
 
         file_name = os.path.basename(file)
         file_path_upper_case = file_name.upper()
 
-        if not any(re.match(pattern, file_path_upper_case) for pattern in image_patterns):
-            with open(error_file, 'a') as ef:
-                ef.write(f"Error: File does not match image naming convention: {file_no_trailing_whitespace}\n")
-            print(f"Error: File does not match image naming convention: {file_no_trailing_whitespace}")
+        if not any(
+            re.match(pattern, file_path_upper_case) for pattern in image_patterns
+        ):
+            with open(error_file, "a") as ef:
+                ef.write(
+                    f"Error: File does not match image naming convention: {file_no_trailing_whitespace}\n"
+                )
+            print(
+                f"Error: File does not match image naming convention: {file_no_trailing_whitespace}"
+            )
             continue
 
-        # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace], 
+        # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace],
         #                            capture_output=True, text=True, shell=True).stdout.strip()
         file_type = get_file_type(file_no_trailing_whitespace)
         if file_type != "image/jpeg":
-            with open(error_file, 'a') as ef:
-                ef.write(f"Error: File is not a valid JPEG: {file_no_trailing_whitespace} (Detected type: {file_type})\n")
-            print(f"Error: File is not a valid JPEG: {file_no_trailing_whitespace} (Detected type: {file_type})")
+            with open(error_file, "a") as ef:
+                ef.write(
+                    f"Error: File is not a valid JPEG: {file_no_trailing_whitespace} (Detected type: {file_type})\n"
+                )
+            print(
+                f"Error: File is not a valid JPEG: {file_no_trailing_whitespace} (Detected type: {file_type})"
+            )
             continue
         else:
             image_files_to_copy.append(file_no_trailing_whitespace)
 
     return image_files_to_copy
+
 
 # Function to verify video files
 def check_video_files(dir, error_file, video_patterns, dry_run):
@@ -266,7 +421,7 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
         return []
 
     if not os.path.isdir(dir):
-        with open(error_file, 'a') as ef:
+        with open(error_file, "a") as ef:
             ef.write(f"Error: Videos directory: {dir} does not exist.\n")
         print(f"Error: Videos directory: {dir} does not exist.")
         # exit(1)
@@ -276,12 +431,14 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
     files_with_matching_extension = []
     for root, _, files in os.walk(dir):
         for file in files:
-            if file.lower().endswith(('.m2ts', '.m2t', '.avi', '.MTS', '.mpg', '.MPG')):
+            if file.lower().endswith((".m2ts", ".m2t", ".avi", ".MTS", ".mpg", ".MPG")):
                 files_with_matching_extension.append(os.path.join(root, file))
 
     video_files_to_copy = []
 
-    for file in tqdm(files_with_matching_extension, total=len(files_with_matching_extension)):
+    for file in tqdm(
+        files_with_matching_extension, total=len(files_with_matching_extension)
+    ):
         file_no_trailing_whitespace = file.rstrip()
 
         # file_name = os.path.basename(file)
@@ -292,7 +449,7 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
         #         ef.write(f"Error: File does not match video naming convention: {file_no_trailing_whitespace}\n")
         #     print(f"Error: File does not match video naming convention: {file_no_trailing_whitespace}")
         #     continue
-        
+
         # remove video file name and type verification for now
         video_files_to_copy.append(file_no_trailing_whitespace)
 
@@ -301,7 +458,7 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
         #     video_files_to_copy.append(file_no_trailing_whitespace)
         #     continue
 
-        # # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace], 
+        # # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace],
         # #                            capture_output=True, text=True, shell=True).stdout.strip()
         # file_type = get_file_type(file_no_trailing_whitespace)
         # if file_type not in ["video/MP2T", "application/octet-stream"]:
@@ -314,6 +471,7 @@ def check_video_files(dir, error_file, video_patterns, dry_run):
 
     return video_files_to_copy
 
+
 # Function to verify text files
 def check_ofop_files(dir, error_file, ofop_patterns):
     print(f"Checking {dir} for text files...")
@@ -325,81 +483,117 @@ def check_ofop_files(dir, error_file, ofop_patterns):
     files_with_matching_extension = []
     for root, _, files in os.walk(dir):
         for file in files:
-            if file.lower().endswith(('.txt')):
+            if file.lower().endswith((".txt")):
                 files_with_matching_extension.append(os.path.join(root, file))
 
     text_files_to_copy = []
 
-    for file in tqdm(files_with_matching_extension, total=len(files_with_matching_extension)):
+    for file in tqdm(
+        files_with_matching_extension, total=len(files_with_matching_extension)
+    ):
         file_no_trailing_whitespace = file.rstrip()
 
         file_name = os.path.basename(file)
         file_path_upper_case = file_name.upper()
         print(file_no_trailing_whitespace)
 
-        # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace], 
+        # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace],
         #                            capture_output=True, text=True, shell=True).stdout.strip()
         file_type = get_file_type(file_no_trailing_whitespace)
         if file_type != "text/plain":
-            with open(error_file, 'a') as ef:
-                ef.write(f"Error: File is not a valid text file: {file_no_trailing_whitespace} (Detected type: {file_type})\n")
-            print(f"Error: File is not a valid text file: {file_no_trailing_whitespace} (Detected type: {file_type})")
+            with open(error_file, "a") as ef:
+                ef.write(
+                    f"Error: File is not a valid text file: {file_no_trailing_whitespace} (Detected type: {file_type})\n"
+                )
+            print(
+                f"Error: File is not a valid text file: {file_no_trailing_whitespace} (Detected type: {file_type})"
+            )
             continue
 
         if any(re.match(pattern, file_path_upper_case) for pattern in ofop_patterns):
             text_files_to_copy.append(file_no_trailing_whitespace)
         else:
-            with open(error_file, 'a') as ef:
+            with open(error_file, "a") as ef:
                 ef.write(f"Error: File does not match any pattern: {file_name}\n")
             print(f"Error: File does not match any pattern: {file_name}")
             continue
 
     return text_files_to_copy
 
+
 def enable_lambda(lambda_client, lambda_function_name, success_file, error_file):
-    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Enabling Lambda event source mapping for the function: {lambda_function_name}...")
+    print(
+        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Enabling Lambda event source mapping for the function: {lambda_function_name}..."
+    )
 
     # # Initialize boto3 client
     # lambda_client = boto3.client('lambda')
 
     # Get event source mapping information
-    event_source_mapping_info = lambda_client.list_event_source_mappings(FunctionName=lambda_function_name)
+    event_source_mapping_info = lambda_client.list_event_source_mappings(
+        FunctionName=lambda_function_name
+    )
 
     # Check if the event source mapping is already enabled
-    if any(mapping['State'] == 'Enabled' for mapping in event_source_mapping_info['EventSourceMappings']):
-        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping was already enabled. Nothing to do")
-        with open(success_file, 'a') as sf:
-            sf.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping was already enabled. Nothing to do\n")
+    if any(
+        mapping["State"] == "Enabled"
+        for mapping in event_source_mapping_info["EventSourceMappings"]
+    ):
+        print(
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping was already enabled. Nothing to do"
+        )
+        with open(success_file, "a") as sf:
+            sf.write(
+                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping was already enabled. Nothing to do\n"
+            )
     else:
         # Extract UUID
-        uuid = next(mapping['UUID'] for mapping in event_source_mapping_info['EventSourceMappings'] if 'UUID' in mapping)
+        uuid = next(
+            mapping["UUID"]
+            for mapping in event_source_mapping_info["EventSourceMappings"]
+            if "UUID" in mapping
+        )
 
         # Update event source mapping to enable it
         try:
             lambda_client.update_event_source_mapping(UUID=uuid, Enabled=True)
-            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping enabled successfully")
-            with open(success_file, 'a') as sf:
-                sf.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping enabled successfully\n")
+            print(
+                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping enabled successfully"
+            )
+            with open(success_file, "a") as sf:
+                sf.write(
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping enabled successfully\n"
+                )
         except Exception as e:
-            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Failed to enable Lambda event source mapping: {str(e)}")
-            with open(error_file, 'a') as ef:
-                ef.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Failed to enable Lambda event source mapping: {str(e)}\n")
+            print(
+                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Failed to enable Lambda event source mapping: {str(e)}"
+            )
+            with open(error_file, "a") as ef:
+                ef.write(
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Failed to enable Lambda event source mapping: {str(e)}\n"
+                )
 
-def write_validated_file_paths(file_type, files_list, cruise_id, plan_file, success_file, error_file):
+
+def write_validated_file_paths(
+    file_type, files_list, cruise_id, plan_file, success_file, error_file
+):
     passed_file_count = 0
-    with open(plan_file, "a") as plan_f, open(success_file, 'a') as sf:
+    with open(plan_file, "a") as plan_f, open(success_file, "a") as sf:
         plan_f.write(f"The following {file_type} files passed local verification:\n")
         plan_f.write("FILE_PATH;STATION_ID\n")
         for file in files_list:
-            station_id = get_station_id(file, cruise_id, error_file)  # Replace with actual implementation
+            station_id = get_station_id(
+                file, cruise_id, error_file
+            )  # Replace with actual implementation
             if station_id:
-                passed_file_count+=1
+                passed_file_count += 1
                 # with open(success_file, 'a') as sf:
                 sf.write(f"Station ID for the file: {file} is: {station_id}\n")
                 plan_f.write(f"{file};{station_id}\n")
         plan_f.write(f"End of {file_type} files that passed local verification\n\n")
     print(f"{passed_file_count} {file_type} files passed location verification")
     return passed_file_count
+
 
 def verify_s3_bucket(s3_client, bucket_name):
     try:
@@ -410,25 +604,26 @@ def verify_s3_bucket(s3_client, bucket_name):
         print(f"Error verifying S3 bucket {bucket_name}: {e}")
         raise
 
+
 def upload_to_s3(
-        plan_file_to_read_from, 
-        environment, 
-        dry_run, 
-        cruise_id, 
-        s3_client,
-        bucket_name,
-        aws_region,
-        sync_output_file,
-        success_file,
-        error_file
-        ):
+    plan_file_to_read_from,
+    environment,
+    dry_run,
+    cruise_id,
+    s3_client,
+    bucket_name,
+    aws_region,
+    sync_output_file,
+    success_file,
+    error_file,
+):
     # Check if the plan file exists
     if not os.path.isfile(plan_file_to_read_from):
         print(f"Error: Plan file does not exist: {plan_file_to_read_from}")
         # sys.exit(1)
     if dry_run == "false":
-        dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        with open(sync_output_file, 'a') as syf:
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(sync_output_file, "a") as syf:
             syf.write(f"Environment Name: {environment}\n")
             syf.write(f"S3 Bucket Name: {bucket_name}\n")
             syf.write(f"Region: {aws_region}\n")
@@ -436,7 +631,7 @@ def upload_to_s3(
             syf.write(f"Upload started: {dt}\n")
 
     # Read the plan file into a list
-    with open(plan_file_to_read_from, 'r') as file:
+    with open(plan_file_to_read_from, "r") as file:
         plan_file_as_array = file.readlines()
 
     # Initialize variables
@@ -457,132 +652,94 @@ def upload_to_s3(
             # Ignore the lines with comments
             continue
 
-        file_path, station_id = plan_file_line.split(';')
+        file_path, station_id = plan_file_line.split(";")
         file_basename = os.path.basename(file_path.strip())
         # print(f"try uploading file: {file_basename}")
         s3_destination = f"s3://{bucket_name}/{cruise_id}/{station_id.strip()}/{file_type}/{file_basename}"
 
         # Run the upload command and capture the output
         if dry_run == "true":
-            upload_log = f"Pretending to be uploading {file_path.strip()} to {s3_destination}"
-            with open(success_file, 'a') as sf:
+            upload_log = (
+                f"Pretending to be uploading {file_path.strip()} to {s3_destination}"
+            )
+            with open(success_file, "a") as sf:
                 sf.write(upload_log + "\n")
         else:
             upload_log = f"Really uploading {file_path.strip()} to {s3_destination}"
-            with open(success_file, 'a') as sf:
+            with open(success_file, "a") as sf:
                 sf.write(upload_log + "\n")
             try:
                 # try list the object
-                res = s3_client.head_object(Bucket=bucket_name, Key=f"{cruise_id}/{station_id.strip()}/{file_type}/{file_basename}")
+                res = s3_client.head_object(
+                    Bucket=bucket_name,
+                    Key=f"{cruise_id}/{station_id.strip()}/{file_type}/{file_basename}",
+                )
             except Exception as e:
                 res = None
-                sync_output = f"{file_path.strip()} not found from S3 {s3_destination}: {e}"
+                sync_output = (
+                    f"{file_path.strip()} not found from S3 {s3_destination}: {e}"
+                )
                 sync_output_exit_status = 1
 
             if res is None:
                 try:
                     # try upload the file
                     sync_output = s3_client.upload_file(
-                        file_path.strip(), 
-                        bucket_name, 
+                        file_path.strip(),
+                        bucket_name,
                         f"{cruise_id}/{station_id.strip()}/{file_type}/{file_basename}",
-                        ExtraArgs={'StorageClass': 'STANDARD_IA'}
-                        )
+                        ExtraArgs={"StorageClass": "STANDARD_IA"},
+                    )
                     if sync_output is None:
-                        sync_output_exit_status = 0 
+                        sync_output_exit_status = 0
                         sync_output = f"Success uploading to S3: {file_path.strip()}"
-                    else: 
+                    else:
                         sync_output_exit_status = 1
                 except Exception as e:
-                    sync_output = f"Error uploading {file_path.strip()} to {s3_destination}: {e}"
+                    sync_output = (
+                        f"Error uploading {file_path.strip()} to {s3_destination}: {e}"
+                    )
                     sync_output_exit_status = 1
             else:
                 sync_output = f"{file_path.strip()} exists already in S3 {s3_destination}, not uploading"
                 sync_output_exit_status = 0
-            
-            with open(sync_output_file, 'a') as syf:
+
+            with open(sync_output_file, "a") as syf:
                 syf.write(sync_output + "\n")
 
             if sync_output_exit_status == 0:
                 # Upload successful, write the output to the success file
-                with open(success_file, 'a') as sf:
+                with open(success_file, "a") as sf:
                     sf.write(sync_output + "\n")
             else:
                 # Upload failed, write the output to the error file
-                with open(error_file, 'a') as ef:
+                with open(error_file, "a") as ef:
                     ef.write(f"Error uploading to S3: {file_path.strip()}\n")
-    
+
     if dry_run == "false":
-        dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        with open(sync_output_file, 'a') as syf:
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(sync_output_file, "a") as syf:
             syf.write("----------------------------\n")
             syf.write(f"Upload ended: {dt}\n")
 
 
 if __name__ == "__main__":
 
-    try: 
-        # initialize bucket name, lambda function name, s3 client, s3 config and aws region
-        bucket_name = "dtis-ofop-851725470721-raw-testing"
-        lambda_function_name = "dtis-ofop-testing"
-        s3_client = None
-        aws_region = "ap-southeast-2"
-        s3_config = Config(
-            region_name=aws_region,
-            s3={
-                "max_concurrent_requests": 20,
-                "max_queue_size": 10000,
-                "multipart_threshold": 64 * 1024 * 1024,   # 64 MB in bytes
-                "multipart_chunksize": 16 * 1024 * 1024,     # 16 MB in bytes
-                "max_bandwidth": 200 * 1024 * 1024,          # 200 MB/s in bytes per second
-                "use_accelerate_endpoint": False,
-                "addressing_style": "virtual"
-            }
-        )
-
-        # Initialize log files
-        success_file = "success.txt"
-        error_file = "error.txt"
-        sync_output_file = "sync_logs.txt"
-        plan_file = "plan.txt"
-
-        # Initialize log patterns
-        patterns = {
-            "image": [
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$", # e.g. TAN1802_160_DTIS__004.jpeg
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPG$", # e.g. TAN1802_160_DTIS__004.jpg
-                r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPEG$", # e.g. TAN1802_Stn_160_004.jpeg
-                r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPG$", # e.g. TAN1802_Stn_160_004.jpg
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$", # e.g. TAN1802_160_004.jpg
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$", # e.g. TAN1802_160_004.jpeg
-            ],
-
-            "video": [],
-
-            # "video": [
-            #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001.m2t, TAN1802_001.m2ts, or TAN1802_001.mpg
-            #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_[0-9]{1}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001_1.m2t, TAN1802_001_2.m2ts, or TAN1802_001_1.mpg
-            #     r"^[0-9]{4,}\.(M2T[S]?|MPG)$", # e.g. 201012220153001.m2t, 201012220153001.m2ts, or 201012220153001.mpg (only digits)
-            # ],
-
-            "ofop": [
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\.TXT$", # e.g. TAN1802_001_posi.txt
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\.TXT$", # e.g. TAN1802_001_prot.txt
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\.TXT$", # e.g. TAN1802_001_obser.txt
-            ],
-            
-            "ofop_rerun": [
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_OBSER.*\.TXT$", # e.g. TAN1802_001.sth_obser.txt
-                r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_PROT.*\.TXT$", # e.g. TAN1802_001.sth_prot.txt
-            ],
-        }
+    try:
 
         # get upload info
-        cruise_id, images_dir, videos_dir, ofop_dir, ofop_rerun_dir, environment, dry_run = get_data_upload_info()
+        (
+            cruise_id,
+            source_dirs_dict,
+            environment,
+            dry_run,
+        ) = get_data_upload_info_from_args()
 
-        if dry_run == "false":
+        if dry_run == "False":
             # get aws access key and secret key
-            aws_access_key_id, aws_secret_access_key, aws_session_token = get_aws_credentials()
+            aws_access_key_id, aws_secret_access_key, aws_session_token = (
+                get_aws_credentials()
+            )
 
             # Initialize AWS Clients
             if aws_session_token:
@@ -590,32 +747,34 @@ if __name__ == "__main__":
                     aws_access_key_id=aws_access_key_id,
                     aws_secret_access_key=aws_secret_access_key,
                     aws_session_token=aws_session_token,
-                    region_name=aws_region
+                    region_name=aws_region,
                 )
             else:
                 session = boto3.Session(
                     aws_access_key_id=aws_access_key_id,
                     aws_secret_access_key=aws_secret_access_key,
-                    region_name=aws_region
+                    region_name=aws_region,
                 )
-            sts_client = session.client('sts')
-            lambda_client = session.client('lambda')
-            s3_client = session.client('s3', config=s3_config)
-            print("Successfully Authenticated IAM User: ", sts_client.get_caller_identity())
-        
+            sts_client = session.client("sts")
+            lambda_client = session.client("lambda")
+            s3_client = session.client("s3", config=s3_config)
+            print(
+                "Successfully Authenticated IAM User: ",
+                sts_client.get_caller_identity(),
+            )
+
             # set bucket_name and lambda_function_name according to environment
             bucket_name = f"dtis-ofop-{sts_client.get_caller_identity()['Account']}-raw-{environment}"
             lambda_function_name = f"dtis-ofop-{environment}"
 
             # verify bucket exists and have permission
-            verify_s3_bucket(
-                s3_client=s3_client,
-                bucket_name=bucket_name
-                )
+            verify_s3_bucket(s3_client=s3_client, bucket_name=bucket_name)
 
         # Start the program here:
-        dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        with open(success_file, "w") as sf, open(error_file, "w") as ef, open(sync_output_file, "w") as syf, open(plan_file, "w") as pf:
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(success_file, "w") as sf, open(error_file, "w") as ef, open(
+            sync_output_file, "w"
+        ) as syf, open(plan_file, "w") as pf:
             sf.write(f"File Upload Success Report - {dt}\n")
             sf.write("----------------------------\n")
             ef.write(f"File Upload Error Report - {dt}\n")
@@ -630,89 +789,92 @@ if __name__ == "__main__":
         video_files_to_copy = []  # Populate with validated video files
         text_files_to_copy = []  # Populate with validated text files
         image_files_to_copy = check_image_files(
-            dir=images_dir, 
-            error_file=error_file, 
-            image_patterns=patterns["image"]
-            )
+            dir=images_dir, error_file=error_file, image_patterns=patterns["image"]
+        )
         video_files_to_copy = check_video_files(
-            dir=videos_dir, 
-            error_file=error_file, 
+            dir=videos_dir,
+            error_file=error_file,
             video_patterns=patterns["video"],
-            dry_run=dry_run
-            )
+            dry_run=dry_run,
+        )
         ofop_files_to_copy = check_ofop_files(
-            dir=ofop_dir, 
-            error_file=error_file, 
-            ofop_patterns=patterns["ofop"]
-            )
+            dir=ofop_dir, error_file=error_file, ofop_patterns=patterns["ofop"]
+        )
         rerun_files_to_copy = check_ofop_files(
-            dir=ofop_rerun_dir, 
-            error_file=error_file, 
-            ofop_patterns=patterns["ofop_rerun"]
-            )
+            dir=ofop_rerun_dir,
+            error_file=error_file,
+            ofop_patterns=patterns["ofop_rerun"],
+        )
         text_files_to_copy = ofop_files_to_copy + rerun_files_to_copy
         # write ofop files first, video upload will trigger lambda function
         # which processes video files and will need ofop obser data for annotation
         passed_text_file_count = write_validated_file_paths(
-            file_type="text", 
-            files_list=text_files_to_copy, 
-            cruise_id=cruise_id, 
-            plan_file=plan_file, 
+            file_type="text",
+            files_list=text_files_to_copy,
+            cruise_id=cruise_id,
+            plan_file=plan_file,
             success_file=success_file,
-            error_file=error_file
-            )
+            error_file=error_file,
+        )
         passed_video_file_count = write_validated_file_paths(
-            file_type="video", 
-            files_list=video_files_to_copy, 
-            cruise_id=cruise_id, 
-            plan_file=plan_file, 
+            file_type="video",
+            files_list=video_files_to_copy,
+            cruise_id=cruise_id,
+            plan_file=plan_file,
             success_file=success_file,
-            error_file=error_file
-            )
+            error_file=error_file,
+        )
         passed_image_file_count = write_validated_file_paths(
-            file_type="image", 
-            files_list=image_files_to_copy, 
-            cruise_id=cruise_id, 
-            plan_file=plan_file, 
+            file_type="image",
+            files_list=image_files_to_copy,
+            cruise_id=cruise_id,
+            plan_file=plan_file,
             success_file=success_file,
-            error_file=error_file
-            )
+            error_file=error_file,
+        )
 
+        total_passed_file_counts = (
+            passed_image_file_count + passed_video_file_count + passed_text_file_count
+        )
+        print(
+            f"{total_passed_file_counts} files in total passed location verification for S3 upload"
+        )
+        print(
+            f"Please check plan.txt file contents for the files ready to be uploaded to S3..."
+        )
 
-        total_passed_file_counts = passed_image_file_count+passed_video_file_count+passed_text_file_count
-        print(f"{total_passed_file_counts} files in total passed location verification for S3 upload")
-        print(f"Please check plan.txt file contents for the files ready to be uploaded to S3...")
-        
         # Upload to s3 directly if dry_run is set to be false
         if dry_run == "false":
-        
+
             # Upload to S3
             upload_to_s3(
-                plan_file_to_read_from=plan_file, 
-                environment=environment, 
-                dry_run=dry_run, 
-                cruise_id=cruise_id, 
+                plan_file_to_read_from=plan_file,
+                environment=environment,
+                dry_run=dry_run,
+                cruise_id=cruise_id,
                 s3_client=s3_client,
                 bucket_name=bucket_name,
                 aws_region=aws_region,
                 sync_output_file=sync_output_file,
                 success_file=success_file,
-                error_file=error_file
+                error_file=error_file,
             )
 
             # Enable Lambda
             enable_lambda(
-                lambda_client=lambda_client, 
-                lambda_function_name=lambda_function_name, 
-                success_file=success_file, 
-                error_file=error_file
+                lambda_client=lambda_client,
+                lambda_function_name=lambda_function_name,
+                success_file=success_file,
+                error_file=error_file,
             )
         else:
             # prompt for data upload after dry run
             confirmation = get_data_upload_confirmation(cruise_id)
             if confirmation == "yes":
                 # get aws access key and secret key
-                aws_access_key_id, aws_secret_access_key, aws_session_token = get_aws_credentials()
+                aws_access_key_id, aws_secret_access_key, aws_session_token = (
+                    get_aws_credentials()
+                )
 
                 # Initialize AWS Clients
                 if aws_session_token:
@@ -720,47 +882,47 @@ if __name__ == "__main__":
                         aws_access_key_id=aws_access_key_id,
                         aws_secret_access_key=aws_secret_access_key,
                         aws_session_token=aws_session_token,
-                        region_name=aws_region
+                        region_name=aws_region,
                     )
                 else:
                     session = boto3.Session(
                         aws_access_key_id=aws_access_key_id,
                         aws_secret_access_key=aws_secret_access_key,
-                        region_name=aws_region
+                        region_name=aws_region,
                     )
-                sts_client = session.client('sts')
-                lambda_client = session.client('lambda')
-                s3_client = session.client('s3', config=s3_config)
-                print("Successfully Authenticated IAM User: ", sts_client.get_caller_identity())
-            
+                sts_client = session.client("sts")
+                lambda_client = session.client("lambda")
+                s3_client = session.client("s3", config=s3_config)
+                print(
+                    "Successfully Authenticated IAM User: ",
+                    sts_client.get_caller_identity(),
+                )
+
                 # set bucket_name and lambda_function_name according to environment
                 bucket_name = f"dtis-ofop-{sts_client.get_caller_identity()['Account']}-raw-{environment}"
                 lambda_function_name = f"dtis-ofop-{environment}"
-                
+
                 # Verify S3 bucket
-                verify_s3_bucket(
-                    s3_client=s3_client,
-                    bucket_name=bucket_name
-                    )
+                verify_s3_bucket(s3_client=s3_client, bucket_name=bucket_name)
                 # Upload to S3
                 upload_to_s3(
-                    plan_file_to_read_from=plan_file, 
-                    environment=environment, 
-                    dry_run="false", 
-                    cruise_id=cruise_id, 
+                    plan_file_to_read_from=plan_file,
+                    environment=environment,
+                    dry_run="false",
+                    cruise_id=cruise_id,
                     s3_client=s3_client,
                     bucket_name=bucket_name,
                     aws_region=aws_region,
                     sync_output_file=sync_output_file,
                     success_file=success_file,
-                    error_file=error_file
+                    error_file=error_file,
                 )
                 # Enable Lambda
                 enable_lambda(
-                    lambda_client=lambda_client, 
-                    lambda_function_name=lambda_function_name, 
-                    success_file=success_file, 
-                    error_file=error_file
+                    lambda_client=lambda_client,
+                    lambda_function_name=lambda_function_name,
+                    success_file=success_file,
+                    error_file=error_file,
                 )
             else:
                 print("Dry run completed, exiting...")
@@ -772,13 +934,12 @@ if __name__ == "__main__":
         # else:
         #     print("Sorry, please try again by setting DRY_RUN to true first...")
         #     sys.exit("Exiting the program now...")
-    
+
     except Exception as e:
         # print full traceback in debug mode
         print("An error occurred:")
         traceback.print_exc()
-    
+
     finally:
         # keep the console open
         input("Press Enter to exit...")
-
