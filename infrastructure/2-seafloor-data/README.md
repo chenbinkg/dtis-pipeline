@@ -11,17 +11,8 @@ This setup uses Terraform remote state, so it requires that code from the [1-ter
 ```bash
 export ENVIRONMENT=dev
 ```
-3. Upload the MongoDB connection string to AWS Systems Manager using CLI as shown below
-```bash
-aws ssm put-parameter \
-    --name "/dtis/mongodb/uri" \
-    --value "mongodb+srv://username:password@cluster.example.mongodb.net" \
-    --type "SecureString" \
-    --description "MongoDB connection string" \
-    --region ap-southeast-2
 
-```
-4. Download the lambda python dependencies, and package them with the lambda function code into a zip file, so that it is available for Terraform:
+3. Download the lambda python dependencies, and package them with the lambda function code into a zip file, so that it is available for Terraform:
 ```bash
 ./tasks lambda_package
 cp lambda/lambda_functions/ingress/lambda_function.zip infrastructure/2-seafloor-data/
@@ -56,7 +47,7 @@ zip -r lambda_media_convert.zip lambda_function_media_convert.py
 mv "${processing_dir}/lambda_media_convert.zip" "$(dirname "${processing_dir}")/infrastructure/2-seafloor-data/"
 ```
 
-5. Run the following:
+4. Run the following:
 
 ```bash
 cd infrastructure/2-seafloor-data

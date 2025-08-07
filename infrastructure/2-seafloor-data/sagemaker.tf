@@ -86,6 +86,7 @@ resource "aws_iam_policy" "sagemaker_pipeline_policy" {
         Action = [
           "secretsmanager:GetSecretValue",
           "ssm:GetParameter",
+          "ssm:PutParameter",
           "ssm:GetParameters",
           "ssm:GetParameterHistory"
         ],
