@@ -1,0 +1,34 @@
+file_suffix:
+  images: ['.jpg', '.jpeg']
+  videos: ['.m2ts', '.m2t', '.avi', '.mts', '.mpg']
+  ofop: ['.text']
+  ofop_rerun: ['.text']
+
+patterns: 
+  images: 
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\\.JPEG$"  # e.g. TAN1802_160_DTIS__004.jpeg
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\\.JPG$"  # e.g. TAN1802_160_DTIS__004.jpg
+    - "[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\\.JPEG$"  # e.g. TAN1802_Stn_160_004.jpeg
+    - "[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\\.JPG$"  # e.g. TAN1802_Stn_160_004.jpg
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\\.JPEG$"  # e.g. TAN1802_160_004.jpeg
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\\.JPG$"  # e.g. TAN1802_160_004.jpg
+  videos:
+  ofop: 
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\\.TXT$"  # e.g. TAN1802_001_posi.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\\.TXT$"  # e.g. TAN1802_001_prot.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\\.TXT$"  # e.g. TAN1802_001_obser.txt
+  ofop_rerun:
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}.*_OBSER.*\\.TXT$"  # e.g. TAN1802_001.sth_obser.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}.*_PROT.*\\.TXT$"  # e.g. TAN1802_001.sth_prot.txt
+
+cruises:
+  TAN0906:
+    images_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/TAN0906/Tan0906_DTIS images"
+    videos_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0906_BOI/TAN0906_DTIS-video"
+    ofop_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/TAN0906/TAN0906 OFOP"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/tan0906_BOI/tan0906_OFOP_reruns"
+  TAN0802:
+    images_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/tan0802/DTIS-Images"
+    videos_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0802_IPY/tan0802_video"
+    ofop_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0802_IPY/tan0802_OFOP"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/tan0802_IPY/tan0802_OFOP_reruns/benthic_TAN0802_OFOP_prot"

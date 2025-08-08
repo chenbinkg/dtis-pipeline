@@ -1,19 +1,20 @@
 import os
 import re
 import sys
+import traceback
+import argparse
+import yaml
+import mimetypes
+import logging
+import logging.config
+from pathlib import Path
 import boto3
+from botocore.config import Config
 from datetime import datetime
 from tqdm import tqdm
-import mimetypes
-import subprocess
 
 # import magic
 # from botocore.exceptions import ClientError
-import sys
-import traceback
-from botocore.config import Config
-import argparse
-import yaml
 
 
 # initialize bucket name, lambda function name, s3 client, s3 config and aws region
@@ -42,15 +43,15 @@ plan_file = "plan.txt"
 
 # Initialize log patterns
 patterns = {
-    "image": [
+    "images": [
         r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$",  # e.g. TAN1802_160_DTIS__004.jpeg
         r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPG$",  # e.g. TAN1802_160_DTIS__004.jpg
         r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPEG$",  # e.g. TAN1802_Stn_160_004.jpeg
         r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPG$",  # e.g. TAN1802_Stn_160_004.jpg
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$",  # e.g. TAN1802_160_004.jpg
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$",  # e.g. TAN1802_160_004.jpeg
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$",  # e.g. TAN1802_160_004.jpeg
+        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$",  # e.g. TAN1802_160_004.jpg
     ],
-    "video": [],
+    "videos": [],
     # "video": [
     #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001.m2t, TAN1802_001.m2ts, or TAN1802_001.mpg
     #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_[0-9]{1}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001_1.m2t, TAN1802_001_2.m2ts, or TAN1802_001_1.mpg
@@ -144,40 +145,39 @@ def get_aws_credentials():
         return aws_access_key_id, aws_secret_access_key, aws_session_token
 
 
-def get_dirs(cruise_id, data_types):
+def get_dirs(cruise_id, data_types, config_cruises):
     dirs_dict = {i_data_type: None for i_data_type in data_types}
-    current_file_dir = os.path.dirname(os.path.abspath(__file__))
-    yml_file_path = os.path.join(current_file_dir, "cruise_config.yml")
-    if not os.path.isfile(yml_file_path):
-        print("Warning: cruise_config.yml file not found in the current directory.")
+    if config_cruises is None:
+        logging.warning(
+            "config.yml file not found in the current directory, or no cruises information found in the file."
+        )
         for i_data_type in data_types:
             dirs_dict[i_data_type] = get_dirs_from_interactive_input(i_data_type)
         return dirs_dict
-    with open(yml_file_path, "r") as file:
-        config = yaml.safe_load(file)
-        # check if cruise_id exists in config
-        if cruise_id not in config["cruises"]:
-            print(
-                f"Warning: Cruise ID {cruise_id} not found in config file(cruise_config.yml)."
-            )
-            for i_data_type in data_types:
-                dirs_dict[i_data_type] = get_dirs_from_interactive_input(i_data_type)
-            return dirs_dict
-        else:
-            # get dirs from the config file
-            dirs = config["cruises"][cruise_id]
-            for i_data_type in data_types:
-                dirs_dict[i_data_type] = dirs.get(f"{i_data_type}_dir", None)
-                if dirs_dict[i_data_type] is not None:
-                    print(f"  {i_data_type}_dir: '{dirs_dict[i_data_type]}'")
-                else:
-                    dirs_dict[i_data_type] = get_dirs_from_interactive_input(
-                        i_data_type
-                    )
+
+    # check if cruise_id exists in config
+    if cruise_id not in config_cruises:
+        logging.warning(
+            f"Cruise ID {cruise_id} not found in config file(config.yml)."
+        )
+        for i_data_type in data_types:
+            dirs_dict[i_data_type] = get_dirs_from_interactive_input(i_data_type)
+        return dirs_dict
+    else:
+        # get dirs from the config file
+        dirs = config_cruises[cruise_id]
+        for i_data_type in data_types:
+            dirs_dict[i_data_type] = dirs.get(f"{i_data_type}_dir", None)
+            if dirs_dict[i_data_type] is not None:
+                logging.info(f"  {i_data_type}_dir: '{dirs_dict[i_data_type]}'")
+            else:
+                dirs_dict[i_data_type] = get_dirs_from_interactive_input(
+                    i_data_type
+                )
     return dirs_dict
 
 
-def get_data_upload_info_from_args():
+def get_data_upload_info_from_args(config_cruises):
     p = argparse.ArgumentParser(
         description="""
     Upload DTIS data to AWS S3 bucket.
@@ -210,13 +210,13 @@ def get_data_upload_info_from_args():
     args = p.parse_args()
 
     args.cruise_id = args.cruise_id.upper()
-    print(f"Uploading Cruise ID: {args.cruise_id}")
-    source_dirs_dict = get_dirs(args.cruise_id, args.data_types)
+    logging.info(f"Uploading Cruise ID: {args.cruise_id}")
+    source_dirs_dict = get_dirs(args.cruise_id, args.data_types, config_cruises)
 
     for i_key, i_value in source_dirs_dict.items():
         if i_value is not None:
             break
-        print(
+        logging.error(
             "At least one of the directories must be set for image/video/ofop/rerun. Please set it explicitly"
         )
         exit(1)
@@ -259,11 +259,7 @@ def get_exit_confirmation():
 
 def get_file_type(file_path):
     # file type check for windows OS
-    # Initialize the magic object
-    # mine = magic.Magic()
-    # file_type = mine.from_file(file_path)
-    file_type, _ = mimetypes.guess_type(file_path)
-    return file_type
+    return mimetypes.guess_type(file_path)[0]
 
 
 def get_station_id(file_path, cruise_id, error_file):
@@ -351,174 +347,43 @@ def get_station_id(file_path, cruise_id, error_file):
     return ""
 
 
-# Function to verify image files
-def check_image_files(dir, error_file, image_patterns):
-    print(f"Checking {dir} for image files...")
+# Function to verify files
+def check_files(data_type, dir, image_patterns, file_suffix_list):
+    logging.info(f"Checking '{dir}' for {data_type} ...")
 
-    if not dir or dir == "ignore":
-        print("Images directory was set to 'ignore', cancelling the check")
+    if not dir.exists():
+        logging.error(f"{data_type} directory: {dir} does not exist.")
         return []
-
-    if not os.path.isdir(dir):
-        with open(error_file, "a") as ef:
-            ef.write(f"Error: Images directory: {dir} does not exist.\n")
-        print(f"Error: Images directory: {dir} does not exist.")
-        # exit(1)
 
     # Find all the files in the images directory with the selected file extensions
-    files_with_matching_extension = []
-    for root, _, files in os.walk(dir):
-        for file in files:
-            if file.lower().endswith((".jpg", ".jpeg")):
-                files_with_matching_extension.append(os.path.join(root, file))
+    filenames = [f for f in dir.rglob("*") if f.suffix.lower() in file_suffix_list]
 
-    image_files_to_copy = []
+    if data_type == "videos":
+        # For videos, we don't need to check the filename patterns
+        return filenames
 
+    files_to_copy = []
     for file in tqdm(
-        files_with_matching_extension, total=len(files_with_matching_extension)
+        filenames, total=len(filenames)
     ):
-        file_no_trailing_whitespace = file.rstrip()
-
-        file_name = os.path.basename(file)
-        file_path_upper_case = file_name.upper()
-
-        if not any(
-            re.match(pattern, file_path_upper_case) for pattern in image_patterns
+        if any(
+            re.match(pattern, file.name.upper())
+            for pattern in image_patterns
         ):
-            with open(error_file, "a") as ef:
-                ef.write(
-                    f"Error: File does not match image naming convention: {file_no_trailing_whitespace}\n"
-                )
-            print(
-                f"Error: File does not match image naming convention: {file_no_trailing_whitespace}"
-            )
-            continue
-
-        # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace],
-        #                            capture_output=True, text=True, shell=True).stdout.strip()
-        file_type = get_file_type(file_no_trailing_whitespace)
-        if file_type != "image/jpeg":
-            with open(error_file, "a") as ef:
-                ef.write(
-                    f"Error: File is not a valid JPEG: {file_no_trailing_whitespace} (Detected type: {file_type})\n"
-                )
-            print(
-                f"Error: File is not a valid JPEG: {file_no_trailing_whitespace} (Detected type: {file_type})"
-            )
-            continue
+            # # needed?
+            # file_type = get_file_type(file) #? Needed?
+            # if file_type != "image/jpeg":
+            #     logging.error(f"File is not a valid JPEG: '{file}' (Detected type: {file_type})")
+            #     continue
+            # else:
+            #     files_to_copy.append(file)
+            files_to_copy.append(file)
         else:
-            image_files_to_copy.append(file_no_trailing_whitespace)
-
-    return image_files_to_copy
-
-
-# Function to verify video files
-def check_video_files(dir, error_file, video_patterns, dry_run):
-    print(f"Checking {dir} for video files...")
-
-    if not dir or dir == "ignore":
-        print("Videos directory was set to 'ignore', cancelling the check")
-        return []
-
-    if not os.path.isdir(dir):
-        with open(error_file, "a") as ef:
-            ef.write(f"Error: Videos directory: {dir} does not exist.\n")
-        print(f"Error: Videos directory: {dir} does not exist.")
-        # exit(1)
-
-    # Find all the files in the videos directory with the selected file extensions
-    # TO-DO: need to accommodate .mts
-    files_with_matching_extension = []
-    for root, _, files in os.walk(dir):
-        for file in files:
-            if file.lower().endswith((".m2ts", ".m2t", ".avi", ".MTS", ".mpg", ".MPG")):
-                files_with_matching_extension.append(os.path.join(root, file))
-
-    video_files_to_copy = []
-
-    for file in tqdm(
-        files_with_matching_extension, total=len(files_with_matching_extension)
-    ):
-        file_no_trailing_whitespace = file.rstrip()
-
-        # file_name = os.path.basename(file)
-        # file_path_upper_case = file_name.upper()
-
-        # if not any(re.match(pattern, file_path_upper_case) for pattern in video_patterns):
-        #     with open(error_file, 'a') as ef:
-        #         ef.write(f"Error: File does not match video naming convention: {file_no_trailing_whitespace}\n")
-        #     print(f"Error: File does not match video naming convention: {file_no_trailing_whitespace}")
-        #     continue
-
-        # remove video file name and type verification for now
-        video_files_to_copy.append(file_no_trailing_whitespace)
-
-        # if dry_run == "true":
-        #     print("DRY_RUN is set, so skipping video file type verification")
-        #     video_files_to_copy.append(file_no_trailing_whitespace)
-        #     continue
-
-        # # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace],
-        # #                            capture_output=True, text=True, shell=True).stdout.strip()
-        # file_type = get_file_type(file_no_trailing_whitespace)
-        # if file_type not in ["video/MP2T", "application/octet-stream"]:
-        #     with open(error_file, 'a') as ef:
-        #         ef.write(f"Error: File is not a valid .m2t or .m2ts file: {file_no_trailing_whitespace} (Detected type: {file_type})\n")
-        #     print(f"Error: File is not a valid .m2t or .m2ts file: {file_no_trailing_whitespace} (Detected type: {file_type})")
-        #     continue
-        # else:
-        #     video_files_to_copy.append(file_no_trailing_whitespace)
-
-    return video_files_to_copy
-
-
-# Function to verify text files
-def check_ofop_files(dir, error_file, ofop_patterns):
-    print(f"Checking {dir} for text files...")
-    if not dir or dir == "ignore":
-        print("OFOP directory was set to 'ignore', cancelling the check")
-        return []
-
-    # Find all the files in the directory with the selected file extensions
-    files_with_matching_extension = []
-    for root, _, files in os.walk(dir):
-        for file in files:
-            if file.lower().endswith((".txt")):
-                files_with_matching_extension.append(os.path.join(root, file))
-
-    text_files_to_copy = []
-
-    for file in tqdm(
-        files_with_matching_extension, total=len(files_with_matching_extension)
-    ):
-        file_no_trailing_whitespace = file.rstrip()
-
-        file_name = os.path.basename(file)
-        file_path_upper_case = file_name.upper()
-        print(file_no_trailing_whitespace)
-
-        # file_type = subprocess.run(['file', '--mime-type', '-b', file_no_trailing_whitespace],
-        #                            capture_output=True, text=True, shell=True).stdout.strip()
-        file_type = get_file_type(file_no_trailing_whitespace)
-        if file_type != "text/plain":
-            with open(error_file, "a") as ef:
-                ef.write(
-                    f"Error: File is not a valid text file: {file_no_trailing_whitespace} (Detected type: {file_type})\n"
-                )
-            print(
-                f"Error: File is not a valid text file: {file_no_trailing_whitespace} (Detected type: {file_type})"
+            logging.error(
+                f"File does not match '{data_type}' naming convention: '{file}'"
             )
             continue
-
-        if any(re.match(pattern, file_path_upper_case) for pattern in ofop_patterns):
-            text_files_to_copy.append(file_no_trailing_whitespace)
-        else:
-            with open(error_file, "a") as ef:
-                ef.write(f"Error: File does not match any pattern: {file_name}\n")
-            print(f"Error: File does not match any pattern: {file_name}")
-            continue
-
-    return text_files_to_copy
+    return files_to_copy
 
 
 def enable_lambda(lambda_client, lambda_function_name, success_file, error_file):
@@ -588,8 +453,8 @@ def write_validated_file_paths(
             if station_id:
                 passed_file_count += 1
                 # with open(success_file, 'a') as sf:
-                sf.write(f"Station ID for the file: {file} is: {station_id}\n")
-                plan_f.write(f"{file};{station_id}\n")
+                sf.write(f"Station ID for the file: '{file}' is: {station_id}\n")
+                plan_f.write(f"'{file}';{station_id}\n")
         plan_f.write(f"End of {file_type} files that passed local verification\n\n")
     print(f"{passed_file_count} {file_type} files passed location verification")
     return passed_file_count
@@ -722,90 +587,117 @@ def upload_to_s3(
             syf.write("----------------------------\n")
             syf.write(f"Upload ended: {dt}\n")
 
+def set_up_aws_credentials():
+    # get aws access key and secret key
+    aws_access_key_id, aws_secret_access_key, aws_session_token = (
+        get_aws_credentials()
+    )
+
+    # Initialize AWS Clients
+    if aws_session_token:
+        session = boto3.Session(
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            aws_session_token=aws_session_token,
+            region_name=aws_region,
+        )
+    else:
+        session = boto3.Session(
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=aws_region,
+        )
+    sts_client = session.client("sts")
+    lambda_client = session.client("lambda")
+    s3_client = session.client("s3", config=s3_config)
+    logging.info(
+        "Successfully Authenticated IAM User: ",
+        sts_client.get_caller_identity(),
+    )
+
+    # set bucket_name and lambda_function_name according to environment
+    bucket_name = f"dtis-ofop-{sts_client.get_caller_identity()['Account']}-raw-{environment}"
+    lambda_function_name = f"dtis-ofop-{environment}"
+
+    # verify bucket exists and have permission
+    verify_s3_bucket(s3_client=s3_client, bucket_name=bucket_name)
+
+
+def set_up_log():
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))
+    yml_file_path = os.path.join(current_file_dir, "conf/logging.yml")
+    with open(yml_file_path, "r") as stream:
+        config = yaml.safe_load(stream)
+        logging.config.dictConfig(config)
+        logger = logging.getLogger(__name__)
+
+def read_config_file():
+    config_cruises = None
+    config_file_suffix = None
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))
+    yml_file_path = os.path.join(current_file_dir, "conf/config.yml")
+    with open(yml_file_path, "r") as file:
+        config = yaml.safe_load(file)
+        config_cruises = config.get("cruises", None)
+        config_file_suffix = config.get("file_suffix", None)
+        config_patterns = config.get("patterns", None)
+    return config_cruises, config_file_suffix, config_patterns
 
 if __name__ == "__main__":
+    # 0, Set up logging
+    set_up_log()
 
+    # 1, read the config file
+    config_cruises, config_file_suffix, config_patterns = read_config_file()
+
+    # 2, get upload info
     try:
-
-        # get upload info
         (
             cruise_id,
             source_dirs_dict,
             environment,
             dry_run,
-        ) = get_data_upload_info_from_args()
+        ) = get_data_upload_info_from_args(config_cruises)
+    except Exception as e:
+        logging.error(f"Error getting data upload info: {e}")
+        sys.exit(1)
 
+    # 3, set up AWS credentials if not dry run
+    try:
         if dry_run == "False":
-            # get aws access key and secret key
-            aws_access_key_id, aws_secret_access_key, aws_session_token = (
-                get_aws_credentials()
-            )
+            set_up_aws_credentials() # TODO
+    except Exception as e:
+        logging.error(f"Error setting up AWS credentials: {e}")
+        sys.exit(1)
 
-            # Initialize AWS Clients
-            if aws_session_token:
-                session = boto3.Session(
-                    aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key,
-                    aws_session_token=aws_session_token,
-                    region_name=aws_region,
-                )
-            else:
-                session = boto3.Session(
-                    aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key,
-                    region_name=aws_region,
-                )
-            sts_client = session.client("sts")
-            lambda_client = session.client("lambda")
-            s3_client = session.client("s3", config=s3_config)
-            print(
-                "Successfully Authenticated IAM User: ",
-                sts_client.get_caller_identity(),
-            )
-
-            # set bucket_name and lambda_function_name according to environment
-            bucket_name = f"dtis-ofop-{sts_client.get_caller_identity()['Account']}-raw-{environment}"
-            lambda_function_name = f"dtis-ofop-{environment}"
-
-            # verify bucket exists and have permission
-            verify_s3_bucket(s3_client=s3_client, bucket_name=bucket_name)
-
+    # Check and validate local files
+    try:
         # Start the program here:
         dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with open(success_file, "w") as sf, open(error_file, "w") as ef, open(
-            sync_output_file, "w"
-        ) as syf, open(plan_file, "w") as pf:
-            sf.write(f"File Upload Success Report - {dt}\n")
-            sf.write("----------------------------\n")
-            ef.write(f"File Upload Error Report - {dt}\n")
-            ef.write("----------------------------\n")
+        with open(sync_output_file, "w") as syf, open(plan_file, "w") as pf:
             syf.write(f"File Sync Report - {dt}\n")
             syf.write("----------------------------\n")
             pf.write(f"Data Upload Plan - {dt}\n")
             pf.write("----------------------------\n")
 
-        # Check and validate local files
-        image_files_to_copy = []  # Populate with validated image files
-        video_files_to_copy = []  # Populate with validated video files
-        text_files_to_copy = []  # Populate with validated text files
-        image_files_to_copy = check_image_files(
-            dir=images_dir, error_file=error_file, image_patterns=patterns["image"]
-        )
-        video_files_to_copy = check_video_files(
-            dir=videos_dir,
-            error_file=error_file,
-            video_patterns=patterns["video"],
-            dry_run=dry_run,
-        )
-        ofop_files_to_copy = check_ofop_files(
-            dir=ofop_dir, error_file=error_file, ofop_patterns=patterns["ofop"]
-        )
-        rerun_files_to_copy = check_ofop_files(
-            dir=ofop_rerun_dir,
-            error_file=error_file,
-            ofop_patterns=patterns["ofop_rerun"],
-        )
-        text_files_to_copy = ofop_files_to_copy + rerun_files_to_copy
+        files_to_copy_dict = {}
+        for i_data_type in source_dirs_dict.keys():
+            files_to_copy_dict[i_data_type] = None
+            if source_dirs_dict[i_data_type] is None:
+                logging.warning(
+                    f"{i_data_type} directory was not set, skipping the check"
+                )
+                continue
+            files_to_copy_dict[i_data_type] = check_files(
+                i_data_type,
+                dir=Path(source_dirs_dict[i_data_type]),
+                image_patterns=config_patterns[i_data_type],
+                file_suffix_list=config_file_suffix[i_data_type],
+            )
+            logging.info(
+                f"Found {len(files_to_copy_dict[i_data_type])} available {i_data_type} files"
+            )
+
         # write ofop files first, video upload will trigger lambda function
         # which processes video files and will need ofop obser data for annotation
         passed_text_file_count = write_validated_file_paths(
