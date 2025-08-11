@@ -3,6 +3,7 @@ import json
 import os
 import boto3
 import sagemaker
+import argparse
 from sagemaker.local import LocalSession
 from sagemaker.s3 import S3Downloader
 from sagemaker.processing import ScriptProcessor
@@ -20,55 +21,68 @@ from sagemaker.workflow.parameters import (
     ParameterString,
     ParameterFloat,
 )
-
-
-def initialize_command():
-    # Initialize the command variable with a default value
-    command = ["python3"]
-    return command
-
-def set_entrypoint(command, user_script_location):
-    # Ensure that command is not None
-    if command is None:
-        command = initialize_command()
-    
-    # Set the entrypoint by concatenating command and user_script_location
-    entrypoint = command + [user_script_location]
-    return entrypoint
+from .code.docker.utils import get_ssm_parameter
 
 
 if __name__ == "__main__":
     # Configuration
-    region = "ap-southeast-2"  # Update with your region
+    parser = argparse.ArgumentParser(description="SageMaker Pipeline Creation Script")
+    parser.add_argument("--environment", type=str, default="dev", 
+                        help="Environment for the pipeline (e.g., dev, prod)")
+    parser.add_argument("--model_s3_uri", type=str, default="s3://dtis-model-851725470721-testing/models/RF-DETR/checkpoint_best_regular.pth",
+                        help="S3 URI for the model file")
+    parser.add_argument("--input_data_s3_uri", type=str, default="s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/frames/",
+                        help="S3 URI for the input data")
+    parser.add_argument("--output_data_s3_uri", type=str, default="s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/annotations/",
+                        help="S3 URI for the output data")
+    parser.add_argument("--matched_anno_s3_uri", type=str, default="s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/matched_annotations/",
+                        help="S3 URI for the matched annotations")
+
+    args, unknown = parser.parse_known_args()
+    environment = args.environment
+    default_model_s3_uri = args.model_s3_uri
+    default_input_data_s3_uri = args.input_data_s3_uri
+    default_output_data_s3_uri = args.output_data_s3_uri
+    default_matched_anno_s3_uri = args.matched_anno_s3_uri
+    # Create a session
+    session = boto3.session.Session()
+
+    # Get the region from the session
+    region = session.region_name
     account_id = boto3.client('sts').get_caller_identity().get('Account')
     # ECR image URI
-    ecr_repository = "dtis-annotation-container"
+    ssm_client = boto3.client('ssm', region_name=region)
+    response = ssm_client.get_parameter(Name="dtis/pipeline/ecr-repository", WithDecryption=True)
+    ecr_repo_prefix = response['Parameter']['Value']
+    ecr_repository = f"{ecr_repo_prefix}-{environment}"
     tag = "latest"
     default_ecr_image_uri = f"{account_id}.dkr.ecr.{region}.amazonaws.com/{ecr_repository}:{tag}"
 
-    # S3 paths
-    default_model_s3_uri = "s3://dtis-model-851725470721-testing/models/RF-DETR/checkpoint_best_regular.pth"
-    # default_input_data_s3_uri = "s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/frames/"
-    # default_output_data_s3_uri = "s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/annotations/"
-    # default_matched_anno_s3_uri = "s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/matched_annotations/"
-    default_input_data_s3_uri = "s3://dtis-model-851725470721-testing/TAN0616/095/video/TAN0616_095/frames_test/"
-    default_output_data_s3_uri = "s3://dtis-model-851725470721-testing/TAN0616/095/video/TAN0616_095/annotations/"
-    default_matched_anno_s3_uri = "s3://dtis-model-851725470721-testing/TAN0616/095/video/TAN0616_095/matched_annotations/"
-    # image_uri = ParameterString(
-    #     name="ECRImageURI", 
-    #     default_value=f"{account_id}.dkr.ecr.{region}.amazonaws.com/{ecr_repository}:{tag}"
-    #     )
-    
     # Create standard SageMaker session (not local)
     sagemaker_session = sagemaker.session.Session()
-    region = sagemaker_session.boto_region_name
 
     # Get role from environment or hardcode it for local testing
     try:
         role = sagemaker.get_execution_role()
     except ValueError:
         # Fallback for local execution
-        role = "arn:aws:iam::851725470721:role/DTIS-SageMakerPipelineExecutionRole-testing"
+        project_name = "data-platform-dtis"
+        role = f"arn:aws:iam::{account_id}:role/{project_name}-{environment}-sagemaker-pipeline-role"
+
+    # Find SSM parameters
+    api_url = get_ssm_parameter("/dtis/biigle/api-url", "https://biigle.de/api/v1")
+    email = get_ssm_parameter("/dtis/biigle/api-email", "bryce.chen@niwa.co.nz")
+    token = get_ssm_parameter("/dtis/biigle/api-token", "")
+    label_tree_to_add_id = get_ssm_parameter("/dtis/biigle/label-tree-id", "3270")
+    storage_disk_id = get_ssm_parameter("/dtis/biigle/disk-id", "84")
+    user_pattern = get_ssm_parameter("/dtis/biigle/user-pattern", "Caroline")
+    user_lastname = get_ssm_parameter("/dtis/biigle/user-lastname", "Chin")
+    create_disk_secret_name = get_ssm_parameter("/dtis/biigle/create-user-disk-secret-name", "aws-credentials/biigle/create-user-disk")
+    mongodb_db = get_ssm_parameter("/dtis/mongodb/mongo-db", "dtis-data")
+    mongodb_biigle_anno_sess_collection = get_ssm_parameter("/dtis/mongodb/biigle-anno-session-collection", "dtis_biigle_annotation_session")
+    mongodb_video_collection = get_ssm_parameter("/dtis/mongodb/dtis-video-collection", "dtis_video")
+    mongodb_ofop_obser_collection = get_ssm_parameter("/dtis/mongodb/dtis-ofop-obser-collection", "dtis_ofop_obser")
+    mongodb_master_collection = get_ssm_parameter("/dtis/mongodb/dtis-metadata-collection", "dtis_master")
 
     # Use PipelineSession for defining the pipeline
     pipeline_session = PipelineSession()
@@ -94,23 +108,55 @@ if __name__ == "__main__":
         )
     db_name = ParameterString(
         name="DBName",
-        default_value="dtistest"
+        default_value=mongodb_db
         )
     video_collection_name = ParameterString(
         name="VideoCollectionName",
-        default_value="dtis_videos"
+        default_value=mongodb_video_collection
         )
     master_collection_name = ParameterString(
         name="MasterCollectionName",
-        default_value="dtis_master"
+        default_value=mongodb_master_collection
         )
     ofop_obser_collection_name = ParameterString(
         name="OFOPObserCollectionName",
-        default_value="dtis_ofop_obser"
+        default_value=mongodb_ofop_obser_collection
         )
     dtis_biigle_anno_collection_name = ParameterString(
         name="DTISBiigleAnnoCollectionName",
-        default_value="dtis_biigle_annotation_session"
+        default_value=mongodb_biigle_anno_sess_collection
+        )
+    biigle_create_disk_secret_name = ParameterString(
+        name="BiigleCreateDiskSecretName",
+        default_value=create_disk_secret_name
+        )
+    biigle_api_url = ParameterString(
+        name="BiigleApiUrl",
+        default_value=api_url
+        )
+    biigle_api_email = ParameterString(
+        name="BiigleApiEmail",
+        default_value=email
+        )
+    biigle_api_token = ParameterString(
+        name="BiigleApiToken",
+        default_value=token
+        )
+    biigle_label_tree_id = ParameterString(
+        name="BiigleLabelTreeId",
+        default_value=label_tree_to_add_id
+        )
+    biigle_storage_disk_id = ParameterString(
+        name="BiigleStorageDiskId",
+        default_value=storage_disk_id
+        )
+    biigle_user_pattern = ParameterString(
+        name="BiigleUserPattern",
+        default_value=user_pattern
+        )
+    biigle_user_lastname = ParameterString(
+        name="BiigleUserLastname",
+        default_value=user_lastname
         )
 
     # # Create a local session
@@ -139,24 +185,6 @@ if __name__ == "__main__":
         instance_type="ml.m5.xlarge",
         sagemaker_session=sagemaker_session
     )
-
-    # inference_args = processor.run(
-    #     code="code/docker/inference.py",
-    #     # source_dir="code",
-    #     inputs=[
-    #         ProcessingInput(
-    #             source=default_input_data_s3_uri,
-    #             destination="/opt/ml/processing/input"
-    #         )
-    #     ],
-    #     outputs=[
-    #         ProcessingOutput(
-    #             source="/opt/ml/processing/output",
-    #             destination=default_output_data_s3_uri,
-    #             s3_upload_mode="Continuous"
-    #         )
-    #     ]
-    # )
 
     # Define pipeline step
     # step_inference = ProcessingStep(name="inference", step_args=inference_args)
@@ -238,13 +266,22 @@ if __name__ == "__main__":
         ],
         job_arguments=[
             "--s3_input_uri", s3_input_uri,
-            "--db_name", db_name,
-            "--dtis_biigle_anno_collection_name", dtis_biigle_anno_collection_name
+            "--aws_region", region,
+            "--secret_name", biigle_create_disk_secret_name,
+            "--api_url", biigle_api_url,
+            "--api_email", biigle_api_email,
+            "--api_token", biigle_api_token,
+            "--label_tree_id", biigle_label_tree_id,
+            "--storage_disk_id", biigle_storage_disk_id,
+            "--user_pattern", biigle_user_pattern,
+            "--user_lastname", biigle_user_lastname,
+            "--ssm_param_mongodb_uri", mongodb_uri_ssm,
+            "--dtis_biigle_anno_sess_collection", dtis_biigle_anno_collection_name
         ]
     )
 
     # Create pipeline
-    pipeline_name = f"DTIS-Annotation-Pipeline-testing"
+    pipeline_name = f"DTIS-Annotation-Pipeline-{environment}"
     pipeline = Pipeline(
         name=pipeline_name,
         parameters=[

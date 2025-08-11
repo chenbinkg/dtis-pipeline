@@ -5,6 +5,7 @@ import sys
 import json
 import argparse
 from .mongodb import MongoDBOps
+from .utils import get_ssm_parameter, sanitize_log_input
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 _logger = logging.getLogger()
@@ -54,12 +55,14 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     It also expects the MongoDB collections to contain specific fields for video metadata,
     master labels, and observation data.
     The matched annotations are saved in the output directory specified by the SageMaker processing job.
+
     Args:
         s3_input_uri (str): S3 URI for input data, e.g. "s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/frames/"
         db_name (str): Name of the MongoDB database.
         video_collection (str): Name of the MongoDB collection for video metadata.
         master_collection (str): Name of the MongoDB collection for master labels.
         ofop_obser_collection (str): Name of the MongoDB collection for observation data.
+        ssm_param_mongodb_uri (str): SSM parameter for MongoDB URI.
     """
     _logger.info("Starting RFDETR annotation matching job")
     cruise = s3_input_uri.split('/')[3]  # Extract cruise from S3 URI
@@ -74,7 +77,8 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     _logger.info(f"Output data path: {output_data_path}")
 
     # generate query from MongoDB (dtis_videos) for video start time
-    mongo_ops = MongoDBOps(ssm_param=ssm_param_mongodb_uri)
+    mongodb_uri = get_ssm_parameter(ssm_param_mongodb_uri, "")
+    mongo_ops = MongoDBOps(mongodb_uri=mongodb_uri)
     columns = ["cruise", "station", "timestamp", "date", "time", "observation"]
     query_cols = ["cruise", "station"]
     query_vals = [cruise, station]

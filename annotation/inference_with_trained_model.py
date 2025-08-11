@@ -8,54 +8,12 @@ import datetime
 import traceback
 import pandas as pd
 from PIL import Image
-from pymongo.mongo_client import MongoClient
 from botocore.exceptions import ClientError
+from .code.docker.mongodb import MongoDBOps
+from .code.docker.utils import get_ssm_parameter, sanitize_log_input, list_all_objects
 
 _logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-
-
-class MongoDBOps:
-
-    def __init__(self, read_secondary=False):
-        self.user = "niwa-admin"
-        self.password = "12345"
-        if read_secondary:
-            # read from secondary node to reduce CPU 
-            self.conn_string = f"mongodb+srv://{self.user}:{self.password}@serverlessinstance0.ta8golw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0?readPreference=secondary"
-        else:
-            self.conn_string = f"mongodb+srv://{self.user}:{self.password}@serverlessinstance0.ta8golw.mongodb.net"
-        # self.client = MongoClient(self.conn_string)
-
-    def read_to_df(self, db_name, collection_name, query_filter, column_filter):
-        client = MongoClient(self.conn_string)
-        coll = client[db_name][collection_name]
-        mydoc = coll.find(query_filter, column_filter)
-        df =  pd.DataFrame(list(mydoc))
-        # df['obs_date'] = pd.to_datetime(df["obs_date"])  
-        # df.set_index('obs_date')
-        if "_id" in df.columns:
-            df = df.drop('_id', axis=1)
-        client.close()
-        return df
-    
-    def gen_query_filter(self, columns, values):
-        '''Generate query filter conditions'''
-        query_filter = {}
-        for col, val in zip(columns, values):
-            query_filter[col] = val
-        _logger.info(f"query_filter: {query_filter}")
-        return query_filter
-
-    def gen_column_filter(self, columns):
-        '''Generate column filter in the following format:
-        {col1: 1, col2: 1, col3: 1, col3: 1, col4: 1}
-        '''
-        column_filter = {}
-        for col in columns:
-            column_filter[col] = 1
-        _logger.info(f"column_filter: {column_filter}")
-        return column_filter
 
 def construct_result_json(image, s3_input_uri, filename, results, label_map):
 	"""

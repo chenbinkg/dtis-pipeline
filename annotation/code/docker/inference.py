@@ -76,24 +76,6 @@ def process_image(image_path, output_path, model):
                 }
             }
         manifest_data = {**manifest_data, **label_data}
-    # for i, (bbox, class_id, conf) in enumerate(zip(detections.xyxy, detections.class_id, detections.confidence)):
-        # x1, y1, x2, y2 = bbox
-        # width = x2 - x1
-        # height = y2 - y1
-        
-        # result = {
-        #     "label": categories[class_id]["name"],
-        #     "confidence": float(conf),
-        #     "boundingBox": {
-        #         "left": float(x1 / image.width),
-        #         "top": float(y1 / image.height),
-        #         "width": float(width / image.width),
-        #         "height": float(height / image.height)
-        #     },
-        #     "class_id": int(class_id)
-        # }
-
-        # results.append(result)
     
     # Save results
     with open(output_path, 'w') as f:

@@ -1,7 +1,6 @@
 from pymongo.mongo_client import MongoClient
 import logging
 import pandas as pd
-import boto3
 import sys
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -9,25 +8,15 @@ _logger = logging.getLogger()
 
 class MongoDBOps:
 
-    def __init__(self, ssm_param="/dtis/mongodb/uri", region_name="ap-southeast-2"):
-        """Initialize MongoDBOps with connection string from AWS SSM Parameter Store.
+    def __init__(self, mongodb_uri, region_name="ap-southeast-2"):
+        """Initialize MongoDBOps with a MongoDB connection string.
         Args:
-            ssm_param (str): The SSM parameter name for the MongoDB connection string.
-            This should be the full path to the parameter, e.g., '/dtis/mongodb/uri'.
+            mongodb_uri (str): The MongoDB connection string.
             The connection string should be in the format:
             'mongodb+srv://username:password@cluster0.mongodb.net/test?retryWrites=true&w=majority'
         """
-        ssm = boto3.client('ssm', region_name=region_name)
-        parameter_name = ssm_param
-        # Get parameter (with decryption if it's a SecureString)
-        response = ssm.get_parameter(
-            Name=parameter_name,
-            WithDecryption=True
-        )
-        
-        # Extract the MongoDB URI
-        self.conn_string = response['Parameter']['Value']
-        # self.client = MongoClient(self.conn_string)
+        self.conn_string = mongodb_uri
+        self.region_name = region_name
 
     def read_to_df(self, db_name, collection_name, query_filter, column_filter):
         client = MongoClient(self.conn_string)

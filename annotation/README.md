@@ -19,7 +19,7 @@
 1. create an virtual environment, turned on docker in your PC
 2. run `pip install docker`
 3. run `cd annotation`
-4. run `sh docker_buildx.sh`
+4. run `./docker_buildx.sh dev ap-southeast-2`
 
 ## Test Docker with entrypoint.sh
 1. have awscli installed in your virtual environment
@@ -29,7 +29,7 @@
   `-e AWS_ACCESS_KEY_ID="{your_access_key_id}" \`
   `-e AWS_SECRET_ACCESS_KEY="{your_secret_access_key}" \`
   `-e AWS_REGION="ap-southeast-2" \`
-  `-e MODEL_S3_URI="s3://dtis-model-851725470721-testing/models/RF-DETR/checkpoint_best_regular.pth" \`
+  `-e MODEL_S3_URI="s3://data-platform-dtis-dev-443293291817-model-data/models/RF-DETR/checkpoint_best_regular.pth" \`
   `851725470721.dkr.ecr.ap-southeast-2.amazonaws.com/dtis-annotation-container /bin/bash`
 5. run `python`
 6. try to import libraries going to be used in the inference.py using `import ... `, check any errors

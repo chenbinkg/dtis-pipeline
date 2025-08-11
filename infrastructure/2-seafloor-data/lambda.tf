@@ -165,12 +165,12 @@ resource "aws_lambda_function" "dtis" {
   environment {
     variables = {
       MONGODB_URI_SSM_PARAM = "/dtis/mongodb/uri" # SSM parameter for MongoDB URI
-			MONGODB_DATABASE = "dtis-data"
-			INGRESS_COLLECTION_DTIS = "dtis_metadata"
-      MONGODB_COLLECTION_IMAGE = "dtis_stills"
-      MONGODB_COLLECTION_VIDEO = "dtis_videos"
-      MONGODB_COLLECTION_OBSER = "dtis_ofop_obser"
-      MONGODB_COLLECTION_PROT = "dtis_ofop_prot"
+			MONGODB_DATABASE = var.mongo_db
+      MONGODB_COLLECTION_OBSER = var.mongo_dtis_ofop_obser_collection
+      MONGODB_COLLECTION_PROT = var.mongo_dtis_ofop_prot_collection
+			INGRESS_COLLECTION_DTIS = var.mongo_dtis_metadata_collection
+      MONGODB_COLLECTION_IMAGE = var.mongo_dtis_stills_collection
+      MONGODB_COLLECTION_VIDEO = var.mongo_dtis_video_collection
       MEDIA_CONVERT_LAMBDA_FUNCTION = "dtis-ofop-mediaconvert-${var.environment}"
     }
   }
@@ -453,10 +453,10 @@ resource "aws_lambda_function" "pretrained_annotation" {
   environment {
     variables = {
 			PIPELINE_NAME = "DTIS-Annotation-Pipeline-${var.environment}",
-      MONGODB_DATABASE = "dtis-data"
-			MONGODB_COLLECTION_MASTER = "dtis_master"
-      MONGODB_COLLECTION_VIDEO = "dtis_videos"
-      MONGODB_COLLECTION_OBSER = "dtis_ofop_obser"
+      MONGODB_DATABASE = var.mongo_db,
+			MONGODB_COLLECTION_MASTER = var.mongo_dtis_master_collection,
+      MONGODB_COLLECTION_VIDEO = var.mongo_dtis_video_collection,
+      MONGODB_COLLECTION_OBSER = var.mongo_dtis_ofop_obser_collection
     }
   }
   tags = local.tags

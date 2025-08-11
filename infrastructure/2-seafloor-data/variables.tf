@@ -46,6 +46,48 @@ variable "mongo_db" {
   default     = "dtis-data"
 }
 
+variable "mongo_dtis_master_collection" {
+  type        = string
+  description = "MongoDB collection for DTIS master data"
+  default     = "dtis_master"
+}
+
+variable "mongo_biigle_anno_session_collection" {
+  type        = string
+  description = "Name of the MongoDB collection for Biigle annotation sessions"
+  default     = "dtis_biigle_annotation_session"
+}
+
+variable "mongo_dtis_ofop_obser_collection" {
+  type        = string
+  description = "MongoDB collection for DTIS OFOP observations"
+  default     = "dtis_ofop_obser"
+}
+
+variable "mongo_dtis_video_collection" {
+  type        = string
+  description = "MongoDB collection for DTIS video data"
+  default     = "dtis_video"
+}
+
+variable "mongo_dtis_ofop_prot_collection" {
+  type        = string
+  description = "MongoDB collection for DTIS protocol data"
+  default     = "dtis_ofop_prot"
+}
+
+variable "mongo_dtis_metadata_collection" {
+  type        = string
+  description = "MongoDB collection for DTIS metadata"
+  default     = "dtis_metadata"
+}
+
+variable "mongo_dtis_stills_collection" {
+  type        = string
+  description = "MongoDB collection for DTIS still images"
+  default     = "dtis_stills"
+}
+
 variable "biigle_api_url" {
   type        = string
   description = "Base URL for the Biigle API"
@@ -93,15 +135,14 @@ variable "biigle_user_lastname" {
   
 }
 
-variable "biigle_anno_session_collection_name" {
-  type        = string
-  description = "Name of the MongoDB collection for Biigle annotation sessions"
-  default     = "dtis_biigle_annotation_session"
-  
-}
-
 variable "biigle_create_user_disk_secret_name" {
   type        = string
   description = "Name of the AWS Secrets Manager secret for Biigle create user disk"
   default     = "aws-credentials/biigle/create-user-disk"
+}
+
+variable "ecr_repository" {
+  type        = string
+  description = "ECR repository for the Biigle annotation container"
+  default     = "dtis-annotation"
 }
