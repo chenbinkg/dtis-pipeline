@@ -14,7 +14,7 @@ handlers:
         filename: upload/log/upload.log
         when: midnight
         interval: 1
-        backupCount: 365
+        # backupCount: 365
         encoding: utf8
 
 root:

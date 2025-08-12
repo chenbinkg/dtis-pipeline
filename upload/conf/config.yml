@@ -1,8 +1,12 @@
-file_suffix:
+if_validate_data: false  # If true, the script will check for existing files before uploading
+                        # If false, the script will not check and upload files directly   
+
+# Lowercase file extensions for different file types
+file_suffix: 
   images: ['.jpg', '.jpeg']
   videos: ['.m2ts', '.m2t', '.avi', '.mts', '.mpg']
-  ofop: ['.text']
-  ofop_rerun: ['.text']
+  ofop: ['.txt']
+  ofop_rerun: ['.txt']
 
 patterns: 
   images: 
