@@ -1,4 +1,4 @@
-if_validate_data: false  # If true, the script will check for existing files before uploading
+if_validate_data: true  # If true, the script will check for existing files before uploading
                         # If false, the script will not check and upload files directly   
 
 # Lowercase file extensions for different file types

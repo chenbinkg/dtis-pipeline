@@ -13,6 +13,9 @@ from datetime import datetime
 from tqdm import tqdm
 from typing import Optional, Dict, Any
 
+from aws_credential_provider import AWSCredentialProvider
+from aws_bucket_manager import AWSBucketManager
+
 # import magic
 # from botocore.exceptions import ClientError
 
@@ -456,33 +459,26 @@ def write_validated_file_paths(data_type, files_list, cruise_id, plan_file):
     return passed_file_count
 
 
-def verify_s3_bucket(s3_client, bucket_name):
-    try:
-        response = s3_client.head_bucket(Bucket=bucket_name)
-        print(f"s3 bucket verification: {response}")
-        print(f"S3 bucket {bucket_name} exists and is accessible.")
-    except Exception as e:
-        print(f"Error verifying S3 bucket {bucket_name}: {e}")
-        raise
-
-
 def upload_to_s3(
-    plan_file_to_read_from,
-    environment,
-    dry_run,
-    cruise_id,
-    s3_client,
-    bucket_name,
-    aws_region,
-    sync_output_file,
-    success_file,
-    error_file,
+    plan_file_to_read_from=None,
+    environment=None,
+    dry_run=None,
+    cruise_id=None,
+    s3_client=None,
+    bucket_name=None,
+    aws_region=None,
+    sync_output_file=None,
 ):
     # Check if the plan file exists
     if not os.path.isfile(plan_file_to_read_from):
-        print(f"Error: Plan file does not exist: {plan_file_to_read_from}")
-        # sys.exit(1)
-    if dry_run == "false":
+        logging.error(f"Plan file does not exist: {plan_file_to_read_from}")
+        sys.exit(1)
+    else:
+        # Read the plan file into a list
+        with open(plan_file_to_read_from, "r") as file:
+            plan_file_as_array = file.readlines()
+
+    if not dry_run:
         dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(sync_output_file, "a") as syf:
             syf.write(f"Environment Name: {environment}\n")
@@ -490,10 +486,6 @@ def upload_to_s3(
             syf.write(f"Region: {aws_region}\n")
             syf.write("----------------------------\n")
             syf.write(f"Upload started: {dt}\n")
-
-    # Read the plan file into a list
-    with open(plan_file_to_read_from, "r") as file:
-        plan_file_as_array = file.readlines()
 
     # Initialize variables
     file_type = ""
@@ -504,7 +496,12 @@ def upload_to_s3(
     for plan_file_line in tqdm(plan_file_as_array, total=len(plan_file_as_array)):
         if "The following image files passed local verification:" in plan_file_line:
             file_type = "images"
-        elif "The following text files passed local verification:" in plan_file_line:
+        elif "The following ofop files passed local verification:" in plan_file_line:
+            file_type = "text"
+        elif (
+            "The following ofop_rerun files passed local verification:"
+            in plan_file_line
+        ):
             file_type = "text"
         elif "The following video files passed local verification:" in plan_file_line:
             file_type = "video"
@@ -520,15 +517,9 @@ def upload_to_s3(
 
         # Run the upload command and capture the output
         if dry_run == "true":
-            upload_log = (
-                f"Pretending to be uploading {file_path.strip()} to {s3_destination}"
-            )
-            with open(success_file, "a") as sf:
-                sf.write(upload_log + "\n")
+            logging.info(f"Pretending to be uploading {file_path.strip()} to {s3_destination}")
         else:
-            upload_log = f"Really uploading {file_path.strip()} to {s3_destination}"
-            with open(success_file, "a") as sf:
-                sf.write(upload_log + "\n")
+            logging.info(f"Really uploading {file_path.strip()} to {s3_destination}")
             try:
                 # try list the object
                 res = s3_client.head_object(
@@ -582,41 +573,6 @@ def upload_to_s3(
         with open(sync_output_file, "a") as syf:
             syf.write("----------------------------\n")
             syf.write(f"Upload ended: {dt}\n")
-
-def set_up_aws_credentials():
-    # get aws access key and secret key
-    aws_access_key_id, aws_secret_access_key, aws_session_token = (
-        get_aws_credentials()
-    )
-
-    # Initialize AWS Clients
-    if aws_session_token:
-        session = boto3.Session(
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            aws_session_token=aws_session_token,
-            region_name=aws_region,
-        )
-    else:
-        session = boto3.Session(
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=aws_region,
-        )
-    sts_client = session.client("sts")
-    lambda_client = session.client("lambda")
-    s3_client = session.client("s3", config=s3_config)
-    logging.info(
-        "Successfully Authenticated IAM User: ",
-        sts_client.get_caller_identity(),
-    )
-
-    # set bucket_name and lambda_function_name according to environment
-    bucket_name = f"dtis-ofop-{sts_client.get_caller_identity()['Account']}-raw-{environment}"
-    lambda_function_name = f"dtis-ofop-{environment}"
-
-    # verify bucket exists and have permission
-    verify_s3_bucket(s3_client=s3_client, bucket_name=bucket_name)
 
 
 def set_up_log():
@@ -679,33 +635,6 @@ def validate_local_files(source_dirs_dict, patterns, file_suffix,):
         f"Please check plan.txt file contents for the files ready to be uploaded to S3..."
     )
 
-def set_up_S3_bucket():
-    # get aws access key and secret key
-    aws_access_key_id, aws_secret_access_key, aws_session_token = get_aws_credentials()
-
-    # Initialize AWS Clients
-    session = boto3.Session(
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        aws_session_token=aws_session_token,
-        region_name=aws_region,
-    )
-
-    sts_client = session.client("sts")
-    lambda_client = session.client("lambda")
-    s3_client = session.client("s3", config=s3_config)
-    print(
-        "Successfully Authenticated IAM User: ",
-        sts_client.get_caller_identity(),
-    )
-
-    # set bucket_name and lambda_function_name according to environment
-    bucket_name = f"data-platform-dtis-{environment}-{sts_client.get_caller_identity()['Account']}-raw-data"
-    lambda_function_name = f"dtis-ofop-{environment}"
-
-    # Verify S3 bucket
-    verify_s3_bucket(s3_client=s3_client, bucket_name=bucket_name)
-
 if __name__ == "__main__":
     # 0, Set up logging
     set_up_log()
@@ -714,7 +643,7 @@ if __name__ == "__main__":
     config = Configs()
     config.read_config_file()
 
-    # 2, get upload info
+    # 2, get upload files
     try:
         (
             cruise_id,
@@ -726,15 +655,7 @@ if __name__ == "__main__":
         logging.error(f"Error getting data upload info: {e}")
         sys.exit(1)
 
-    # 3, set up AWS credentials if not dry run
-    try:
-        if dry_run == "False":
-            set_up_aws_credentials() # TODO
-    except Exception as e:
-        logging.error(f"Error setting up AWS credentials: {e}")
-        sys.exit(1)
-
-    # 4, Check and validate local files
+    # 3, Check and validate local files and get the station IDs
     if config.if_validate_data:
         try:
             validate_local_files(
@@ -751,60 +672,39 @@ if __name__ == "__main__":
         )
         input("Press Enter to confirm and continue...")
 
-    # 5 upload to S3
-    try:
-        # Upload to s3 directly if dry_run is set to be false
-        if dry_run == "false":
+    # 5, Set up AWS credentials
+    provider = AWSCredentialProvider()
+    manager = AWSBucketManager(
+        environment=environment,
+        aws_region="ap-southeast-2",
+        credential_provider=provider.get_credentials_from_interaction,
+        bucket_name=f"data-platform-dtis-{environment}-AWSACCOUNT-raw-data",
+        lambda_function_name=f"dtis-ofop-{environment}",
+    )
+    aws_resources = manager.setup()
 
-            # Upload to S3
-            upload_to_s3(
-                plan_file_to_read_from=plan_file,
-                environment=environment,
-                dry_run=dry_run,
-                cruise_id=cruise_id,
-                s3_client=s3_client,
-                bucket_name=bucket_name,
-                aws_region=aws_region,
-                sync_output_file=sync_output_file,
-                success_file=success_file,
-                error_file=error_file,
-            )
+    # # 5 upload to S3 if not dry_run
+    # confirmation = get_data_upload_confirmation(cruise_id)
+    # if confirmation == "yes":
 
-            # Enable Lambda
-            enable_lambda(
-                lambda_client=lambda_client,
-                lambda_function_name=lambda_function_name,
-                success_file=success_file,
-                error_file=error_file,
-            )
-        else:
-            # prompt for data upload after dry run
-            confirmation = get_data_upload_confirmation(cruise_id)
-            if confirmation == "yes":
-                set_up_S3_bucket()
-
-                # Upload to S3
-                upload_to_s3(
-                    plan_file_to_read_from=plan_file,
-                    environment=environment,
-                    dry_run="false",
-                    cruise_id=cruise_id,
-                    s3_client=s3_client,
-                    bucket_name=bucket_name,
-                    aws_region=aws_region,
-                    sync_output_file=sync_output_file,
-                    success_file=success_file,
-                    error_file=error_file,
-                )
-                # Enable Lambda
-                enable_lambda(
-                    lambda_client=lambda_client,
-                    lambda_function_name=lambda_function_name,
-                    success_file=success_file,
-                    error_file=error_file,
-                )
-            else:
-                print("Dry run completed, exiting...")
+    # 6, Upload to S3
+    upload_to_s3(
+        plan_file_to_read_from=plan_file,
+        environment=environment,
+        dry_run=dry_run,
+        cruise_id=cruise_id,
+        s3_client=aws_resources['s3_client'],
+        bucket_name=aws_resources['bucket_name'],
+        aws_region=aws_region,
+        sync_output_file=sync_output_file,
+    )
+    # Enable Lambda
+    enable_lambda(
+        lambda_client=lambda_client,
+        lambda_function_name=lambda_function_name,
+        success_file=success_file,
+        error_file=error_file,
+    )
 
         # # exit program
         # exit_confirmation = get_exit_confirmation()
@@ -813,10 +713,3 @@ if __name__ == "__main__":
         # else:
         #     print("Sorry, please try again by setting DRY_RUN to true first...")
         #     sys.exit("Exiting the program now...")
-
-    except Exception as e:
-        logging.exception(f"An error occurred: {e}")
-
-    finally:
-        # keep the console open
-        logging.info("Press Enter to exit...")
