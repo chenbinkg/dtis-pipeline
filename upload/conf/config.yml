@@ -8,7 +8,7 @@ file_suffix:
   ofop: ['.txt']
   ofop_rerun: ['.txt']
 
-patterns: 
+patterns_filename: 
   images: 
     - "[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\\.JPEG$"  # e.g. TAN1802_160_DTIS__004.jpeg
     - "[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\\.JPG$"  # e.g. TAN1802_160_DTIS__004.jpg
@@ -24,6 +24,36 @@ patterns:
   ofop_rerun:
     - "[A-Z]{3}[0-9]{4}_[0-9]{3}.*_OBSER.*\\.TXT$"  # e.g. TAN1802_001.sth_obser.txt
     - "[A-Z]{3}[0-9]{4}_[0-9]{3}.*_PROT.*\\.TXT$"  # e.g. TAN1802_001.sth_prot.txt
+
+patterns_station_id: 
+  images:
+    # e.g. TAN1802_160_DTIS__004.jpeg
+    # e.g. TAN1802_160_DTIS__004.jpg
+    # e.g. TAN1802_Stn_160_004.jpeg
+    # e.g. TAN1802_Stn_160_004.jpg
+    # e.g. TAN1802_160_004.jpeg
+    # e.g. TAN1802_160_004.jpg
+    # this gives, e.g. '160'
+    - "[A-Z]{3}[0-9]{4}_(?:Stn_)?(?P<station_id>[0-9]{3,})_"
+  videos:
+    # e.g. Video/TAN0616/TAN0616_003/TAN0616_045.m2ts, this gives 003
+    # e.g. TAN2203/Stn003/1234.m2t, this gives 003
+    # e.g. /Stn002/11-04-2022/20220411191258.m2ts, this gives 002
+    # e.g. /STN_002/1234.m2t, this gives 002
+    # e.g. tan0906_059\tan0906_059 - Clip 001.avi, this gives 059
+    - "STN_(?P<station_id>[0-9]{3,})[\\/]"
+    - "tan[0-9]{4}_(?P<station_id>[0-9]{3,})"
+  ofop:
+    # e.g. TAN1802_001_posi.txt
+    # e.g.TAN1802_001_prot.txt
+    # e.g. TAN1802_001_obser.txt
+    # this gives, e.g. '001'
+    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})_"
+  ofop_rerun:
+    # e.g. TAN1802_001.sth_obser.txt
+    # e.g. TAN1802_001.sth_prot.txt
+    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})."
+
 
 cruises:
   TAN0906:

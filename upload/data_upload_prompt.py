@@ -12,6 +12,7 @@ from botocore.config import Config
 from datetime import datetime
 from tqdm import tqdm
 from typing import Optional, Dict, Any
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from aws_credential_provider import AWSCredentialProvider
 from aws_bucket_manager import AWSBucketManager
@@ -21,6 +22,8 @@ from aws_bucket_manager import AWSBucketManager
 
 
 # initialize bucket name, lambda function name, s3 client, s3 config and aws region
+max_workers = 8  # Number of threads to use for parallel processing
+
 bucket_name = "dtis-ofop-851725470721-raw-testing"
 lambda_function_name = "dtis-ofop-testing"
 s3_client = None
@@ -44,45 +47,19 @@ error_file = "error.txt"
 sync_output_file = "sync_logs.txt"
 plan_file = "plan.txt"
 
-# Initialize log patterns
-patterns = {
-    "images": [
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPEG$",  # e.g. TAN1802_160_DTIS__004.jpeg
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\.JPG$",  # e.g. TAN1802_160_DTIS__004.jpg
-        r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPEG$",  # e.g. TAN1802_Stn_160_004.jpeg
-        r"^[A-Z]{3}[0-9]{4}_STN_[0-9]{3,}_[0-9]{3}\.JPG$",  # e.g. TAN1802_Stn_160_004.jpg
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPEG$",  # e.g. TAN1802_160_004.jpeg
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3,}_[0-9]{3}\.JPG$",  # e.g. TAN1802_160_004.jpg
-    ],
-    "videos": [],
-    # "video": [
-    #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001.m2t, TAN1802_001.m2ts, or TAN1802_001.mpg
-    #     r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_[0-9]{1}\.(M2T[S]?|MPG)$", # e.g. TAN1802_001_1.m2t, TAN1802_001_2.m2ts, or TAN1802_001_1.mpg
-    #     r"^[0-9]{4,}\.(M2T[S]?|MPG)$", # e.g. 201012220153001.m2t, 201012220153001.m2ts, or 201012220153001.mpg (only digits)
-    # ],
-    "ofop": [
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_POSI\.TXT$",  # e.g. TAN1802_001_posi.txt
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_PROT\.TXT$",  # e.g. TAN1802_001_prot.txt
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}_OBSER\.TXT$",  # e.g. TAN1802_001_obser.txt
-    ],
-    "ofop_rerun": [
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_OBSER.*\.TXT$",  # e.g. TAN1802_001.sth_obser.txt
-        r"^[A-Z]{3}[0-9]{4}_[0-9]{3}.*_PROT.*\.TXT$",  # e.g. TAN1802_001.sth_prot.txt
-    ],
-}
-
 data_types_list = ["ofop", "ofop_rerun", "images", "videos"]
 
 
 class Configs:
     def __init__(self, config_path: Optional[str] = None):
-        self.if_validate_data: bool = True
-        self.cruises: Optional[Any] = None
-        self.file_suffix: Optional[str] = None
-        self.patterns: Optional[Dict[str, Any]] = None
         self.config_path = config_path or os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "conf/config.yml"
         )
+        self.if_validate_data: bool = True
+        self.cruises: Optional[Any] = None
+        self.file_suffix: Optional[str] = None
+        self.patterns_filename: Optional[Dict[str, Any]] = None
+        self.patterns_station_id: Optional[Dict[str, Any]] = None
 
     def read_config_file(self) -> None:
         try:
@@ -91,7 +68,8 @@ class Configs:
                 self.if_validate_data = config.get("if_validate_data", True)
                 self.cruises = config.get("cruises")
                 self.file_suffix = config.get("file_suffix")
-                self.patterns = config.get("patterns")
+                self.patterns_filename = config.get("patterns_filename")
+                self.patterns_station_id = config.get("patterns_station_id")
         except Exception as e:
             logging.error(f"Error reading config file: {e}")
             sys.exit(1)
@@ -288,7 +266,7 @@ def get_file_type(file_path):
     return mimetypes.guess_type(file_path)[0]
 
 
-def get_station_id(data_type, file_path, cruise_id):
+def get_station_id(file_path, cruise_id, patterns):
     # Normalize the file path to use the correct separator for the OS
     file_path_normalized = file_path.resolve().name.upper()
     cruise_id_normalized = cruise_id.upper()
@@ -297,36 +275,6 @@ def get_station_id(data_type, file_path, cruise_id):
     if cruise_id_normalized not in file_path_normalized:
         logging.error(f"File: {file_path} does not come from the cruise of ID: {cruise_id}")
         return None
-
-    if data_type == "images":
-        # e.g. TAN1802_160_DTIS__004.jpeg
-        # e.g. TAN1802_160_DTIS__004.jpg
-        # e.g. TAN1802_Stn_160_004.jpeg
-        # e.g. TAN1802_Stn_160_004.jpg
-        # e.g. TAN1802_160_004.jpeg
-        # e.g. TAN1802_160_004.jpg
-        # this gives, e.g. '160'
-        patterns = [r"[A-Z]{3}[0-9]{4}_(?:Stn_)?(?P<station_id>[0-9]{3,})_"]
-    if data_type == "videos":
-        # e.g. Video/TAN0616/TAN0616_003/TAN0616_045.m2ts, this gives 003
-        # e.g. TAN2203/Stn003/1234.m2t, this gives 003
-        # e.g. /Stn002/11-04-2022/20220411191258.m2ts, this gives 002
-        # e.g. /STN_002/1234.m2t, this gives 002
-        # e.g. tan0906_059\tan0906_059 - Clip 001.avi, this gives 059
-        patterns = [
-            r"STN_(?P<station_id>[0-9]{3,})[\\/]",
-            r"tan[0-9]{4}_(?P<station_id>[0-9]{3,})",
-        ]
-    elif data_type == "ofop":
-        # e.g. TAN1802_001_posi.txt
-        # e.g.TAN1802_001_prot.txt
-        # e.g. TAN1802_001_obser.txt
-        # this gives, e.g. '001'
-        patterns = [r"[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})_"]
-    elif data_type == "ofop_rerun":
-        # e.g. TAN1802_001.sth_obser.txt
-        # e.g. TAN1802_001.sth_prot.txt
-        patterns = [r"[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})."]
 
     # Try each pattern
     for pattern in patterns:
@@ -339,11 +287,6 @@ def get_station_id(data_type, file_path, cruise_id):
             return station_id
     # If no match found, log an error and return None
     logging.error(f"Could not extract station ID from file path: {file_path}")
-
-    error_message = f"Error: Could not get station id for the file: {file_path} (file path matches no pattern, potential cruise ID mismatch)"
-    print(error_message)
-    with open(error_file, "a") as ef:
-        ef.write(error_message + "\n")
     return None
 
 
@@ -362,7 +305,7 @@ def check_files(data_type, dir, image_patterns, file_suffix_list):
         # For videos, we don't need to check the filename patterns
         return filenames
 
-    files_to_copy = []
+    files_to_copy = {}
     for file in tqdm(
         filenames, total=len(filenames)
     ):
@@ -377,7 +320,7 @@ def check_files(data_type, dir, image_patterns, file_suffix_list):
             #     continue
             # else:
             #     files_to_copy.append(file)
-            files_to_copy.append(file)
+            files_to_copy[file] = None  # Using None as a placeholder for the station ID
         else:
             logging.error(
                 f"File does not match '{data_type}' naming convention: '{file}'"
@@ -438,23 +381,33 @@ def enable_lambda(lambda_client, lambda_function_name, success_file, error_file)
                     f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Failed to enable Lambda event source mapping: {str(e)}\n"
                 )
 
+def verify_file(file, cruise_id, patterns_station_id):
+    station_id = get_station_id(file, cruise_id, patterns_station_id)
+    return file, station_id
 
-def write_validated_file_paths(data_type, files_list, cruise_id, plan_file):
-    logging.info(f"local verification for {data_type} files")
+
+def parallel_verify_files(
+    files_dict, data_type, cruise_id, patterns_station_id, max_workers=max_workers
+):
+    logging.info(f"Local verification for {data_type} files")
     passed_file_count = 0
-    with open(plan_file, "a") as plan_f, open(success_file, "a") as sf:
-        plan_f.write(f"The following {data_type} files passed local verification:\n")
-        plan_f.write("FILE_PATH;STATION_ID\n")
-        for file in files_list:
-            station_id = get_station_id(data_type,
-                file, cruise_id
-            )  # Replace with actual implementation
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(
+                verify_file, file, cruise_id, patterns_station_id
+            ): file
+            for file in files_dict.keys()
+        }
+
+        for future in as_completed(futures):
+            file, station_id = future.result()
             if station_id:
+                files_dict[file] = station_id
                 passed_file_count += 1
-                # with open(success_file, 'a') as sf:
-                sf.write(f"Station ID for the file: '{file}' is: {station_id}\n")
-                plan_f.write(f"'{file}';{station_id}\n")
-        plan_f.write(f"End of {data_type} files that passed local verification\n\n")
+            else:
+                logging.warning(f"No station ID found for file: {file}")
+
     logging.info(f"{passed_file_count} {data_type} files passed location verification")
     return passed_file_count
 
@@ -584,8 +537,7 @@ def set_up_log():
         logger = logging.getLogger(__name__)
 
 
-def validate_local_files(source_dirs_dict, patterns, file_suffix,):
-
+def validate_local_files(source_dirs_dict, config):
     files_to_copy_dict = {}
     for i_data_type in source_dirs_dict.keys():
         files_to_copy_dict[i_data_type] = None
@@ -597,33 +549,24 @@ def validate_local_files(source_dirs_dict, patterns, file_suffix,):
         files_to_copy_dict[i_data_type] = check_files(
             i_data_type,
             dir=Path(source_dirs_dict[i_data_type]),
-            image_patterns=patterns[i_data_type],
-            file_suffix_list=file_suffix[i_data_type],
+            image_patterns=config.patterns_filename[i_data_type],
+            file_suffix_list=config.file_suffix[i_data_type],
         )
         logging.info(
             f"Found {len(files_to_copy_dict[i_data_type])} available {i_data_type} files"
         )
 
-    # Start the program here:
-    dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(sync_output_file, "w") as syf, open(plan_file, "w") as pf:
-        syf.write(f"File Sync Report - {dt}\n")
-        syf.write("----------------------------\n")
-        pf.write(f"Data Upload Plan - {dt}\n")
-        pf.write("----------------------------\n")
-
-    # 5, Write the plan file with validated file paths
     # write ofop files first, video upload will trigger lambda function
     # which processes video files and will need ofop obser data for annotation
     # ofop is needed by video?
     passed_file_count = {}
     for i_data_type in data_types_list:
         if i_data_type in files_to_copy_dict.keys():
-            passed_file_count[i_data_type] = write_validated_file_paths(
+            passed_file_count[i_data_type] = parallel_verify_files(
                 data_type=i_data_type,
-                files_list=files_to_copy_dict[i_data_type],
+                files_dict=files_to_copy_dict[i_data_type],
                 cruise_id=cruise_id,
-                plan_file=plan_file,
+                patterns_station_id=config.patterns_station_id[i_data_type],
             )
     total_passed_file_counts = 0
     for i_data_type in files_to_copy_dict.keys():
@@ -660,8 +603,7 @@ if __name__ == "__main__":
         try:
             validate_local_files(
                 source_dirs_dict,
-                config.patterns,
-                config.file_suffix,
+                config,
             )
         except Exception as e:
             logging.exception(f"Error validating local files: {e}")
@@ -672,7 +614,7 @@ if __name__ == "__main__":
         )
         input("Press Enter to confirm and continue...")
 
-    # 5, Set up AWS credentials
+    # 4, Set up AWS credentials
     provider = AWSCredentialProvider()
     manager = AWSBucketManager(
         environment=environment,
