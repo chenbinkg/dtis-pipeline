@@ -481,12 +481,15 @@ def upload_to_s3(
 
             if res is None:
                 try:
+                    # Get content type for the file
+                    content_type = get_file_type(file_path.strip()) or 'application/octet-stream'
                     # try upload the file
                     sync_output = s3_client.upload_file(
                         file_path.strip(), 
                         bucket_name, 
                         f"{cruise_id}/{station_id.strip()}/{file_type}/{file_basename}",
-                        ExtraArgs={'StorageClass': 'STANDARD_IA'}
+                        ExtraArgs={'StorageClass': 'STANDARD_IA',
+                                   'ContentType': content_type}
                         )
                     if sync_output is None:
                         sync_output_exit_status = 0 
