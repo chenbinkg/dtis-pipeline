@@ -15,7 +15,7 @@ class AWSCredentialProvider:
         self.aws_session_token = None
         self.profile_name = profile_name
 
-    def get_credentials_from_interaction(self) -> Tuple[str, str, Optional[str]]:
+    def get_credentials_from_interaction(self) -> Tuple[str, str, str]:
         """
         Interactively retrieves AWS credentials from the user.
         """
@@ -93,8 +93,8 @@ class AWSCredentialProvider:
 
         if not self.aws_access_key_id or not self.aws_secret_access_key:
             raise ValueError("Access Key ID and Secret Access Key are required.")
-
-        logging.info("AWS credentials successfully retrieved from user interaction.")
+        else:
+            logging.info("AWS credentials successfully retrieved from user interaction.")
         return (
             self.aws_access_key_id,
             self.aws_secret_access_key,
