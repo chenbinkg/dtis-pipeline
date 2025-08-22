@@ -212,58 +212,6 @@ def check_files(data_type, dir, image_patterns, file_suffix_list):
     return files_to_copy
 
 
-def enable_lambda(lambda_client, lambda_function_name, success_file, error_file):
-    print(
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Enabling Lambda event source mapping for the function: {lambda_function_name}..."
-    )
-
-    # # Initialize boto3 client
-    # lambda_client = boto3.client('lambda')
-
-    # Get event source mapping information
-    event_source_mapping_info = lambda_client.list_event_source_mappings(
-        FunctionName=lambda_function_name
-    )
-
-    # Check if the event source mapping is already enabled
-    if any(
-        mapping["State"] == "Enabled"
-        for mapping in event_source_mapping_info["EventSourceMappings"]
-    ):
-        print(
-            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping was already enabled. Nothing to do"
-        )
-        with open(success_file, "a") as sf:
-            sf.write(
-                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping was already enabled. Nothing to do\n"
-            )
-    else:
-        # Extract UUID
-        uuid = next(
-            mapping["UUID"]
-            for mapping in event_source_mapping_info["EventSourceMappings"]
-            if "UUID" in mapping
-        )
-
-        # Update event source mapping to enable it
-        try:
-            lambda_client.update_event_source_mapping(UUID=uuid, Enabled=True)
-            print(
-                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping enabled successfully"
-            )
-            with open(success_file, "a") as sf:
-                sf.write(
-                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Lambda event source mapping enabled successfully\n"
-                )
-        except Exception as e:
-            print(
-                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Failed to enable Lambda event source mapping: {str(e)}"
-            )
-            with open(error_file, "a") as ef:
-                ef.write(
-                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Failed to enable Lambda event source mapping: {str(e)}\n"
-                )
-
 def get_station_id(file_path, cruise_id, patterns):
     station_id = None
     # Normalize the file path to use the correct separator for the OS
@@ -404,7 +352,7 @@ def upload_to_s3(
             for future in as_completed(futures):
                 log_msg = future.result()
                 logging.info(log_msg) if log_msg else None
-
+            logging.info(f"Finished uploading {i_data_type} files to S3.")
 
 def set_up_log():
     current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -509,25 +457,19 @@ if __name__ == "__main__":
         aws_resources = manager.setup()
 
         # 5, Upload to S3
-        upload_to_s3(
-            files_to_upload_dict=files_to_upload_dict,
-            dry_run=dry_run,
-            cruise_id=cruise_id,
-            s3_client=aws_resources['s3_client'],
-            bucket_name=aws_resources['bucket_name'],
-        )
-        # # Enable Lambda
-        # enable_lambda(
-        #     lambda_client=lambda_client,
-        #     lambda_function_name=lambda_function_name,
-        #     success_file=success_file,
-        #     error_file=error_file,
-        # )
+        try:
+            upload_to_s3(
+                files_to_upload_dict=files_to_upload_dict,
+                dry_run=dry_run,
+                cruise_id=cruise_id,
+                s3_client=aws_resources['s3_client'],
+                bucket_name=aws_resources['bucket_name'],
+            )
+        except Exception as e:
+            logging.exception(f"Error uploading files to S3: {e}")
+            sys.exit(1)
 
-    # # exit program
-    # exit_confirmation = get_exit_confirmation()
-    # if exit_confirmation == "yes":
-    #     sys.exit("Closing down now, exiting...")
-    # else:
-    #     print("Sorry, please try again by setting DRY_RUN to true first...")
-    #     sys.exit("Exiting the program now...")
+        logging.info("Data upload completed successfully.")
+    else:
+        logging.info("Data upload cancelled by user.")
+
