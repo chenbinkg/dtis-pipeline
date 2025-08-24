@@ -58,11 +58,21 @@ export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output tex
 
 terraform init -backend-config="bucket=${PROJECT_NAME}-${ENVIRONMENT}-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${ENVIRONMENT}/${ENVIRONMENT}.tfstate"
 
-terraform plan -out=plan.tfplan
+terraform plan -out=plan.tfplan \
+    -var="mongo_uri=mongodb+srv://username:password@cluster.mongodb.net"
 terraform apply plan.tfplan
 ```
 
 You may want to run the commands directly from your laptop, or use a [Dojo](https://github.com/kudulab/dojo)-docker container.
+
+## Upload Credential and Secrets to AWS
+```bash
+aws secretsmanager create-secret \
+    --region ap-southeast-2 \
+    --name "aws-credentials/biigle/create-user-disk" \
+    --description "AWS Access Key ID and Secret Access Key for my application" \
+    --secret-string '{"access_key_id":"XXXXXXXXXXXXXXX","secret_access_key":"XXXXXXXXXXXXXX"}'
+```
 
 ## Cleanup
 
@@ -90,4 +100,17 @@ terraform init -backend-config="bucket=niwa-dtis-ofop-data-${AWS_ACCOUNT_ID}-ter
 
 terraform plan -destroy -out=plan.tfplan
 terraform apply plan.
+```
+
+# Query MongoDB URI in SSM parameters
+```bash
+aws ssm get-parameters \
+  --names "/dtis/mongodb/mongo-uri" \
+  --region ap-southeast-2
+  --with-decryption
+```
+
+# CLI Command to Update SSM parameters
+```bash
+aws ssm put-parameter --name "/dtis/biigle/disk-id" --value "107" --overwrite
 ```

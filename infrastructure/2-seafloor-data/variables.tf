@@ -67,7 +67,7 @@ variable "mongo_dtis_ofop_obser_collection" {
 variable "mongo_dtis_video_collection" {
   type        = string
   description = "MongoDB collection for DTIS video data"
-  default     = "dtis_video"
+  default     = "dtis_videos"
 }
 
 variable "mongo_dtis_ofop_prot_collection" {
@@ -139,10 +139,4 @@ variable "biigle_create_user_disk_secret_name" {
   type        = string
   description = "Name of the AWS Secrets Manager secret for Biigle create user disk"
   default     = "aws-credentials/biigle/create-user-disk"
-}
-
-variable "ecr_repository" {
-  type        = string
-  description = "ECR repository for the Biigle annotation container"
-  default     = "dtis-annotation"
 }

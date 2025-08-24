@@ -183,7 +183,8 @@ def get_aws_credentials_from_secrets_manager(secret_name):
 
     try:
         get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name
+            SecretId=secret_name,
+            region_name=session.region_name
         )
     except ClientError as e:
         error_code = e.response['Error']['Code']

@@ -131,6 +131,13 @@ resource "aws_ssm_parameter" "mongo_dtis_stills_collection" {
  resource "aws_ssm_parameter" "ecr_repository" {
   name  = "/dtis/pipeline/ecr-repository"
   type  = "String"
-  value = var.ecr_repository
+  value = aws_ecr_repository.dtis_annotation_ecr.name
   tags  = local.tags
  }
+
+  resource "aws_ssm_parameter" "ecr_repository_url" {
+  name  = "/dtis/pipeline/ecr-repository-url"
+  type  = "String"
+  value = aws_ecr_repository.dtis_annotation_ecr.repository_url
+  tags  = local.tags
+}

@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
-
-ENVIRONMENT=${1:-dev}
-AWS_REGION=${2:-ap-southeast-2}
+PROJECT_NAME=${1:-data-platform-dtis}
+ENVIRONMENT=${2:-dev}
+AWS_REGION=${3:-ap-southeast-2}
 # Set variables
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-ECR_REPOSITORY="dtis-annotation-${ENVIRONMENT}"
+ECR_REPOSITORY="${PROJECT_NAME}-${ENVIRONMENT}-annotation"
 ECR_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
 IMAGE_TAG="latest"
 
@@ -16,9 +16,10 @@ aws ecr create-repository --repository-name ${ECR_REPOSITORY}
 # Get login credentials for ECR
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
-# Enable Docker Buildx if not already enabled
-docker buildx create --name mybuilder --driver docker-container --use > /dev/null 2>&1
-docker buildx inspect --bootstrap > /dev/null 2>&1
+# Clean up and recreate buildx builder
+docker buildx rm mybuilder || true
+docker buildx create --name mybuilder --driver docker-container --use
+docker buildx inspect --bootstrap
 
 # Build and push the multi-platform Docker image using Buildx
 docker buildx build \

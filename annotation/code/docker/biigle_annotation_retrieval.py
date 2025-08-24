@@ -6,7 +6,7 @@ import numpy as np
 import requests
 from botocore.exceptions import NoCredentialsError, ClientError
 
-from .utils import (
+from utils import (
     get_ssm_parameter,
     list_all_objects,
     read_json_from_s3,

@@ -4,8 +4,12 @@ import os
 import sys
 import json
 import argparse
-from .mongodb import MongoDBOps
-from .utils import get_ssm_parameter, sanitize_log_input
+
+# Add parent directory to path for imports when running from /opt/ml/processing/input/code/
+sys.path.insert(0, '/opt/ml/processing')
+
+from mongodb import MongoDBOps
+from utils import get_ssm_parameter, sanitize_log_input
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 _logger = logging.getLogger()
@@ -44,7 +48,7 @@ def sync_obser_with_video_frame(df_obs, df_master, vide_start_times):
         df_obs = df_obs[~df_obs.index.isin(df.index)] # exclude df index
     return video_labels
 
-def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_collection, ssm_param_mongodb_uri):
+def main(cruise, station, db_name, video_collection, master_collection, ofop_obser_collection, ssm_param_mongodb_uri):
     """
     Main function to perform annotation matching.
     This function reads video metadata and master labels from MongoDB,
@@ -57,7 +61,8 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     The matched annotations are saved in the output directory specified by the SageMaker processing job.
 
     Args:
-        s3_input_uri (str): S3 URI for input data, e.g. "s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/frames/"
+        cruise (str): Cruise identifier.
+        station (str): Station identifier.
         db_name (str): Name of the MongoDB database.
         video_collection (str): Name of the MongoDB collection for video metadata.
         master_collection (str): Name of the MongoDB collection for master labels.
@@ -65,8 +70,6 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
         ssm_param_mongodb_uri (str): SSM parameter for MongoDB URI.
     """
     _logger.info("Starting RFDETR annotation matching job")
-    cruise = s3_input_uri.split('/')[3]  # Extract cruise from S3 URI
-    station = s3_input_uri.split('/')[4]  # Extract station from S3 URI
     _logger.info(f"Processing images for cruise: {cruise}, station: {station}")
 
     # SageMaker paths
@@ -115,7 +118,7 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     )
 
     df_master = pd.concat([df_master_fish, df_master_invert], axis=0)
-
+    _logger.info(f"master headers: {df_master.columns}")
     # generate query from MongoDB (dtis_ofop_obser) for labelled data
     columns = ["cruise", "station", "timestamp", "date", "time", "observation", "observation2"]
     query_cols = ["cruise", "station"]
@@ -212,7 +215,8 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--s3_input_uri", type=str, default=None)
+    parser.add_argument("--cruise", type=str, default=None)
+    parser.add_argument("--station", type=str, default=None)
     parser.add_argument("--db_name", type=str, default=None)
     parser.add_argument("--video_collection_name", type=str, default=None)
     parser.add_argument("--master_collection_name", type=str, default=None)
@@ -222,7 +226,8 @@ if __name__ == "__main__":
 
     _logger.info("Received arguments {}".format(args))
     main(
-        s3_input_uri=args.s3_input_uri,
+        cruise=args.cruise,
+        station=args.station,
         db_name=args.db_name,
         video_collection=args.video_collection_name,
         master_collection=args.master_collection_name,

@@ -4,6 +4,7 @@ import os
 import boto3
 import sagemaker
 import argparse
+import logging
 from sagemaker.local import LocalSession
 from sagemaker.s3 import S3Downloader
 from sagemaker.processing import ScriptProcessor
@@ -21,29 +22,75 @@ from sagemaker.workflow.parameters import (
     ParameterString,
     ParameterFloat,
 )
-from .code.docker.utils import get_ssm_parameter
+
+from botocore.exceptions import NoCredentialsError, ClientError
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+_logger = logging.getLogger()
+
+
+def sanitize_log_input(value: str) -> str:
+    """Sanitize input for logging to prevent log injection attacks."""
+    if not isinstance(value, str):
+        value = str(value)
+    return value.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+
+# Function to get parameters from SSM
+def get_ssm_parameter(name, default_value=None):
+    """Retrieve a parameter from AWS SSM Parameter Store."""
+    try:
+        ssm_client = boto3.client('ssm', region_name=os.environ.get('AWS_REGION', 'ap-southeast-2'))
+        response = ssm_client.get_parameter(Name=name, WithDecryption=True)
+        return response['Parameter']['Value']
+    except ClientError as e:
+        error_code = e.response.get('Error', {}).get('Code')
+        if error_code == 'ParameterNotFound':
+            _logger.warning(f"SSM parameter '{sanitize_log_input(name)}' not found, using default: {sanitize_log_input(str(default_value))}")
+            return default_value
+        elif error_code == 'AccessDenied':
+            _logger.error(f"Access denied to SSM parameter '{sanitize_log_input(name)}': {sanitize_log_input(str(e))}")
+            return default_value
+        else:
+            _logger.error(f"SSM client error for parameter '{sanitize_log_input(name)}': {sanitize_log_input(str(e))}")
+            return default_value
+    except NoCredentialsError as e:
+        _logger.error(f"AWS credentials not found for SSM: {sanitize_log_input(str(e))}")
+        return default_value
 
 
 if __name__ == "__main__":
     # Configuration
     parser = argparse.ArgumentParser(description="SageMaker Pipeline Creation Script")
-    parser.add_argument("--environment", type=str, default="dev", 
+    parser.add_argument("--cruise", type=str, default="TAN0616",
+                        help="cruise name, e.g. TAN0616")
+    parser.add_argument("--station", type=str, default="095",
+                        help="station name, e.g. 095")
+    parser.add_argument("--environment", type=str, default="dev",
                         help="Environment for the pipeline (e.g., dev, prod)")
-    parser.add_argument("--model_s3_uri", type=str, default="s3://dtis-model-851725470721-testing/models/RF-DETR/checkpoint_best_regular.pth",
+    parser.add_argument("--model_s3_uri", type=str, default="s3://data-platform-dtis-dev-443293291817-model-data/models/RF-DETR/checkpoint_best_regular.pth",
                         help="S3 URI for the model file")
-    parser.add_argument("--input_data_s3_uri", type=str, default="s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/frames/",
+    parser.add_argument("--input_data_s3_uri", type=str, default="s3://data-platform-dtis-dev-443293291817-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/frames/",
                         help="S3 URI for the input data")
-    parser.add_argument("--output_data_s3_uri", type=str, default="s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/annotations/",
+    parser.add_argument("--output_data_s3_uri", type=str, default="s3://data-platform-dtis-dev-443293291817-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/annotations/",
                         help="S3 URI for the output data")
-    parser.add_argument("--matched_anno_s3_uri", type=str, default="s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/matched_annotations/",
+    parser.add_argument("--matched_anno_s3_uri", type=str, default="s3://data-platform-dtis-dev-443293291817-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/matched_annotations/",
                         help="S3 URI for the matched annotations")
 
     args, unknown = parser.parse_known_args()
+    cruise = args.cruise
+    station = args.station
     environment = args.environment
     default_model_s3_uri = args.model_s3_uri
     default_input_data_s3_uri = args.input_data_s3_uri
     default_output_data_s3_uri = args.output_data_s3_uri
     default_matched_anno_s3_uri = args.matched_anno_s3_uri
+
+    # Parse the S3 URI to get bucket and key
+    parts = default_input_data_s3_uri.replace("s3://", "").split("/", 1)
+    bucket_name = parts[0]
+    object_key = parts[1] if len(parts) > 1 else ""
+    _logger.info(f"Parsed S3 bucket: {bucket_name}, key: {object_key}")
+
     # Create a session
     session = boto3.session.Session()
 
@@ -52,11 +99,10 @@ if __name__ == "__main__":
     account_id = boto3.client('sts').get_caller_identity().get('Account')
     # ECR image URI
     ssm_client = boto3.client('ssm', region_name=region)
-    response = ssm_client.get_parameter(Name="dtis/pipeline/ecr-repository", WithDecryption=True)
-    ecr_repo_prefix = response['Parameter']['Value']
-    ecr_repository = f"{ecr_repo_prefix}-{environment}"
+    response = ssm_client.get_parameter(Name="/dtis/pipeline/ecr-repository-url")
+    ecr_repo_url = response['Parameter']['Value']
     tag = "latest"
-    default_ecr_image_uri = f"{account_id}.dkr.ecr.{region}.amazonaws.com/{ecr_repository}:{tag}"
+    default_ecr_image_uri = f"{ecr_repo_url}:{tag}"
 
     # Create standard SageMaker session (not local)
     sagemaker_session = sagemaker.session.Session()
@@ -78,17 +124,38 @@ if __name__ == "__main__":
     user_pattern = get_ssm_parameter("/dtis/biigle/user-pattern", "Caroline")
     user_lastname = get_ssm_parameter("/dtis/biigle/user-lastname", "Chin")
     create_disk_secret_name = get_ssm_parameter("/dtis/biigle/create-user-disk-secret-name", "aws-credentials/biigle/create-user-disk")
+    mongodb_uri = get_ssm_parameter("/dtis/mongodb/mongo-uri", "")
     mongodb_db = get_ssm_parameter("/dtis/mongodb/mongo-db", "dtis-data")
     mongodb_biigle_anno_sess_collection = get_ssm_parameter("/dtis/mongodb/biigle-anno-session-collection", "dtis_biigle_annotation_session")
     mongodb_video_collection = get_ssm_parameter("/dtis/mongodb/dtis-video-collection", "dtis_video")
     mongodb_ofop_obser_collection = get_ssm_parameter("/dtis/mongodb/dtis-ofop-obser-collection", "dtis_ofop_obser")
-    mongodb_master_collection = get_ssm_parameter("/dtis/mongodb/dtis-metadata-collection", "dtis_master")
+    mongodb_master_collection = get_ssm_parameter("/dtis/mongodb/dtis-master-collection", "dtis_master")
 
     # Use PipelineSession for defining the pipeline
     pipeline_session = PipelineSession()
     # default_bucket = sagemaker_session.default_bucket()
 
     # Define parameters
+    cruise_param = ParameterString(
+        name="Cruise",
+        default_value=cruise
+    )
+    station_param = ParameterString(
+        name="Station",
+        default_value=station
+    )
+    bucket_name_param = ParameterString(
+        name="BucketName",
+        default_value=bucket_name
+    )
+    frames_prefix_param = ParameterString(
+        name="FramesPrefix",
+        default_value=object_key
+    )
+    region_param = ParameterString(
+        name="AWSRegion",
+        default_value=region
+    )
     processing_instance_count = ParameterInteger(
         name="ProcessingInstanceCount", 
         default_value=1
@@ -104,7 +171,7 @@ if __name__ == "__main__":
         )
     mongodb_uri_ssm = ParameterString(
         name="MongoDBURI",
-        default_value="/dtis/mongodb/uri"  # SSM parameter for MongoDB
+        default_value="/dtis/mongodb/mongo-uri"  # SSM parameter for MongoDB
         )
     db_name = ParameterString(
         name="DBName",
@@ -244,7 +311,8 @@ if __name__ == "__main__":
             )
         ],
         job_arguments=[
-            "--s3_input_uri", s3_input_uri,
+            "--cruise", cruise_param,
+            "--station", station_param,
             "--db_name", db_name,
             "--video_collection_name", video_collection_name,
             "--master_collection_name", master_collection_name,
@@ -265,8 +333,11 @@ if __name__ == "__main__":
             )
         ],
         job_arguments=[
-            "--s3_input_uri", s3_input_uri,
-            "--aws_region", region,
+            "--bucket_name", bucket_name_param,
+            "--frames_prefix", frames_prefix_param,
+            "--cruise", cruise_param,
+            "--station", station_param,
+            "--aws_region", region_param,
             "--secret_name", biigle_create_disk_secret_name,
             "--api_url", biigle_api_url,
             "--api_email", biigle_api_email,
@@ -276,6 +347,7 @@ if __name__ == "__main__":
             "--user_pattern", biigle_user_pattern,
             "--user_lastname", biigle_user_lastname,
             "--ssm_param_mongodb_uri", mongodb_uri_ssm,
+            "--mongodb_db", db_name,
             "--dtis_biigle_anno_sess_collection", dtis_biigle_anno_collection_name
         ]
     )
@@ -285,17 +357,31 @@ if __name__ == "__main__":
     pipeline = Pipeline(
         name=pipeline_name,
         parameters=[
+            bucket_name_param,
+            cruise_param,
+            station_param,
+            frames_prefix_param,
+            region_param,
             processing_instance_count,
             instance_type,
             s3_input_uri,
             s3_output_uri,
             s3_matched_anno_uri,
             model_s3_uri,
+            mongodb_uri_ssm,
             db_name,
             video_collection_name,
             master_collection_name,
             ofop_obser_collection_name,
-            dtis_biigle_anno_collection_name
+            dtis_biigle_anno_collection_name,
+            biigle_create_disk_secret_name,
+            biigle_api_url,
+            biigle_api_email,
+            biigle_api_token,
+            biigle_label_tree_id,
+            biigle_storage_disk_id,
+            biigle_user_pattern,
+            biigle_user_lastname
         ],
         steps=[
             step_inference,
