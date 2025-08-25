@@ -36,7 +36,7 @@ if __name__ == "__main__":
     
     # ECR image URI
     ssm_client = boto3.client('ssm', region_name=region)
-    response = ssm_client.get_parameter(Name="dtis/pipeline/ecr-repository", WithDecryption=True)
+    response = ssm_client.get_parameter(Name="/dtis/pipeline/ecr-repository", WithDecryption=True)
     ecr_repo_prefix = response['Parameter']['Value']
     ecr_repository = f"{ecr_repo_prefix}-{environment}"
     tag = "latest"

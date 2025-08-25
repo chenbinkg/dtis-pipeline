@@ -16,6 +16,18 @@ def lambda_handler(event, context):
     collection_obser = os.environ["MONGODB_COLLECTION_OBSER"]
     collection_video = os.environ["MONGODB_COLLECTION_VIDEO"]
     collection_master = os.environ["MONGODB_COLLECTION_MASTER"]
+    
+    # Get SSM parameters for BIIGLE configuration
+    ssm_client = boto3.client('ssm')
+    
+    def get_ssm_parameter(param_name):
+        try:
+            response = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
+            return response['Parameter']['Value']
+        except Exception as e:
+            logger.error(f"Failed to get SSM parameter {param_name}: {e}")
+            return ""
+    
     if not pipeline_name:
         logger.error("Environment variable PIPELINE_NAME is not set.")
         return {"statusCode": 500, "body": "Missing PIPELINE_NAME environment variable."}
@@ -61,7 +73,18 @@ def lambda_handler(event, context):
         # Define parameters for the SageMaker pipeline
         annotation_s3_url = frame_capture_output_url.replace("/frames", "/annotations")
         matched_annotation_s3_url = frame_capture_output_url.replace("/frames", "/matched_annotations")
+        
+        # Extract cruise and station from S3 path
+        cruise = s3_base_key.split('/')[0]
+        station = s3_base_key.split('/')[1]
+        frames_prefix = s3_base_key + '/'
+        
         pipeline_parameters = [
+            {"Name": "BucketName", "Value": bucket_name},
+            {"Name": "Cruise", "Value": cruise},
+            {"Name": "Station", "Value": station},
+            {"Name": "FramesPrefix", "Value": frames_prefix},
+            {"Name": "AWSRegion", "Value": "ap-southeast-2"},
             {"Name": "S3InputURI", "Value": frame_capture_output_url},
             {"Name": "S3OutputURI", "Value": annotation_s3_url},
             {"Name": "InferenceInstanceType", "Value": "ml.m5.xlarge"},
@@ -69,8 +92,16 @@ def lambda_handler(event, context):
             {"Name": "DBName", "Value": db_name},
             {"Name": "OFOPObserCollectionName", "Value": collection_obser},
             {"Name": "VideoCollectionName", "Value": collection_video},
-            {"Name": "MasterCollectionName", "Value": collection_master}
-
+            {"Name": "MasterCollectionName", "Value": collection_master},
+            {"Name": "DTISBiigleAnnoCollectionName", "Value": get_ssm_parameter("/dtis/mongodb/biigle-anno-session-collection")},
+            {"Name": "BiigleCreateDiskSecretName", "Value": get_ssm_parameter("/dtis/biigle/create-user-disk-secret-name")},
+            {"Name": "BiigleApiUrl", "Value": get_ssm_parameter("/dtis/biigle/api-url")},
+            {"Name": "BiigleApiEmail", "Value": get_ssm_parameter("/dtis/biigle/api-email")},
+            {"Name": "BiigleApiToken", "Value": get_ssm_parameter("/dtis/biigle/api-token")},
+            {"Name": "BiigleLabelTreeId", "Value": get_ssm_parameter("/dtis/biigle/label-tree-id")},
+            {"Name": "BiigleStorageDiskId", "Value": get_ssm_parameter("/dtis/biigle/disk-id")},
+            {"Name": "BiigleUserPattern", "Value": get_ssm_parameter("/dtis/biigle/user-pattern")},
+            {"Name": "BiigleUserLastname", "Value": get_ssm_parameter("/dtis/biigle/user-lastname")}
         ]
 
         # Start the SageMaker pipeline execution
