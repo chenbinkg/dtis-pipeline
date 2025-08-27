@@ -1,67 +1,19 @@
-from pymongo.mongo_client import MongoClient
 import logging
 import pandas as pd
-import boto3
 import os
 import sys
-from io import StringIO
 import json
 import argparse
+
+# Add parent directory to path for imports when running from /opt/ml/processing/input/code/
+sys.path.insert(0, '/opt/ml/processing')
+
+from mongodb import MongoDBOps
+from utils import get_ssm_parameter, sanitize_log_input
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 _logger = logging.getLogger()
 
-class MongoDBOps:
-
-    def __init__(self, ssm_param="/dtis/mongodb/uri", region_name="ap-southeast-2"):
-        """Initialize MongoDBOps with connection string from AWS SSM Parameter Store.
-        Args:
-            ssm_param (str): The SSM parameter name for the MongoDB connection string.
-            This should be the full path to the parameter, e.g., '/dtis/mongodb/uri'.
-            The connection string should be in the format:
-            'mongodb+srv://username:password@cluster0.mongodb.net/test?retryWrites=true&w=majority'
-        """
-        ssm = boto3.client('ssm', region_name=region_name)
-        parameter_name = ssm_param
-        # Get parameter (with decryption if it's a SecureString)
-        response = ssm.get_parameter(
-            Name=parameter_name,
-            WithDecryption=True
-        )
-        
-        # Extract the MongoDB URI
-        self.conn_string = response['Parameter']['Value']
-        # self.client = MongoClient(self.conn_string)
-
-    def read_to_df(self, db_name, collection_name, query_filter, column_filter):
-        client = MongoClient(self.conn_string)
-        coll = client[db_name][collection_name]
-        mydoc = coll.find(query_filter, column_filter)
-        df =  pd.DataFrame(list(mydoc))
-        # df['obs_date'] = pd.to_datetime(df["obs_date"])  
-        # df.set_index('obs_date')
-        if "_id" in df.columns:
-            df = df.drop('_id', axis=1)
-        client.close()
-        return df
-    
-    def gen_query_filter(self, columns, values):
-        '''Generate query filter conditions'''
-        query_filter = {}
-        for col, val in zip(columns, values):
-            query_filter[col] = val
-        _logger.info(f"query_filter: {query_filter}")
-        return query_filter
-
-    def gen_column_filter(self, columns):
-        '''Generate column filter in the following format:
-        {col1: 1, col2: 1, col3: 1, col3: 1, col4: 1}
-        '''
-        column_filter = {}
-        for col in columns:
-            column_filter[col] = 1
-        _logger.info(f"column_filter: {column_filter}")
-        return column_filter
 
 # convert labelled data to video frame, see below
 def get_video_start_time(df, start_prompt="Start video"):
@@ -96,7 +48,7 @@ def sync_obser_with_video_frame(df_obs, df_master, vide_start_times):
         df_obs = df_obs[~df_obs.index.isin(df.index)] # exclude df index
     return video_labels
 
-def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_collection, ssm_param_mongodb_uri):
+def main(cruise, station, db_name, video_collection, master_collection, ofop_obser_collection, ssm_param_mongodb_uri):
     """
     Main function to perform annotation matching.
     This function reads video metadata and master labels from MongoDB,
@@ -107,16 +59,17 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     It also expects the MongoDB collections to contain specific fields for video metadata,
     master labels, and observation data.
     The matched annotations are saved in the output directory specified by the SageMaker processing job.
+
     Args:
-        s3_input_uri (str): S3 URI for input data, e.g. "s3://dtis-model-851725470721-testing/TAN0616/001/video/TAN0616_001/frames/"
+        cruise (str): Cruise identifier.
+        station (str): Station identifier.
         db_name (str): Name of the MongoDB database.
         video_collection (str): Name of the MongoDB collection for video metadata.
         master_collection (str): Name of the MongoDB collection for master labels.
         ofop_obser_collection (str): Name of the MongoDB collection for observation data.
+        ssm_param_mongodb_uri (str): SSM parameter for MongoDB URI.
     """
     _logger.info("Starting RFDETR annotation matching job")
-    cruise = s3_input_uri.split('/')[3]  # Extract cruise from S3 URI
-    station = s3_input_uri.split('/')[4]  # Extract station from S3 URI
     _logger.info(f"Processing images for cruise: {cruise}, station: {station}")
 
     # SageMaker paths
@@ -127,7 +80,8 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     _logger.info(f"Output data path: {output_data_path}")
 
     # generate query from MongoDB (dtis_videos) for video start time
-    mongo_ops = MongoDBOps(ssm_param=ssm_param_mongodb_uri)
+    mongodb_uri = get_ssm_parameter(ssm_param_mongodb_uri, "")
+    mongo_ops = MongoDBOps(mongodb_uri=mongodb_uri)
     columns = ["cruise", "station", "timestamp", "date", "time", "observation"]
     query_cols = ["cruise", "station"]
     query_vals = [cruise, station]
@@ -164,7 +118,7 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
     )
 
     df_master = pd.concat([df_master_fish, df_master_invert], axis=0)
-
+    _logger.info(f"master headers: {df_master.columns}")
     # generate query from MongoDB (dtis_ofop_obser) for labelled data
     columns = ["cruise", "station", "timestamp", "date", "time", "observation", "observation2"]
     query_cols = ["cruise", "station"]
@@ -261,7 +215,8 @@ def main(s3_input_uri, db_name, video_collection, master_collection, ofop_obser_
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--s3_input_uri", type=str, default=None)
+    parser.add_argument("--cruise", type=str, default=None)
+    parser.add_argument("--station", type=str, default=None)
     parser.add_argument("--db_name", type=str, default=None)
     parser.add_argument("--video_collection_name", type=str, default=None)
     parser.add_argument("--master_collection_name", type=str, default=None)
@@ -271,7 +226,8 @@ if __name__ == "__main__":
 
     _logger.info("Received arguments {}".format(args))
     main(
-        s3_input_uri=args.s3_input_uri,
+        cruise=args.cruise,
+        station=args.station,
         db_name=args.db_name,
         video_collection=args.video_collection_name,
         master_collection=args.master_collection_name,

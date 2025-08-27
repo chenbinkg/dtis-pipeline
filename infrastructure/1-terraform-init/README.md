@@ -5,8 +5,10 @@ The files in this directory set up Terraform [remote state](https://developer.ha
 ## How to run this?
 
 1. Make sure you are authenticated with the right AWS account. You might want to check it with `aws sts get-caller-identity`
-2. Run the following:
+2. Run the following, change environment variable to dev, test or prod accordingly:
 ```
+export ENVIRONMENT=dev
+export TF_VAR_environment=${ENVIRONMENT}
 terraform init
 terraform plan -out=plan.tfplan
 terraform apply plan.tfplan
@@ -16,8 +18,10 @@ You may want to run the commands directly from your laptop, or use a [Dojo](http
 
 ## Cleanup
 
-Similar to above, the Terraform commands are:
+Similar to above, you might want to check your account is right with `aws sts get-caller-identity`, and change environment variable to dev, test or prod accordingly, the Terraform commands are:
 ```
+export ENVIRONMENT=dev
+export TF_VAR_environment=${ENVIRONMENT}
 terraform init
 terraform plan -destroy -out=plan.tfplan
 terraform apply plan.tfplan

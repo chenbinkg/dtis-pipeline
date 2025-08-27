@@ -169,14 +169,17 @@ def video_convert_job_setting(input_file, output_file, output_frames_dir, frame_
                     'Outputs': [
                         {
                             'ContainerSettings': {
-                                'Container': 'MP4'
+                                'Container': 'MP4',
+                                'Mp4Settings': {
+                                    'MoovPlacement': 'PROGRESSIVE_DOWNLOAD'
+                                }
                             },
                             'VideoDescription': {
                                 'CodecSettings': {
                                     'Codec': 'H_264',
                                     'H264Settings': {
                                         'RateControlMode': 'QVBR',
-                                        'QualityTuningLevel': 'MULTI_PASS_HQ',#'SINGLE_PASS',
+                                        'QualityTuningLevel': 'MULTI_PASS_HQ',
                                         'MaxBitrate': 10000000
                                     }
                                 }

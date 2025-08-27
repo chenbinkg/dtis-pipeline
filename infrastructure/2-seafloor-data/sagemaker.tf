@@ -1,6 +1,6 @@
 # --- IAM Role and Policy for SageMaker Pipeline ---
 resource "aws_iam_role" "sagemaker_pipeline_role" {
-  name = "DTIS-SageMakerPipelineExecutionRole-${var.environment}"
+  name = "${local.name_prefix}-sagemaker-pipeline-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -17,7 +17,7 @@ resource "aws_iam_role" "sagemaker_pipeline_role" {
 }
 
 resource "aws_iam_policy" "sagemaker_pipeline_policy" {
-  name = "DTIS-SageMakerPipelineExecutionPolicy-${var.environment}"
+  name = "${local.name_prefix}-sagemaker-pipeline-policy"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -86,6 +86,7 @@ resource "aws_iam_policy" "sagemaker_pipeline_policy" {
         Action = [
           "secretsmanager:GetSecretValue",
           "ssm:GetParameter",
+          "ssm:PutParameter",
           "ssm:GetParameters",
           "ssm:GetParameterHistory"
         ],

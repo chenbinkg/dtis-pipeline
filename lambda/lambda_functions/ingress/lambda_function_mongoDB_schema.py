@@ -24,17 +24,14 @@ import json
 import logging
 import os
 import re
+import boto3
 from datetime import datetime, time, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
-
-import boto3
 from botocore.exceptions import ClientError
-from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.collection import Collection, ReturnDocument
 from pymongo.database import Database
-import boto3
-import boto3
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

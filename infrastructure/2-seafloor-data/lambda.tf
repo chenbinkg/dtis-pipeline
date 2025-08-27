@@ -24,7 +24,7 @@ data "aws_iam_policy_document" "dtis_lambda_logging" {
 }
 
 resource "aws_iam_policy" "dtis_lambda_logging" {
-  name        = "dtis-lambda-logging-${var.environment}"
+  name        = "${local.name_prefix}-lambda-logging"
   path        = "/"
   description = "IAM policy for logging from a lambda"
   policy      = data.aws_iam_policy_document.dtis_lambda_logging.json
@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "dtis_lambda_assume_role" {
 
 # lambda execution role for ingress lambda function
 resource "aws_iam_role" "iam_for_lambda" {
-  name               = "dtis-lambda-execution-${var.environment}"
+  name               = "${local.name_prefix}-lambda-execution"
   assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
   tags          = local.tags
 }
@@ -67,7 +67,7 @@ data "aws_iam_policy_document" "dtis_lambda_sqs_permissions" {
 }
 
 resource "aws_iam_policy" "dtis_lambda_sqs_permissions" {
-  name        = "dtis-lambda-sqs-${var.environment}"
+  name        = "${local.name_prefix}-lambda-sqs-permissions"
   path        = "/"
   policy      = data.aws_iam_policy_document.dtis_lambda_sqs_permissions.json
   tags          = local.tags
@@ -87,7 +87,7 @@ data "aws_iam_policy_document" "dtis_lambda_s3_permissions" {
 }
 
 resource "aws_iam_policy" "dtis_lambda_s3_permissions" {
-  name        = "dtis-lambda-s3-${var.environment}"
+  name        = "${local.name_prefix}-lambda-s3-permissions"
   path        = "/"
   policy      = data.aws_iam_policy_document.dtis_lambda_s3_permissions.json
   tags          = local.tags
@@ -98,7 +98,7 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_role_policy" {
   policy_arn = aws_iam_policy.dtis_lambda_s3_permissions.arn
 }
 
-resource "aws_iam_policy_document" "dtis_systems_manager_permissions" {
+data "aws_iam_policy_document" "dtis_systems_manager_permissions" {
   statement {
     effect = "Allow"
     resources = ["arn:aws:ssm:*"]
@@ -111,7 +111,7 @@ resource "aws_iam_policy_document" "dtis_systems_manager_permissions" {
 }
 
 resource "aws_iam_policy" "dtis_systems_manager_permissions" {
-  name        = "dtis-systems-manager-${var.environment}"
+  name        = "${local.name_prefix}-systems-manager-permissions"
   path        = "/"
   policy      = data.aws_iam_policy_document.dtis_systems_manager_permissions.json
   tags          = local.tags
@@ -143,7 +143,7 @@ resource "aws_lambda_function" "dtis" {
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
   filename      = "lambda_ingress.zip"
-  function_name = "dtis-ofop-${var.environment}"
+  function_name = "dtis-ofop-ingress-${var.environment}"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "lambda_function_mongoDB_schema.lambda_handler"
 
@@ -153,7 +153,7 @@ resource "aws_lambda_function" "dtis" {
 
   source_code_hash = data.local_file.lambda_ingress_zip.content_sha256
 
-  runtime = "python3.9"
+  runtime = "python3.12"
 
   # TODO bump it for batching
   reserved_concurrent_executions = 1
@@ -165,12 +165,12 @@ resource "aws_lambda_function" "dtis" {
   environment {
     variables = {
       MONGODB_URI_SSM_PARAM = "/dtis/mongodb/uri" # SSM parameter for MongoDB URI
-			MONGODB_DATABASE = "dtis${var.environment}"
-			INGRESS_COLLECTION_DTIS = "dtis_metadata"
-      MONGODB_COLLECTION_IMAGE = "dtis_stills"
-      MONGODB_COLLECTION_VIDEO = "dtis_videos"
-      MONGODB_COLLECTION_OBSER = "dtis_ofop_obser"
-      MONGODB_COLLECTION_PROT = "dtis_ofop_prot"
+			MONGODB_DATABASE = var.mongo_db
+      MONGODB_COLLECTION_OBSER = var.mongo_dtis_ofop_obser_collection
+      MONGODB_COLLECTION_PROT = var.mongo_dtis_ofop_prot_collection
+			INGRESS_COLLECTION_DTIS = var.mongo_dtis_metadata_collection
+      MONGODB_COLLECTION_IMAGE = var.mongo_dtis_stills_collection
+      MONGODB_COLLECTION_VIDEO = var.mongo_dtis_video_collection
       MEDIA_CONVERT_LAMBDA_FUNCTION = "dtis-ofop-mediaconvert-${var.environment}"
     }
   }
@@ -189,7 +189,7 @@ resource "aws_lambda_event_source_mapping" "dtis" {
 
 ### MediaConvert role and policy
 resource "aws_iam_role" "mediaconvert_role" {
-  name = "dtis-mediaconvert-${var.environment}"
+  name = "${local.name_prefix}-mediaconvert-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -206,7 +206,7 @@ resource "aws_iam_role" "mediaconvert_role" {
 }
 
 resource "aws_iam_policy" "mediaconvert_policy" {
-  name        = "dtis-mediaconvert-${var.environment}"
+  name        = "${local.name_prefix}-mediaconvert-policy"
   description = "Policy for MediaConvert to access S3 and CloudWatch"
 
   policy = jsonencode({
@@ -255,7 +255,7 @@ resource "aws_iam_role_policy_attachment" "mediaconvert_role_policy" {
 ### MediaConvert lambda function
 # create lambda execution role for mediaconvert lambda function
 resource "aws_iam_role" "iam_for_lambda_mediaconvert" {
-  name               = "dtis-lambda-mediaconvert-execution-${var.environment}"
+  name               = "${local.name_prefix}-lambda-mediaconvert-execution"
   assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
   tags          = local.tags
 }
@@ -282,7 +282,7 @@ data "aws_iam_policy_document" "pass_mediaconvert_role" {
 }
 
 resource "aws_iam_policy" "pass_mediaconvert_permissions" {
-  name        = "dtis-lambda-mediaconvert-${var.environment}"
+  name        = "${local.name_prefix}-lambda-mediaconvert-permissions"
   path        = "/"
   policy      = data.aws_iam_policy_document.pass_mediaconvert_role.json
   tags          = local.tags
@@ -324,7 +324,7 @@ resource "aws_lambda_function" "dtis_mediaconvert" {
 
   source_code_hash = data.local_file.lambda_mediaconvert_zip.content_sha256
 
-  runtime = "python3.9"
+  runtime = "python3.12"
 
   # TODO bump it for batching
   reserved_concurrent_executions = 1
@@ -359,7 +359,7 @@ data "aws_iam_policy_document" "invoke_mediaconvert_lambda_permissions" {
 
 # IAM policy for main lambda to invoke lambda function for media convert
 resource "aws_iam_policy" "invoke_media_convert_lambda_permissions" {
-  name        = "dtis-lambda-invoke-lambda-${var.environment}"
+  name        = "${local.name_prefix}-lambda-invoke-lambda-mediaconvert-permissions"
   path        = "/"
   policy      = data.aws_iam_policy_document.invoke_mediaconvert_lambda_permissions.json
   tags          = local.tags
@@ -374,14 +374,14 @@ resource "aws_iam_role_policy_attachment" "invoke_mediaconvert_lambda_policy" {
 ### Pretrained Annotation lambda function
 # create lambda execution role for pretrained-annotation lambda function
 resource "aws_iam_role" "iam_for_lambda_pretrained_annotation" {
-  name               = "dtis-lambda-pretrained-annotation-execution-${var.environment}"
+  name               = "${local.name_prefix}-lambda-pretrained-annotation-execution"
   assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
   tags          = local.tags
 }
 
 # Grant lambda execution role for sagemaker pipeline
 resource "aws_iam_policy" "lambda_sagemaker_trigger_policy" {
-  name = "LambdaSageMakerTriggerPolicy"
+  name = "${local.name_prefix}-lambda-sagemaker-trigger-policy"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -390,7 +390,7 @@ resource "aws_iam_policy" "lambda_sagemaker_trigger_policy" {
         Effect = "Allow",
         Action = "sagemaker:StartPipelineExecution",
         Resource = [
-          "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:pipeline/DTIS-Annotation-Pipeline-${var.environment}"
+          "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:pipeline/DTIS-Annotation-Pipeline-${var.environment}"
         ]
       },
       { # Permissions for Lambda to write logs to CloudWatch Logs
@@ -443,7 +443,7 @@ resource "aws_lambda_function" "pretrained_annotation" {
 
   source_code_hash = data.local_file.lambda_pretrained_annotation_zip.content_sha256
 
-  runtime = "python3.9"
+  runtime = "python3.12"
 
   reserved_concurrent_executions = 1
   # defaults to 3 (seconds)
@@ -453,10 +453,10 @@ resource "aws_lambda_function" "pretrained_annotation" {
   environment {
     variables = {
 			PIPELINE_NAME = "DTIS-Annotation-Pipeline-${var.environment}",
-      MONGODB_DATABASE = "dtis${var.environment}"
-			MONGODB_COLLECTION_MASTER = "dtis_master"
-      MONGODB_COLLECTION_VIDEO = "dtis_videos"
-      MONGODB_COLLECTION_OBSER = "dtis_ofop_obser"
+      MONGODB_DATABASE = var.mongo_db,
+			MONGODB_COLLECTION_MASTER = var.mongo_dtis_master_collection,
+      MONGODB_COLLECTION_VIDEO = var.mongo_dtis_video_collection,
+      MONGODB_COLLECTION_OBSER = var.mongo_dtis_ofop_obser_collection
     }
   }
   tags = local.tags

@@ -5,3 +5,4 @@ pandas
 pymongo
 rfdetr
 tqdm
+requests

@@ -1,9 +1,10 @@
 #!/bin/bash
-
+PROJECT_NAME=${1:-data-platform-dtis}
+ENVIRONMENT=${2:-dev}
+AWS_REGION=${3:-ap-southeast-2}
 # Set variables
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-AWS_REGION="ap-southeast-2"  # Change to your region
-ECR_REPOSITORY="dtis-annotation-container"
+ECR_REPOSITORY="${PROJECT_NAME}-${ENVIRONMENT}-annotation"
 IMAGE_TAG="latest"
 
 # Create the ECR repository if it doesn't exist
