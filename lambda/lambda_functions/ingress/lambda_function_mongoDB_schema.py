@@ -998,7 +998,7 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     bounding_box = parsed_data.get("bounding_box")
 
     if not documents:
-        logger.error("No parsed data found to create documents.")
+        logger.warning("No parsed data found to create documents.")
 
     return documents, file_format, bounding_box, cruise, \
         station, metadata, image_docs, video_docs
@@ -1339,7 +1339,7 @@ def prepare_documents(
             )
             documents.append(document)
         else:
-            logger.error("Unknown file type. Cannot prepare document.")
+            logger.warning(f"Unknown file type of {file_key}. Skipping...")
             continue
 
         logger.debug(f"Prepared document for observation: {document}")
@@ -1409,9 +1409,11 @@ def lambda_handler(event, context):
                             bucket_name,
                             file_key,
                         )
-                        
+
                         # call media convert lambda function for .m2t video files
-                        if file_key.endswith(('.m2ts', '.m2t', '.avi', '.MTS', '.mpg', '.MPG')):
+                        if file_key.lower().endswith(
+                            (".m2ts", ".m2t", ".avi", ".mts", ".mpg")
+                        ):
                             logger.info("Detected video file: %s", file_key)
                             try:
                                 # call media convert lambda function for video files
@@ -1434,14 +1436,28 @@ def lambda_handler(event, context):
                             logger.info("Skip MongoDB ingress for video files")
                             continue
                         # detection image files and skip MongoDB ingress
-                        elif file_key.endswith('.jpg') or file_key.endswith('.jpeg'):
+                        elif file_key.lower().endswith(
+                            ".jpg"
+                        ) or file_key.lower().endswith(".jpeg"):
                             logger.info("Detected image file: %s", file_key)
                             logger.info("Skip MongoDB ingress for image files")
                             continue
                         # check if .ts file
-                        elif file_key.endswith('.ts'):
+                        elif file_key.lower().endswith(".ts"):
                             logger.info("Detected .ts file: %s", file_key)
                             logger.info("Skip MongoDB ingress for .ts files")
+                            continue
+
+                        # Verify if prot or obser or rerun file
+                        is_rerun, is_prot, is_obs = check_source_key(file_key)
+                        if is_prot:
+                            ofop_collection = collection_prot
+                        elif is_obs:
+                            ofop_collection = collection_obser
+                        elif not is_rerun:
+                            logger.warning(
+                                f"Unknown file type of {file_key}. Skipping..."
+                            )
                             continue
 
                         # Get file content from S3
@@ -1466,18 +1482,6 @@ def lambda_handler(event, context):
                         )
 
                         if len(documents) > 0:
-                            # Verify if prot or obser file, use corresponding collection
-                            is_rerun, is_prot, is_obs = check_source_key(file_key)
-                            if is_prot:
-                                ofop_collection = collection_prot
-                            elif is_obs:
-                                ofop_collection = collection_obser
-                            else:
-                                logger.error("Unknown file type. Cannot insert documents.")
-                                return {
-                                    "statusCode": 500,
-                                    "body": json.dumps("An error occurred."),
-                                }
                             # Insert new documents, old documents need to update, take care of obs and obs2
                             inserted_counts, updated_counts = insert_documents_to_mongodb(
                                 collection=ofop_collection, 
@@ -1513,7 +1517,7 @@ def lambda_handler(event, context):
                                     updated_video_counts,
                                     len(video_docs),
                                 )
-                            
+
                             # Try to generate document summary and insert or update to MongoDB
                             try:
                                 object_key = file_key.strip() if file_key else None
@@ -1549,7 +1553,6 @@ def lambda_handler(event, context):
                         else:
                             logger.info("No documents to insert...")
 
-                        
             except Exception as e:
                 logger.error(f"Error processing record: {str(e)}")
                 # Optionally, handle failed records

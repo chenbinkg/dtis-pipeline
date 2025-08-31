@@ -4,6 +4,7 @@ import sys
 import argparse
 import yaml
 import mimetypes
+import urllib.parse
 import logging
 import logging.config
 from pathlib import Path
@@ -17,8 +18,8 @@ from aws_bucket_manager import AWSBucketManager
 
 
 # initialize bucket name, lambda function name, s3 client, s3 config and aws region
-max_workers = 8  # Number of threads to use for parallel processing
-
+max_workers_verify = 8  # Number of threads to use for parallel processing
+max_workers_upload = 1
 # bucket_name = "dtis-ofop-851725470721-raw-testing"
 # lambda_function_name = "dtis-ofop-testing"
 # s3_client = None
@@ -36,13 +37,12 @@ max_workers = 8  # Number of threads to use for parallel processing
 #     },
 # )
 
-# Initialize log files
-success_file = "success.txt"
-error_file = "error.txt"
-
-
-data_types_list = ["ofop", "ofop_rerun", "images", "videos"]
-
+data_types_list = [
+    "ofop",
+    "ofop_rerun",
+    "images",
+    "videos",
+]  # in the order of upload priority, ofop is needed by videos
 
 class Configs:
     def __init__(self, config_path: Optional[str] = None):
@@ -65,6 +65,13 @@ class Configs:
         except Exception as e:
             logging.error(f"Error reading config file: {e}")
             sys.exit(1)
+
+
+# Function to sanitize and encode filename
+def sanitize_filename(filename):
+    sanitized = filename.replace(" ", "_")  # Replace spaces with underscores
+    encoded = urllib.parse.quote(sanitized, safe="")  # URL-encode special characters
+    return encoded
 
 
 def get_dirs(cruise_id, data_types, cruises):
@@ -200,7 +207,7 @@ def check_files(data_type, dir, image_patterns, file_suffix_list):
         filenames, total=len(filenames)
     ):
         if any(
-            re.match(pattern, file.name.upper())
+            re.match(pattern, file.name.upper(), re.IGNORECASE)
             for pattern in image_patterns
         ):
             files_to_copy[file] = None  # Using None as a placeholder for the station ID
@@ -215,35 +222,34 @@ def check_files(data_type, dir, image_patterns, file_suffix_list):
 def get_station_id(file_path, cruise_id, patterns):
     station_id = None
     # Normalize the file path to use the correct separator for the OS
-    file_path_normalized = file_path.name.upper()
+    file_path_normalized = str(file_path).upper()
     cruise_id_normalized = cruise_id.upper()
-
-    # Check if the file path matches the cruise ID
-    if cruise_id_normalized not in file_path_normalized:
-        return (
-            file_path,
-            None,
-            f"ERROR: File: {file_path} does not come from the cruise of ID: {cruise_id}",
-        )
 
     # Try each pattern
     for pattern in patterns:
         match = re.search(pattern, file_path_normalized, re.IGNORECASE)
         if match:
             station_id = match.group("station_id").strip()
-            return file_path, station_id, f"Extracted station ID: {file_path} -> {station_id}"
+            if cruise_id_normalized in file_path_normalized:
+                return file_path, station_id, f"Extracted station ID: {file_path} -> {station_id}"
+            else:
+                return file_path, station_id, f"WARNING: File: {file_path} does not come from the cruise of ID: {cruise_id}, but extracted station ID: {station_id}"
     # If no match found, log an error and return None
     return file_path, station_id, f"ERROR: Could not extract station ID from file path: {file_path}"
 
 
 def parallel_verify_files(
-    files_dict, data_type, cruise_id, patterns_station_id, max_workers=max_workers
+    files_dict,
+    data_type,
+    cruise_id,
+    patterns_station_id,
+    max_workers=max_workers_verify,
 ):
     logging.info(f"Local verification for {data_type} files")
     passed_file_count = 0
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        
+
         futures = {
             executor.submit(get_station_id, file, cruise_id, patterns_station_id): file
             for file in files_dict.keys()
@@ -261,6 +267,7 @@ def parallel_verify_files(
     logging.info(f"{passed_file_count} {data_type} files passed location verification")
     return passed_file_count
 
+
 def upload_to_s3_single_file(
     file_path,
     station_id,
@@ -273,16 +280,23 @@ def upload_to_s3_single_file(
     if not station_id:
         return f"Station ID not found for file: {file_path}"
 
-    s3_destination = f"{cruise_id}/{station_id.strip()}/{file_type}/{file_path.name}"
+    # sanitize and encode filename
+    s3_file_path = Path(sanitize_filename(str(file_path.name)))
 
-    if file_type == "videos" or file_type == "images":
-        try:
-            # will not upload if it exists
-            s3_client.head_object(Bucket=bucket_name, Key=s3_destination)
+    s3_destination = f"{cruise_id}/{station_id.strip()}/{file_type}/{s3_file_path.name}"
+
+    try:
+        # will not upload if it exists
+        s3_client.head_object(Bucket=bucket_name, Key=s3_destination)
+        if file_type == "videos" or file_type == "images":
             return f"File s3://{bucket_name}/{s3_destination} already exists. Skipping upload."
-        except s3_client.exceptions.ClientError as e:
-            if e.response['Error']['Code'] != '404':
-                pass # If the file does not exist, proceed with upload
+        else:
+            logging.warning(f"File s3://{bucket_name}/{s3_destination} already exists. Overwriting...")
+            # proceed to upload and overwrite
+            pass
+    except s3_client.exceptions.ClientError as e:
+        if e.response['Error']['Code'] != '404':
+            pass # If the file does not exist, proceed with upload
 
     # get file type
     mime_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
@@ -315,8 +329,11 @@ def upload_to_s3(
     logging.info(f"Uploading files to S3...")
 
     for i_data_type in tqdm(
-        files_to_upload_dict.keys(), total=len(files_to_upload_dict)
+        data_types_list, total=len(data_types_list) # in the order of upload priority, ofop is needed by videos
     ):
+        if i_data_type not in files_to_upload_dict.keys():
+            logging.warning(f"{i_data_type} not in the upload list, skipping the upload")
+            continue
         if files_to_upload_dict[i_data_type] is None:
             logging.warning(
                 f"{i_data_type} directory was not set, skipping the upload"
@@ -333,7 +350,7 @@ def upload_to_s3(
             case _:
                 file_type = "unknown"
 
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=max_workers_upload) as executor:
             futures = [
                 executor.submit(
                     upload_to_s3_single_file,
@@ -357,6 +374,7 @@ def upload_to_s3(
 def set_up_log():
     current_file_dir = os.path.dirname(os.path.abspath(__file__))
     yml_file_path = os.path.join(current_file_dir, "conf/logging.yml")
+    print(f"Setting up logging using config file: {yml_file_path}")
     with open(yml_file_path, "r") as stream:
         config = yaml.safe_load(stream)
         logging.config.dictConfig(config)
@@ -472,4 +490,3 @@ if __name__ == "__main__":
         logging.info("Data upload completed successfully.")
     else:
         logging.info("Data upload cancelled by user.")
-
