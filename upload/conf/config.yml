@@ -49,7 +49,7 @@ patterns_station_id:
   ofop_rerun:
     # e.g. TAN1802_001.sth_obser.txt
     # e.g. TAN1802_001.sth_prot.txt
-    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})."
+    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})"
 
 
 cruises:
@@ -77,7 +77,7 @@ cruises:
     images_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN2101/DTIS/DTIS_Stills"
     videos_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN2101/DTIS/DTIS_Video"
     ofop_dir: "R:/National/Datasets/Voyage 2019-2021/Data/TAN2101/OFOP/OFOP_prot"
-    ofop_rerun_dir: "Q:/DTIS_analysis/DTIS_analysis/OFOP reruns by voyage/TAN2101_Caroline_reruns"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN2101_Caroline_reruns"
   TAN2302:
     images_dir: "R:/National/Datasets/Voyage 2022-2024/Data/TAN2302/DTIS/DTIS_Stills"
     videos_dir: "R:/National/Datasets/Voyage 2022-2024/Video/TAN2302/DTIS_Video"
