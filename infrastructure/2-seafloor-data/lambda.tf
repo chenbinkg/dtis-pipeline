@@ -393,6 +393,15 @@ resource "aws_iam_policy" "lambda_sagemaker_trigger_policy" {
           "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:pipeline/DTIS-Annotation-Pipeline-${var.environment}"
         ]
       },
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameter"
+        ],
+        Resource = [
+          "arn:aws:ssm:*"
+        ]
+      },
       { # Permissions for Lambda to write logs to CloudWatch Logs
           Effect = "Allow",
           Action = [

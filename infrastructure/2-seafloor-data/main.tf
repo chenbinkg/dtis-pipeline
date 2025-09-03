@@ -66,6 +66,18 @@ resource "aws_s3_bucket_lifecycle_configuration" "intelligent_tiering_archive" {
   }
 }
 
+resource "aws_s3_bucket_cors_configuration" "raw_data" {
+  bucket = aws_s3_bucket.raw_data.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = ["https://biigle.de"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 86400
+  }
+}
+
 resource "aws_sqs_queue" "queue" {
   name                       =   "${local.name_prefix}-sqs-queue"
   # Any message that is sent to the queue remains invisible to consumers for the duration of this delay period.
@@ -192,6 +204,18 @@ resource "aws_s3_bucket_lifecycle_configuration" "dtis_model" {
       days          = 30   // Transition after 30 days
       storage_class = "INTELLIGENT_TIERING"
     }
+  }
+}
+
+resource "aws_s3_bucket_cors_configuration" "dtis_model" {
+  bucket = aws_s3_bucket.dtis_model.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = ["https://biigle.de"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 86400
   }
 }
 
