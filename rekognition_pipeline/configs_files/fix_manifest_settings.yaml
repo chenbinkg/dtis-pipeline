@@ -1,0 +1,8 @@
+manifest_file: "/Users/alan.tan/projects/niwa-dtis-data-upload/rekognition_pipeline/data_manifests/DTIS_s3_tan0616_095.manifest"
+# Path prefix string to use for replacing the image source info to point to the image "source-ref" attribute in the manifest file
+img_path: "s3://dtis-model-851725470721-testing/dtis-detection-training-data/video_frames/"
+# File to save output
+output_file: "/Users/alan.tan/projects/niwa-dtis-data-upload/rekognition_pipeline/data_manifests/DTIS_starfish_subset_tan0616_095.manifest"
+
+# specify labels to include in manifest of training data, comma-separated string
+use_only_labels: "starfish, starfishfish"
