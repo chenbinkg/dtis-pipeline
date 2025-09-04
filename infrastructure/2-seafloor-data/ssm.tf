@@ -128,6 +128,13 @@ resource "aws_ssm_parameter" "mongo_dtis_stills_collection" {
   tags  = local.tags
 }
 
+resource "aws_ssm_parameter" "mongo_taxonomy_collection" {
+  name  = "/dtis/mongodb/dtis-taxonomy-collection"
+  type  = "String"
+  value = var.mongo_dtis_taxonomy_collection
+  tags  = local.tags
+}
+
  resource "aws_ssm_parameter" "ecr_repository" {
   name  = "/dtis/pipeline/ecr-repository"
   type  = "String"

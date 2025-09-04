@@ -88,6 +88,12 @@ variable "mongo_dtis_stills_collection" {
   default     = "dtis_stills"
 }
 
+variable "mongo_dtis_taxonomy_collection" {
+  type        = string
+  description = "MongoDB collection for DTIS taxonomy data"
+  default     = "dtis_taxonomy"
+}
+
 variable "biigle_api_url" {
   type        = string
   description = "Base URL for the Biigle API"
