@@ -57,19 +57,19 @@ from lambda_function_mongoDB_schema import (  # parse_tasks,
     detect_file_format,
     detect_header_line,
     get_file_from_s3,
-    get_posi_file_content,
+    # get_posi_file_content,
     increment_ingress_id,
     initialize_resources,
     insert_documents_to_mongodb,
     lambda_handler,
-    parse_data_line,
+    # parse_data_line,
     parse_data_rows,
     parse_datetime,
     parse_file_content,
     parse_latest_format,
     parse_metadata,
     parse_original_format,
-    parse_posi_file,
+    # parse_posi_file,
     parse_simple_format,
     parse_time_only,
     prepare_documents,
@@ -362,9 +362,7 @@ def test_insert_one_document_to_mongodb(db, mongo_client, test_document={"_id": 
 @patch("lambda_function_mongoDB_schema.parse_file_content")
 @patch("lambda_function_mongoDB_schema.prepare_documents")
 @patch("lambda_function_mongoDB_schema.insert_documents_to_mongodb")
-@patch("lambda_function_mongoDB_schema.get_posi_file_content")
 def test_lambda_handler(
-    mock_get_posi_file_content,
     mock_insert_documents_to_mongodb,
     mock_prepare_documents,
     mock_parse_file_content,
@@ -436,7 +434,6 @@ def test_lambda_handler(
         },
     )
     mock_insert_documents_to_mongodb.return_value = [1, 2]
-    mock_get_posi_file_content.return_value = "posi file content"
 
     event = {
         "Records": [
@@ -453,6 +450,7 @@ def test_lambda_handler(
     # mock_mongo_client.close.assert_called_once()
 
 
+@pytest.mark.skip("Skipping test for now: not used")
 def test_get_posi_file_content_success():
     """
     Tests the path where the posi file exists and can be retrieved successfully.
@@ -474,6 +472,7 @@ def test_get_posi_file_content_success():
     )
 
 
+@pytest.mark.skip("Skipping test for now: not used")
 def test_get_posi_file_content_no_file():
     """
     Tests the error handling when the posi file doesn't exist.
@@ -496,6 +495,7 @@ def test_get_posi_file_content_no_file():
         get_posi_file_content(mock_s3, "test-bucket", "sample_prot.txt")
 
 
+@pytest.mark.skip("Skipping test for now: not used")
 def test_get_posi_file_content_file_name_transformation():
     """
     Test that the get_posi_file_content function correctly transforms the file name.
@@ -515,6 +515,7 @@ def test_get_posi_file_content_file_name_transformation():
     )
 
 
+@pytest.mark.skip("Skipping test for now: not used")
 @pytest.mark.parametrize(
     "input_key,expected_posi_key",
     [
@@ -672,6 +673,7 @@ def test_parse_detailed_data_line(basic_line, expected_output):
 #     assert result == expected_output
 
 
+@pytest.mark.skip("Skipping test for now: not used")
 @pytest.mark.parametrize(
     "line,expected_results,file_format",
     [
@@ -802,7 +804,7 @@ def test_parse_data_line(line, expected_results, source_key, file_format):
             else:
                 assert result[key] == expected_results[key]
 
-
+@pytest.mark.skip("Skipping test for now: not used")
 def test_parse_data_line_new_format(new_format_line, new_format_header, source_key):
     """
     Test parsing of a data line in the new format (for reruns).
@@ -856,6 +858,7 @@ def test_parse_data_line_new_format(new_format_line, new_format_header, source_k
             )
 
 
+@pytest.mark.skip("Skipping test for now: not used")
 @pytest.mark.parametrize(
     "observation,expected_video_state",
     [
@@ -881,6 +884,7 @@ def test_parse_data_line_new_format(new_format_line, new_format_header, source_k
         ),
     ],
 )
+
 def test_parse_data_line_video_events(
     basic_line, source_key, observation, expected_video_state
 ):
@@ -926,7 +930,7 @@ def time_test_cases():
         # Add more test cases as needed
     ]
 
-
+@pytest.mark.skip("Skipping test for now: not used")
 @pytest.mark.parametrize("test_case", time_test_cases())
 def test_parse_data_line_time_parsing(test_case, basic_line):
     """
@@ -1002,7 +1006,7 @@ def test_parse_time_incomplete_only(input_str):
 def test_parse_datetime(input_str, expected_output):
     assert parse_datetime(input_str) == expected_output
 
-
+@pytest.mark.skip("Skipping test for now: not used")
 @pytest.mark.parametrize(
     "sequence_times,expected_duration",
     [
@@ -1089,6 +1093,7 @@ def test_parse_data_line_media_types(
     assert result["feature"]["media"] == expected_media_path
 
 
+@pytest.mark.skip("Skipping test for now: not used")
 def test_parse_data_line_complete_video_sequence():
     """
     Test parsing of complete set of data lines with video sequences.
