@@ -470,3 +470,201 @@ resource "aws_lambda_function" "pretrained_annotation" {
   }
   tags = local.tags
 }
+
+### BIIGLE Annotation Retrieval lambda function
+# create lambda execution role for biigle-annotation-retrieval lambda function
+resource "aws_iam_role" "iam_for_lambda_biigle_anno_retrieval" {
+  name               = "${local.name_prefix}-lambda-biigle-anno-retrieval-execution"
+  assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
+  tags          = local.tags
+}
+
+# Grant lambda execution role for sagemaker pipeline and MongoDB access
+resource "aws_iam_policy" "lambda_biigle_retrieval_policy" {
+  name = "${local.name_prefix}-lambda-biigle-retrieval-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = "sagemaker:StartPipelineExecution",
+        Resource = [
+          "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:pipeline/DTIS-Annotation-Retrieval-Pipeline-${var.environment}"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameter"
+        ],
+        Resource = [
+          "arn:aws:ssm:*"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ],
+        Resource = "arn:aws:logs:*:*:*"
+      },
+    ]
+  })
+}
+
+# Attach the policy to the lambda execution role
+resource "aws_iam_role_policy_attachment" "lambda_biigle_retrieval_policy_attachment" {
+  role       = aws_iam_role.iam_for_lambda_biigle_anno_retrieval.name
+  policy_arn = aws_iam_policy.lambda_biigle_retrieval_policy.arn
+}
+
+# Create a CloudWatch Log Group for the BIIGLE Annotation Retrieval Lambda function
+resource "aws_cloudwatch_log_group" "biigle_anno_retrieval_lambda_loggroup" {
+  name              = "/aws/lambda/dtis-biigle-anno-retrieval-${var.environment}"
+  retention_in_days = 90
+  tags          = local.tags
+}
+
+# lambda function to trigger sagemaker retrieval pipeline
+data "local_file" "lambda_biigle_anno_retrieval_zip" {
+  filename = "lambda_biigle_anno_retrieval.zip"
+}
+
+resource "aws_lambda_function" "biigle_anno_retrieval" {
+	depends_on = [
+		aws_iam_role_policy_attachment.lambda_logs,
+		aws_cloudwatch_log_group.biigle_anno_retrieval_lambda_loggroup,
+	]
+
+  filename      = "lambda_biigle_anno_retrieval.zip"
+  function_name = "dtis-biigle-anno-retrieval-${var.environment}"
+  role          = aws_iam_role.iam_for_lambda_biigle_anno_retrieval.arn
+  handler       = "lambda_function_biigle_anno_retrieval.lambda_handler"
+
+  source_code_hash = data.local_file.lambda_biigle_anno_retrieval_zip.content_sha256
+
+  runtime = "python3.12"
+
+  reserved_concurrent_executions = 1
+  timeout = 900
+  memory_size = 1024
+  environment {
+    variables = {
+			PIPELINE_NAME = "DTIS-Annotation-Retrieval-Pipeline-${var.environment}"
+    }
+  }
+  tags = local.tags
+}
+
+### Taxonomy lambda function
+# create lambda execution role for taxonomy lambda function
+resource "aws_iam_role" "iam_for_lambda_taxonomy" {
+  name               = "${local.name_prefix}-lambda-taxonomy-execution"
+  assume_role_policy = data.aws_iam_policy_document.dtis_lambda_assume_role.json
+  tags          = local.tags
+}
+
+# Grant lambda execution role for sagemaker pipeline
+resource "aws_iam_policy" "lambda_taxonomy_policy" {
+  name = "${local.name_prefix}-lambda-taxonomy-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = "sagemaker:StartPipelineExecution",
+        Resource = [
+          "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:pipeline/DTIS-Taxonomy-Processing-Pipeline-${var.environment}"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameter"
+        ],
+        Resource = [
+          "arn:aws:ssm:*"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ],
+        Resource = "arn:aws:logs:*:*:*"
+      },
+    ]
+  })
+}
+
+# Attach the policy to the lambda execution role
+resource "aws_iam_role_policy_attachment" "lambda_taxonomy_policy_attachment" {
+  role       = aws_iam_role.iam_for_lambda_taxonomy.name
+  policy_arn = aws_iam_policy.lambda_taxonomy_policy.arn
+}
+
+# Create a CloudWatch Log Group for the Taxonomy Lambda function
+resource "aws_cloudwatch_log_group" "taxonomy_lambda_loggroup" {
+  name              = "/aws/lambda/dtis-taxonomy-${var.environment}"
+  retention_in_days = 90
+  tags          = local.tags
+}
+
+# lambda function to trigger sagemaker taxonomy pipeline
+data "local_file" "lambda_taxonomy_zip" {
+  filename = "lambda_taxonomy.zip"
+}
+
+resource "aws_lambda_function" "taxonomy" {
+	depends_on = [
+		aws_iam_role_policy_attachment.lambda_logs,
+		aws_cloudwatch_log_group.taxonomy_lambda_loggroup,
+	]
+
+  filename      = "lambda_taxonomy.zip"
+  function_name = "dtis-taxonomy-${var.environment}"
+  role          = aws_iam_role.iam_for_lambda_taxonomy.arn
+  handler       = "lambda_function_taxonomy.lambda_handler"
+
+  source_code_hash = data.local_file.lambda_taxonomy_zip.content_sha256
+
+  runtime = "python3.12"
+
+  reserved_concurrent_executions = 1
+  timeout = 900
+  memory_size = 1024
+  environment {
+    variables = {
+			PIPELINE_NAME = "DTIS-Taxonomy-Processing-Pipeline-${var.environment}"
+    }
+  }
+  tags = local.tags
+}
+
+# S3 bucket notification to trigger taxonomy lambda on object creation
+resource "aws_s3_bucket_notification" "taxonomy_trigger" {
+  bucket = aws_s3_bucket.dtis_model.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.taxonomy.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_suffix       = "biigle_labels.csv"
+  }
+
+  depends_on = [aws_lambda_permission.allow_s3_invoke_taxonomy]
+}
+
+# Permission for S3 to invoke taxonomy lambda function
+resource "aws_lambda_permission" "allow_s3_invoke_taxonomy" {
+  statement_id  = "${local.name_prefix}-allow-s3-invoke-taxonomy"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.taxonomy.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.dtis_model.arn
+}

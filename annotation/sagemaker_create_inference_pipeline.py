@@ -97,6 +97,7 @@ if __name__ == "__main__":
     # Get the region from the session
     region = session.region_name
     account_id = boto3.client('sts').get_caller_identity().get('Account')
+    _logger.info(f"Using AWS region: {region}")
     # ECR image URI
     ssm_client = boto3.client('ssm', region_name=region)
     response = ssm_client.get_parameter(Name="/dtis/pipeline/ecr-repository-url")

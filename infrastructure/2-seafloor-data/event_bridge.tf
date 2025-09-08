@@ -84,3 +84,30 @@ resource "aws_cloudwatch_event_target" "log_mediaconvert_complete_events" {
   arn = aws_cloudwatch_log_group.mediaconvert_events_log_group.arn
 
 }
+
+# EventBridge Rule to trigger BIIGLE annotation retrieval every 24 hours
+resource "aws_cloudwatch_event_rule" "biigle_retrieval_schedule_rule" {
+  name                = "${local.name_prefix}-biigle-retrieval-schedule-rule"
+  description         = "Triggers BIIGLE annotation retrieval lambda every 24 hours"
+  schedule_expression = "rate(24 hours)"
+  
+  tags = {
+    Name = "BIIGLE Retrieval Schedule Rule"
+  }
+}
+
+# EventBridge Target for BIIGLE annotation retrieval lambda
+resource "aws_cloudwatch_event_target" "biigle_retrieval_lambda_target" {
+  target_id = "biigle-retrieval-lambda-target"
+  rule      = aws_cloudwatch_event_rule.biigle_retrieval_schedule_rule.name
+  arn       = aws_lambda_function.biigle_anno_retrieval.arn
+}
+
+# Permission for EventBridge to invoke BIIGLE annotation retrieval lambda
+resource "aws_lambda_permission" "allow_invoke_biigle_retrieval_lambda" {
+  statement_id  = "${local.name_prefix}-allow-invoke-biigle-retrieval-lambda"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.biigle_anno_retrieval.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.biigle_retrieval_schedule_rule.arn
+}
