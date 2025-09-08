@@ -3,6 +3,7 @@ import re
 import sys
 import argparse
 import yaml
+import platform
 import mimetypes
 import urllib.parse
 import logging
@@ -15,6 +16,17 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from aws_credential_provider import AWSCredentialProvider
 from aws_bucket_manager import AWSBucketManager
+
+
+if platform.system() == "Windows":
+    MAGIC_AVAILABLE = False
+elif platform.system() == "Linux":
+    try:
+        import magic
+        MAGIC_AVAILABLE = True
+    except ImportError:
+        print("Error: python-magic library not found.")
+        exit(1)
 
 
 # initialize bucket name, lambda function name, s3 client, s3 config and aws region
@@ -45,20 +57,30 @@ data_types_list = [
 ]  # in the order of upload priority, ofop is needed by videos
 
 class Configs:
-    def __init__(self, config_path: Optional[str] = None):
+
+    def __init__(
+        self,
+        config_path: Optional[str] = None,
+        cruises_config_path: Optional[str] = None,
+    ):
         self.config_path = config_path or os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "conf/config.yml"
+        )
+        self.cruises_config_path = cruises_config_path or os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "conf/cruises.yml"
         )
         self.cruises: Optional[Any] = None
         self.file_suffix: Optional[str] = None
         self.patterns_filename: Optional[Dict[str, Any]] = None
         self.patterns_station_id: Optional[Dict[str, Any]] = None
 
+        self.read_config_file()
+        self.read_cruises_config()
+
     def read_config_file(self) -> None:
         try:
             with open(self.config_path, "r") as file:
                 config = yaml.safe_load(file) or {}
-                self.cruises = config.get("cruises")
                 self.file_suffix = config.get("file_suffix")
                 self.patterns_filename = config.get("patterns_filename")
                 self.patterns_station_id = config.get("patterns_station_id")
@@ -66,6 +88,32 @@ class Configs:
             logging.error(f"Error reading config file: {e}")
             sys.exit(1)
 
+    def read_cruises_config(self) -> None:
+        try:
+            with open(self.cruises_config_path, "r") as file:
+                config = yaml.safe_load(file) or {}
+                self.cruises = config.get("cruises")
+        except Exception as e:
+            logging.error(f"Error reading cruises config file: {e}")
+            sys.exit(1)
+
+
+def get_file_type(filepath):
+    if not os.path.exists(filepath):
+        logging.error(f"File not found: {filepath}")
+        return None
+
+    if MAGIC_AVAILABLE:
+        try:
+            mime = magic.Magic(mime=True)
+            return mime.from_file(filepath)
+        except Exception as e:
+            logging.error(f"Error using python-magic: {e}")
+            return None
+    else:
+        # Fallback to mimetypes
+        mime_type, _ = mimetypes.guess_type(filepath)
+        return mime_type or None
 
 # Function to sanitize and encode filename
 def sanitize_filename(filename):
@@ -299,7 +347,7 @@ def upload_to_s3_single_file(
             pass # If the file does not exist, proceed with upload
 
     # get file type
-    mime_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+    mime_type = get_file_type(file_path)
 
     if dry_run:
         return f"Pretending to upload {file_path} to s3://{bucket_name}/{s3_destination} as {mime_type} file"
@@ -311,10 +359,10 @@ def upload_to_s3_single_file(
             bucket_name,
             s3_destination,
             ExtraArgs={"StorageClass": "STANDARD_IA",
-                        "ContentType": mime_type,
+                        "ContentType": file_type,
                     },
         )
-        return f"Successfully uploaded {file_path} to s3://{bucket_name}/{s3_destination} as {mime_type} file"
+        return f"Successfully uploaded {file_path} to s3://{bucket_name}/{s3_destination} as {file_type} file"
     except Exception as e:
         return f"Error uploading {file_path} to S3: {e}"
 
@@ -384,12 +432,12 @@ def set_up_log():
 def validate_local_files(source_dirs_dict, config):
     files_to_upload_dict = {}
     for i_data_type in source_dirs_dict.keys():
-        files_to_upload_dict[i_data_type] = None
         if source_dirs_dict[i_data_type] is None:
             logging.warning(
                 f"{i_data_type} directory was not set, skipping the check"
             )
             continue
+        files_to_upload_dict[i_data_type] = None
         files_to_upload_dict[i_data_type] = check_files(
             i_data_type,
             dir=Path(source_dirs_dict[i_data_type]),
@@ -437,7 +485,6 @@ if __name__ == "__main__":
 
     # 1, read the config file
     config = Configs()
-    config.read_config_file()
 
     # 2, get upload files
     try:

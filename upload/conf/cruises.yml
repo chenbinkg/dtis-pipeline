@@ -1,0 +1,36 @@
+cruises:
+  TAN0906:
+    images_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/TAN0906/Tan0906_DTIS images"
+    videos_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0906_BOI/TAN0906_DTIS-video"
+    ofop_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/TAN0906/TAN0906 OFOP"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/tan0906_BOI/tan0906_OFOP_reruns"
+  TAN0802:
+    images_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/tan0802/DTIS-Images"
+    videos_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0802_IPY/tan0802_video"
+    ofop_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0802_IPY/tan0802_OFOP"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/tan0802_IPY/tan0802_OFOP_reruns/benthic_TAN0802_OFOP_prot"
+  TAN1802:
+    images_dir: "R:/National/Datasets/Voyage 2016-2018/2016-2018/Data/TAN1802/hoki_voyage/Seabed/DTIS_Stills"
+    videos_dir: "R:/National/Datasets/Voyage 2016-2018/2016-2018/Video/TAN1802"
+    # ofop_dir: "R:/National/Datasets/Voyage 2016-2018/2016-2018/Data/TAN1802/hoki_voyage/Seabed/OFOP_Prot"
+    ofop_dir: "R:/National/Datasets/Voyage 2016-2018/2016-2018/Data/TAN1802/hoki_voyage/Seabed/OFOP_Prot/tan1802_stn092-108_corrected"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN1802_Caroline_reruns"
+  TAN1901:
+    images_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN1901/TAN1901_DTIS_Stills"
+    videos_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN1901/TAN1901_DTIS_Video"
+    ofop_dir: "R:/National/Datasets/Voyage 2019-2021/Data/TAN1901/TAN1901_catch/TAN1901_DTIS/TAN1901_OFOP/TAN1901_OFOP_prot"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN1901_Caroline_reruns"
+  TAN2101:
+    images_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN2101/DTIS/DTIS_Stills"
+    videos_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN2101/DTIS/DTIS_Video"
+    ofop_dir: "R:/National/Datasets/Voyage 2019-2021/Data/TAN2101/OFOP/OFOP_prot"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN2101_Caroline_reruns"
+  TAN2302:
+    images_dir: "R:/National/Datasets/Voyage 2022-2024/Data/TAN2302/DTIS/DTIS_Stills"
+    videos_dir: "R:/National/Datasets/Voyage 2022-2024/Video/TAN2302/DTIS_Video"
+    ofop_dir: "R:/National/Datasets/Voyage 2022-2024/Data/TAN2302/OFOP/TAN2302_OFOP_Prot"
+    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN2302 OFOP reruns"
+  TAN2502:
+    images_dir: "R:/National/Datasets/Voyage 2025-2026/Data/TAN2502/Photos/GRILLO SCHIAPARELLI photo TAN2502 MNA"
+    videos_dir: "R:/National/Datasets/Voyage 2025-2026/Video/TAN2502/TAN2502-DTIS"
+    ofop_dir: "C:/1_NIWA/2026_AWS/DTIS/TAN2502_OFOP_prot"

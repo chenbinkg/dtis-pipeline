@@ -12,10 +12,14 @@ patterns_filename:
 
   videos:
   ofop: 
-    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?POSI\\.TXT$"  # e.g. TAN1802_001_posi.txt，TAN2302_088_prot_posi.txt,TAN2302_202._prot_posi.txt
-    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?PROT\\.TXT$"  # e.g. TAN1802_001_prot.txt，TAN2302_088_prot_prot.txt,TAN2302_202._prot_prot.txt
-    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?OBSER\\.TXT$"  # e.g. TAN1802_001_obser.txt，TAN2302_088_prot_obser.txt,TAN2302_202._prot_obser.txt
-    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?FINAL\\.TXT$"  # TAN2302_147_prot_final.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?(?:EDIT_)?POSI\\.TXT$"  # e.g. TAN1802_001_posi.txt，TAN2302_088_prot_posi.txt,TAN2302_202._prot_posi.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?(?:EDIT_)?PROT\\.TXT$"  # e.g. TAN1802_001_prot.txt，TAN2302_088_prot_prot.txt,TAN2302_202._prot_prot.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?(?:EDIT_)?OBSER\\.TXT$"  # e.g. TAN1802_001_obser.txt，TAN2302_088_prot_obser.txt,TAN2302_202._prot_obser.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?(?:EDIT_)?FINAL\\.TXT$"  # TAN2302_147_prot_final.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{2}(?:.)?_(?:PROT_)?(?:EDIT_)?POSI\\.TXT$"  # e.g. TAN1802_01_posi.txt，TAN2302_88_prot_posi.txt,TAN2302_02._prot_posi.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{2}(?:.)?_(?:PROT_)?(?:EDIT_)?PROT\\.TXT$"  # e.g. TAN1802_01_prot.txt，TAN2302_88_prot_prot.txt,TAN2302_02._prot_prot.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{2}(?:.)?_(?:PROT_)?(?:EDIT_)?OBSER\\.TXT$"  # e.g. TAN1802_01_obser.txt，TAN2302_88_prot_obser.txt,TAN2302_02._prot_obser.txt
+
   ofop_rerun:
     - "[A-Z]{3}[0-9]{4}_[0-9]{3}.*_OBSER.*\\.TXT$"  # e.g. TAN1802_001.sth_obser.txt
     - "[A-Z]{3}[0-9]{4}_[0-9]{3}.*_PROT.*\\.TXT$"  # e.g. TAN1802_001.sth_prot.txt
@@ -46,43 +50,9 @@ patterns_station_id:
     # this gives, e.g. '001'
     - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})_"
     - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})."
+    # e.g. TAN1901_98_posi.txt
+    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{2,})"
   ofop_rerun:
     # e.g. TAN1802_001.sth_obser.txt
     # e.g. TAN1802_001.sth_prot.txt
     - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})"
-
-
-cruises:
-  TAN0906:
-    images_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/TAN0906/Tan0906_DTIS images"
-    videos_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0906_BOI/TAN0906_DTIS-video"
-    ofop_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/TAN0906/TAN0906 OFOP"
-    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/tan0906_BOI/tan0906_OFOP_reruns"
-  TAN0802:
-    images_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Data/tan0802/DTIS-Images"
-    videos_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0802_IPY/tan0802_video"
-    ofop_dir: "R:/National/Datasets/Voyage-Pre-2016/Pre-2010/Video/TAN0802_IPY/tan0802_OFOP"
-    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/tan0802_IPY/tan0802_OFOP_reruns/benthic_TAN0802_OFOP_prot"
-  TAN1802:
-    images_dir: "R:/National/Datasets/Voyage 2016-2018/2016-2018/Data/TAN1802/hoki_voyage/Seabed/DTIS_Stills"
-    videos_dir: "R:/National/Datasets/Voyage 2016-2018/2016-2018/Video/TAN1802"
-    ofop_dir: "R:/National/Datasets/Voyage 2016-2018/2016-2018/Data/TAN1802/hoki_voyage/Seabed/OFOP_Prot"
-    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN1802_Caroline_reruns"
-  TAN1901:
-    images_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN1901/TAN1901_DTIS_Stills"
-    videos_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN1901/TAN1901_DTIS_Video"
-    ofop_dir: "R:/National/Datasets/Voyage 2019-2021/Data/TAN1901/TAN1901_catch/TAN1901_DTIS/TAN1901_OFOP/TAN1901_OFOP_prot"
-    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN1901_Caroline_reruns"
-  TAN2101:
-    images_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN2101/DTIS/DTIS_Stills"
-    videos_dir: "R:/National/Datasets/Voyage 2019-2021/Video/TAN2101/DTIS/DTIS_Video"
-    ofop_dir: "R:/National/Datasets/Voyage 2019-2021/Data/TAN2101/OFOP/OFOP_prot"
-    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN2101_Caroline_reruns"
-  TAN2302:
-    images_dir: "R:/National/Datasets/Voyage 2022-2024/Data/TAN2302/DTIS/DTIS_Stills"
-    videos_dir: "R:/National/Datasets/Voyage 2022-2024/Video/TAN2302/DTIS_Video"
-    ofop_dir: "R:/National/Datasets/Voyage 2022-2024/Data/TAN2302/OFOP/TAN2302_OFOP_Prot"
-    ofop_rerun_dir: "Q:/DTIS_analysis/OFOP reruns by voyage/TAN2302 OFOP reruns"
-  TAN2502:
-    images_dir: "R:/National/Datasets/Voyage 2025-2026/Data/TAN2502/Photos/GRILLO SCHIAPARELLI photo TAN2502 MNA"
-    videos_dir: "R:/National/Datasets/Voyage 2025-2026/Video/TAN2502/TAN2502-DTIS"
