@@ -963,6 +963,8 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
         station,
     )
 
+    # get header lines
+
     # split the file content into indivdual lines
     lines = file_content.splitlines()
 
