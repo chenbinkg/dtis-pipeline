@@ -3,12 +3,12 @@ DataPlatform Lambda Function for ingesting text-file-based DTIS/OFOP content int
 
 * Text files on S3 are parsed by this function and the relevant content converted to MongoDB collections.
 * File format is expected to conform to the specifications used in/created by OFOP software for DTIS (prot and rerun files).
-* Folders that contain video and image files are being referenced in the output collection by adding links to those folders. 
+* Folders that contain video and image files are being referenced in the output collection by adding links to those folders.
 
 Requirements:
 * PyMongo needs to be available to the Lambda process Python 3 environment (can be added via a Lambda layer)
-* Define environment variables for 
-* MongoDB connection string, e.g. MONGODB_URI, 
+* Define environment variables for
+* MongoDB connection string, e.g. MONGODB_URI,
 * and the name of the MongoDB database, e.g. MONGODB_DATABASE
 * Define environment variable for the name of the MongoDB collection used for observations, e.g. MONGODB__COLLECTION
 * Define environment variable for the name of the MongoDB collection used for overview, e.g. INGRESS_COLLECTION_DTIS
@@ -90,6 +90,7 @@ def parse_datetime(datetime_str: str) -> Optional[datetime]:
     logger.debug(f"Failed to parse datetime: {datetime_str}")
     return None
 
+
 def parse_date_only(date_str: str) -> Optional[str]:
     """
     Attempt to parse a date string with multiple formats.
@@ -113,6 +114,7 @@ def parse_date_only(date_str: str) -> Optional[str]:
 
     logger.debug(f"Failed to parse date: {date_str}")
     return None
+
 
 def parse_time_only(time_str: str) -> Optional[str]:
     """
@@ -140,7 +142,7 @@ def parse_time_only(time_str: str) -> Optional[str]:
 
 def insert_documents_to_mongodb(
     collection: Collection, documents: List[Dict[str, Any]]
-    ) -> List[Any]:
+) -> List[Any]:
     """
     Upload and insert 'documents' (a.k.a records) to MongoDB Atlas
     collection.
@@ -163,11 +165,13 @@ def insert_documents_to_mongodb(
         existing_documents_to_skip_update = []
 
         for doc in documents:
-            existing_doc = collection.find_one({
-                "cruise": doc["cruise"],
-                "station": doc["station"],
-                "timestamp": doc["timestamp"]
-            })
+            existing_doc = collection.find_one(
+                {
+                    "cruise": doc["cruise"],
+                    "station": doc["station"],
+                    "timestamp": doc["timestamp"],
+                }
+            )
             if existing_doc:
                 obj_key = existing_doc.get("file_key")
                 if "rerun" in obj_key:
@@ -188,19 +192,25 @@ def insert_documents_to_mongodb(
         logger.info(
             f"Existing documents to skip update due to pre-existing rerun entry: "
             f"{len(existing_documents_to_skip_update)}"
-            )
-        logger.info(f"Existing documents to update: {len(existing_documents_to_update)}")
+        )
+        logger.info(
+            f"Existing documents to update: {len(existing_documents_to_update)}"
+        )
         updated_doc_counts = 0
         for doc in existing_documents_to_update:
             update_doc = doc.copy()
-            keys_to_exclude = ['_id', 'cruise', 'station', 'timestamp']
+            keys_to_exclude = ["_id", "cruise", "station", "timestamp"]
             for key in keys_to_exclude:
                 if key in update_doc:
                     del update_doc[key]
             rsl = collection.update_one(
-                {"cruise": doc["cruise"], "station": doc["station"], "timestamp": doc["timestamp"]}, 
-                {"$set": update_doc}
-                )
+                {
+                    "cruise": doc["cruise"],
+                    "station": doc["station"],
+                    "timestamp": doc["timestamp"],
+                },
+                {"$set": update_doc},
+            )
             if rsl.matched_count > 0:
                 if rsl.modified_count > 0:
                     updated_doc_counts += 1
@@ -267,7 +277,7 @@ def increment_ingress_id(
     bounding_box,
     document_counts,
     date_created,
-    metadata
+    metadata,
 ):
     """
     Increment the ingressId for a given cruise, station, and object_key.
@@ -375,17 +385,14 @@ def initialize_resources() -> Tuple[boto3.client, MongoClient, Database]:
     """
 
     s3_client = boto3.client("s3")
-    ssm = boto3.client('ssm', region_name='ap-southeast-2')
+    ssm = boto3.client("ssm", region_name="ap-southeast-2")
     parameter_name = os.environ.get("MONGODB_URI_SSM_PARAM")
     # Get parameter (with decryption if it's a SecureString)
-    response = ssm.get_parameter(
-        Name=parameter_name,
-        WithDecryption=True
-    )
-    
+    response = ssm.get_parameter(Name=parameter_name, WithDecryption=True)
+
     # Extract the MongoDB URI
-    mongo_uri = response['Parameter']['Value']
-    
+    mongo_uri = response["Parameter"]["Value"]
+
     mongo_db_name = os.environ.get("MONGODB_DATABASE")
 
     if not mongo_uri or not mongo_db_name:
@@ -555,11 +562,11 @@ def parse_original_format(lines: List[str]) -> Dict[str, Any]:
         logger.warning("No valid coordinates found to calculate bounding box.")
 
     return {
-            "metadata": metadata,
-            "bounding_box": bounding_box,
-            # "tasks": tasks,
-            "detailed_data_table": observations
-            }
+        "metadata": metadata,
+        "bounding_box": bounding_box,
+        # "tasks": tasks,
+        "detailed_data_table": observations,
+    }
 
 
 def parse_metadata(lines: List[str]) -> Tuple[Dict[str, str], int]:
@@ -690,7 +697,7 @@ def parse_data_rows(
 
     for idx in range(start_idx, len(lines)):
         line = lines[idx].strip()
-        # detect empty lines 
+        # detect empty lines
         # or comments, which usually is the header line
         if not line or line.startswith("#"):
             skipped_lines += 1
@@ -705,13 +712,9 @@ def parse_data_rows(
         if len(fields) != len(headers):
             logger.warning("Malformed data line %s, %s", idx, line)
             if len(fields) > len(headers):
-                logger.warning(
-                    "It has more fields than headers."
-                )
+                logger.warning("It has more fields than headers.")
             else:
-                logger.warning(
-                    "It has fewer field than headers."
-                )
+                logger.warning("It has fewer field than headers.")
             if skip_mismatched:
                 logger.warning("Skipping line %s due to mismatched fields", idx)
                 skipped_lines += 1
@@ -784,7 +787,9 @@ def parse_data_rows(
         observations.append(observation)
         logger.debug(f"Parsed observation at line {idx}: {observation}")
 
-    logger.info(f"Parsed {len(observations)} data rows, skipped {skipped_lines} rows, total {len(lines)} rows.")
+    logger.info(
+        f"Parsed {len(observations)} data rows, skipped {skipped_lines} rows, total {len(lines)} rows."
+    )
 
     return observations
 
@@ -837,7 +842,9 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
                 sub_lon = float(obs.get("SUB1_Lon"))
                 coordinates.append((sub_lon, sub_lat))
             except (TypeError, ValueError) as e:
-                logger.error(f"Invalid coordinate data in observation: {obs}. Error: {e}")
+                logger.error(
+                    f"Invalid coordinate data in observation: {obs}. Error: {e}"
+                )
                 continue
 
     # Calculate bounding box
@@ -849,10 +856,10 @@ def parse_latest_format(lines: List[str]) -> List[Dict[str, Any]]:
         logger.warning("No valid coordinates found to calculate bounding box.")
 
     return {
-            "metadata": metadata,
-            "bounding_box": bounding_box,
-            "detailed_data_table": observations
-            }
+        "metadata": metadata,
+        "bounding_box": bounding_box,
+        "detailed_data_table": observations,
+    }
 
 
 def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
@@ -873,8 +880,8 @@ def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Structured data with empty metadata and detailed data table suitable for MongoDB insertion.
     """
-    metadata = {} # no metadata in simple format
-    data_start_idx = 0 # searching for header line index starts from line 0
+    metadata = {}  # no metadata in simple format
+    data_start_idx = 0  # searching for header line index starts from line 0
 
     logger.debug("Searching for HEADER. Parsing 'simple' format file.")
     headers, header_idx = detect_header_line(lines, data_start_idx)
@@ -907,7 +914,7 @@ def parse_simple_format(lines: List[str]) -> Dict[str, Any]:
     else:
         bounding_box = None
         logger.warning("No valid coordinates found to calculate bounding box.")
-    
+
     return {
         "metadata": metadata,
         "bounding_box": bounding_box,
@@ -921,7 +928,7 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     tuple,  # bounding_box / tuple of coordinates
     str,  # cruise_from_name
     str,  # station_from_name
-    dict,   # metadata
+    dict,  # metadata
 ]:
     """
     Parses the file content and returns a list of documents
@@ -971,7 +978,8 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     # Detect file format
     file_format = detect_file_format(lines)
     logger.info(
-        "Detected file format: %s", file_format,
+        "Detected file format: %s",
+        file_format,
     )
     documents = []
     # Parse based on file format:
@@ -993,8 +1001,9 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     # Add metadata from file name
     parsed_data["metadata"]["Cruise"] = cruise
     parsed_data["metadata"]["Station"] = station
-    documents, metadata,\
-         image_docs, video_docs = prepare_documents(parsed_data, key, ingress_collection)
+    documents, metadata, image_docs, video_docs = prepare_documents(
+        parsed_data, key, ingress_collection
+    )
 
     # # We will return the bounding box from the last parsed document
     bounding_box = parsed_data.get("bounding_box")
@@ -1002,8 +1011,16 @@ def parse_file_content(file_content: str, key: str, ingress_collection: Collecti
     if not documents:
         logger.warning("No parsed data found to create documents.")
 
-    return documents, file_format, bounding_box, cruise, \
-        station, metadata, image_docs, video_docs
+    return (
+        documents,
+        file_format,
+        bounding_box,
+        cruise,
+        station,
+        metadata,
+        image_docs,
+        video_docs,
+    )
 
 
 def remove_brackets(text, default=""):
@@ -1027,14 +1044,11 @@ def check_source_key(source_key):
     is_rerun = "rerun" in source_key
     is_prot = source_key.endswith("_prot.txt")
     is_obs = source_key.endswith("_obser.txt")
-    
+
     return is_rerun, is_prot, is_obs
 
 
-def prepare_img_document(
-        document,
-        obs_text
-):
+def prepare_img_document(document, obs_text):
     """
     Construct a document for MongoDB insertion for image data.
     add img_key to the document after extracting img_key from obs_text
@@ -1063,19 +1077,16 @@ def prepare_img_document(
     return document, img_num
 
 
-def prepare_video_document(
-        document,
-        obs_text
-):
+def prepare_video_document(document, obs_text):
     """
     Construct a document for MongoDB insertion for video data.
-    
+
     Args:
         document (Dict[str, Any]): The structured document.
         obs_text (str): The observation text containing the video key.
             the video key is made up of timestamp in %Y%m%d%H%M%S format
             the filename will not match with actual filename in S3 due to
-            timestamp difference when video is actually generated, but 
+            timestamp difference when video is actually generated, but
             the filename can be used as a reference for further video
             filename identification, e.g. find filename with closest timestamp
             to the video key
@@ -1098,14 +1109,8 @@ def prepare_video_document(
 
 
 def prepare_prot_document(
-        cruise, 
-        station, 
-        timestamp, 
-        observation, 
-        cleaned_observation, 
-        file_key, 
-        is_rerun
-        ):
+    cruise, station, timestamp, observation, cleaned_observation, file_key, is_rerun
+):
     """
     Construct a document for MongoDB insertion for prot data.
 
@@ -1165,14 +1170,8 @@ def prepare_prot_document(
 
 
 def prepare_obser_document(
-        cruise, 
-        station, 
-        timestamp, 
-        observation, 
-        cleaned_observation, 
-        file_key, 
-        is_rerun
-        ):
+    cruise, station, timestamp, observation, cleaned_observation, file_key, is_rerun
+):
     """
     Construct a document for MongoDB insertion for obser data.
 
@@ -1268,9 +1267,9 @@ def prepare_documents(
     logger.info("Extracted %s observations.", len(observations))
 
     documents = []
-    image_docs = [] # store image docs only for original prot file
-    video_docs = [] # store video docs only for original prot file
-    image_nums = [] # store image numbers only for original prot file
+    image_docs = []  # store image docs only for original prot file
+    video_docs = []  # store video docs only for original prot file
+    image_nums = []  # store image numbers only for original prot file
 
     # Get the current ingressId
     current_ingress_id = 1
@@ -1301,9 +1300,7 @@ def prepare_documents(
 
     for observation in observations:
         # Extract timestamp from observation
-        timestamp = datetime.combine(
-            observation.get("Date"), observation.get("Time")
-        )
+        timestamp = datetime.combine(observation.get("Date"), observation.get("Time"))
         # Initialize the document
         if is_prot:
             obs_text = observation.get("Image-Video Path", "")
@@ -1316,7 +1313,7 @@ def prepare_documents(
                 observation=observation,
                 cleaned_observation=cleaned_observation,
                 file_key=file_key,
-                is_rerun=is_rerun
+                is_rerun=is_rerun,
             )
             documents.append(document)
             if "photo" in obs_text:
@@ -1337,7 +1334,7 @@ def prepare_documents(
                 observation=observation,
                 cleaned_observation=cleaned_observation,
                 file_key=file_key,
-                is_rerun=is_rerun
+                is_rerun=is_rerun,
             )
             documents.append(document)
         else:
@@ -1351,7 +1348,7 @@ def prepare_documents(
         metadata["image_count"] = max_img_num
     # count video using start and stop entry documents
     if len(video_docs) > 0:
-        metadata["video_count"] = int(len(video_docs)/2)
+        metadata["video_count"] = int(len(video_docs) / 2)
 
     logger.info(f"Total documents prepared for insertion: {len(documents)}")
     return documents, metadata, image_docs, video_docs
@@ -1370,18 +1367,10 @@ def generate_lambda_payload(bucket_name, file_key):
     """
     return {
         "Records": [
-            {
-                "s3": {
-                    "bucket": {
-                        "name": bucket_name
-                    },
-                    "object": {
-                        "key": file_key
-                    }
-                }
-            }
+            {"s3": {"bucket": {"name": bucket_name}, "object": {"key": file_key}}}
         ]
     }
+
 
 def lambda_handler(event, context):
     logger.info("Received event: %s", json.dumps(event))
@@ -1419,20 +1408,25 @@ def lambda_handler(event, context):
                             logger.info("Detected video file: %s", file_key)
                             try:
                                 # call media convert lambda function for video files
-                                lambda_client = boto3.client('lambda')
+                                lambda_client = boto3.client("lambda")
                                 lambda_payload = generate_lambda_payload(
-                                    bucket_name, 
-                                    file_key
-                                    )
+                                    bucket_name, file_key
+                                )
                                 lambda_response = lambda_client.invoke(
-                                    FunctionName=os.environ['MEDIA_CONVERT_LAMBDA_FUNCTION'],
-                                    InvocationType='RequestResponse',
-                                    Payload=json.dumps(lambda_payload)
+                                    FunctionName=os.environ[
+                                        "MEDIA_CONVERT_LAMBDA_FUNCTION"
+                                    ],
+                                    InvocationType="RequestResponse",
+                                    Payload=json.dumps(lambda_payload),
                                 )
                                 logger.info("Triggered media convert for video file")
-                                logger.info("Lambda function response: %s", lambda_response)
+                                logger.info(
+                                    "Lambda function response: %s", lambda_response
+                                )
                             except Exception as e:
-                                logger.error(f"Error calling media convert lambda function: {str(e)}")
+                                logger.error(
+                                    f"Error calling media convert lambda function: {str(e)}"
+                                )
                                 # Depending on requirements, you might want to continue or re-raise
                                 continue
                             logger.info("Skip MongoDB ingress for video files")
@@ -1474,21 +1468,28 @@ def lambda_handler(event, context):
                         )  # Log first 100 chars for brevity
 
                         # Parse file content
-                        documents, file_format, bounding_box, cruise, station, \
-                            metadata, image_docs, video_docs = (
-                            parse_file_content(
-                                file_content,
-                                file_key,
-                                ingress_collection,  # Pass the ingress collection
-                            )
+                        (
+                            documents,
+                            file_format,
+                            bounding_box,
+                            cruise,
+                            station,
+                            metadata,
+                            image_docs,
+                            video_docs,
+                        ) = parse_file_content(
+                            file_content,
+                            file_key,
+                            ingress_collection,  # Pass the ingress collection
                         )
 
                         if len(documents) > 0:
                             # Insert new documents, old documents need to update, take care of obs and obs2
-                            inserted_counts, updated_counts = insert_documents_to_mongodb(
-                                collection=ofop_collection, 
-                                documents=documents
+                            inserted_counts, updated_counts = (
+                                insert_documents_to_mongodb(
+                                    collection=ofop_collection, documents=documents
                                 )
+                            )
                             logger.info(
                                 "Inserted %s docs, updated %s docs in MongoDB, total %s docs.",
                                 inserted_counts,
@@ -1497,9 +1498,11 @@ def lambda_handler(event, context):
                             )
                             # Insert image documents
                             if len(image_docs) > 0:
-                                inserted_image_counts, updated_image_counts = insert_documents_to_mongodb(
-                                    collection=collection_image,
-                                    documents=image_docs
+                                inserted_image_counts, updated_image_counts = (
+                                    insert_documents_to_mongodb(
+                                        collection=collection_image,
+                                        documents=image_docs,
+                                    )
                                 )
                                 logger.info(
                                     "Inserted %s docs, updated %s docs in MongoDB, total %s image docs.",
@@ -1509,9 +1512,11 @@ def lambda_handler(event, context):
                                 )
                             # Insert video documents
                             if len(video_docs) > 0:
-                                inserted_video_counts, updated_video_counts = insert_documents_to_mongodb(
-                                    collection=collection_video,
-                                    documents=video_docs
+                                inserted_video_counts, updated_video_counts = (
+                                    insert_documents_to_mongodb(
+                                        collection=collection_video,
+                                        documents=video_docs,
+                                    )
                                 )
                                 logger.info(
                                     "Inserted %s docs, updated %s docs in MongoDB, total %s video docs.",
@@ -1542,7 +1547,7 @@ def lambda_handler(event, context):
                                     bounding_box=bounding_box,
                                     document_counts=len(documents),
                                     date_created=datetime.now(timezone.utc),
-                                    metadata=metadata
+                                    metadata=metadata,
                                 )
                                 logger.info(f"Final Ingress Count: {ingress_count}")
                                 logger.info("Parsed file format: %s", file_format)
@@ -1551,7 +1556,9 @@ def lambda_handler(event, context):
                                     bounding_box,
                                 )
                             except Exception as inner_e:
-                                logger.error(f"Error processing record {record}: {str(inner_e)}")
+                                logger.error(
+                                    f"Error processing record {record}: {str(inner_e)}"
+                                )
                         else:
                             logger.info("No documents to insert...")
 
