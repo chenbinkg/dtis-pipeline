@@ -13,26 +13,37 @@ SCRIPT="$2"
 LAMBDA_BASE="./lambda/lambda_functions"
 FUNC_DIR="${LAMBDA_BASE}/${FUNC}"
 REQUIREMENTS_FILE="${FUNC_DIR}/requirements.txt"
-ZIP_FILE="${FUNC_DIR}/lambda_${FUNC}.zip"
+ZIP_FILE="${LAMBDA_BASE}/lambda_${FUNC}.zip"
 
-# Create virtual environment
-python3 -m venv ${FUNC_DIR}/venv
-source ${FUNC_DIR}/venv/bin/activate
-pip install --upgrade pip
-pip install -r ${REQUIREMENTS_FILE}
-deactivate
-
-# Determine Python version used in venv
-PYTHON_VERSION=$(ls ${FUNC_DIR}/venv/lib | grep python)
-SITE_PACKAGES="${FUNC_DIR}/venv/lib/${PYTHON_VERSION}/site-packages"
+if [ ! -f "${FUNC_DIR}/${SCRIPT}" ]; then
+  echo "Script file ${FUNC_DIR}/${SCRIPT} not found!"
+  exit 1
+fi
 
 # Remove old zip file if exists
-rm -f ${ZIP_FILE}
+rm -f "${ZIP_FILE}"
 
-# Zip dependencies
-zip -r9 ${ZIP_FILE} ${SITE_PACKAGES}
-
-# Zip Lambda function code
-zip -g ${ZIP_FILE} ${FUNC_DIR}/${SCRIPT}
+if [ -f "${REQUIREMENTS_FILE}" ]; then
+  # Create virtual environment if requirements.txt exists
+  echo "Installing dependencies from ${REQUIREMENTS_FILE}..."
+  python3 -m venv ${FUNC_DIR}/venv
+  source ${FUNC_DIR}/venv/bin/activate
+  pip install --upgrade pip
+  pip install -r ${REQUIREMENTS_FILE}
+  deactivate
+  # Determine Python version used in venv
+  PYTHON_VERSION=$(ls ${FUNC_DIR}/venv/lib | grep python)
+  SITE_PACKAGES="${FUNC_DIR}/venv/lib/${PYTHON_VERSION}/site-packages"
+  # Zip dependencies
+  zip -r9 "${ZIP_FILE}" "${SITE_PACKAGES}"
+  # Zip Lambda function code
+  zip -g "${ZIP_FILE}" "${FUNC_DIR}/${SCRIPT}"
+  # Clean up virtual environment
+  rm -rf "${FUNC_DIR}/venv"
+else
+  echo "No requirements.txt under ${FUNC_DIR}, skip conda installation."
+  zip "${ZIP_FILE}" "${FUNC_DIR}/${SCRIPT}"
+fi
 
 echo "Packaged Lambda: ${ZIP_FILE}"
+
