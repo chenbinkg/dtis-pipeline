@@ -1,11 +1,21 @@
 #!/bin/bash
+# Check if all required arguments are provided
+if [ $# -lt 3 ]; then
+  echo "Usage: $0 <path_cwd> <function_name> <runtime>"
+  exit 1
+fi
+# Assign arguments to variables
+path_cwd=$1
+function_name=$2
+runtime=$3
 
 echo "Executing create_pkg.sh..."
+echo "Working directory: $path_cwd"
+echo "Function name: $function_name"
+echo "Python runtime: $runtime"
 
 cd $path_cwd # Change to the directory containing lambda functions and scripts folders
 parent_dir=$(dirname "$path_cwd")
-echo "$parent_dir"
-# mkdir $dir_name
 
 # remove the zip file if it exists in the terraform directory
 if [ -f "$parent_dir/infrastructure/2-seafloor-data/lambda_$function_name.zip" ]; then

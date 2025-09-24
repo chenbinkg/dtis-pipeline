@@ -118,19 +118,19 @@ jobs:
       - name: Install zip utility
         run: apt-get update && apt-get install -y zip
       - name: Make packaging script executable
-        run: chmod +x ./cicd_scripts/package_lambdas.sh
+        run: chmod +x ./lambda/scripts/create_pkg.sh
 
       # Ingress Lambda
       - name: Cache ingress Lambda zip
         id: ingress-cache
         uses: actions/cache@v3
         with:
-          path: lambda/lambda_functions/lambda_ingress.zip
-          key: ingress-${{ hashFiles('lambda/lambda_functions/lambda_function_mongoDB_schema.py') }}
+          path: infrastructure/2-seafloor-data/lambda_ingress.zip
+          key: ingress-${{ hashFiles('lambda/lambda_functions/ingress/lambda_function_mongoDB_schema.py') }}
       - name: Package ingress Lambda
         if: steps.ingress-cache.outputs.cache-hit != 'true'
         shell: bash
-        run: ./cicd_scripts/package_lambdas.sh ingress lambda_function_mongoDB_schema.py
+        run: ./lambda/scripts/create_pkg.sh $PWD/lambda ingress python3
       - name: Skip ingress packaging
         if: steps.ingress-cache.outputs.cache-hit == 'true'
         run: echo "Cache hit — skipping ingress Lambda packaging."
@@ -139,12 +139,12 @@ jobs:
         id: media-cache
         uses: actions/cache@v3
         with:
-          path: lambda/lambda_functions/lambda_media_convert.zip
-          key: media-${{ hashFiles('lambda/lambda_functions/lambda_function_media_convert.py') }}
+          path: infrastructure/2-seafloor-data/lambda_media_convert.zip
+          key: media-${{ hashFiles('lambda/lambda_functions/media_convert/lambda_function_media_convert.py') }}
       - name: Package media_convert Lambda
         if: steps.media-cache.outputs.cache-hit != 'true'
         shell: bash
-        run: ./cicd_scripts/package_lambdas.sh media_convert lambda_function_media_convert.py
+        run: ./lambda/scripts/create_pkg.sh $PWD/lambda media_convert python3
       - name: Skip media_convert packaging
         if: steps.media-cache.outputs.cache-hit == 'true'
         run: echo "Cache hit — skipping media_convert Lambda packaging."
@@ -153,12 +153,12 @@ jobs:
         id: pretrained-cache
         uses: actions/cache@v3
         with:
-          path: lambda/lambda_functions/lambda_pretrained_annotation.zip
-          key: pretrained-${{ hashFiles('lambda/lambda_functions/lambda_function_pretrained_annotation.py') }}
+          path: infrastructure/2-seafloor-data/lambda_pretrained_annotation.zip
+          key: pretrained-${{ hashFiles('lambda/lambda_functions/pretrained_annotation/lambda_function_pretrained_annotation.py') }}
       - name: Package pretrained_annotation Lambda
         if: steps.pretrained-cache.outputs.cache-hit != 'true'
         shell: bash
-        run: ./cicd_scripts/package_lambdas.sh pretrained_annotation lambda_function_pretrained_annotation.py
+        run: ./lambda/scripts/create_pkg.sh $PWD/lambda pretrained_annotation python3
       - name: Skip pretrained_annotation packaging
         if: steps.pretrained-cache.outputs.cache-hit == 'true'
         run: echo "Cache hit — skipping pretrained_annotation Lambda packaging."
@@ -167,7 +167,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lambda-zips
-          path: lambda/lambda_functions/*.zip
+          path: infrastructure/2-seafloor-data/*.zip
 
   terraform-deployment:
     runs-on: ubuntu-latest
@@ -184,7 +184,7 @@ jobs:
       - name: Move lambda zips
         shell: bash
         run: |
-          mv ./lambda-zips/*.zip infrastructure/2-seafloor-data
+          find ./lambda-zips -name "*.zip" -exec mv {} infrastructure/2-seafloor-data/ \;
           ls -l infrastructure/2-seafloor-data/
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
