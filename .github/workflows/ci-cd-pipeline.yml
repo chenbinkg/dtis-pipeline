@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - CICD
 
 env:
   ENV_NAME: dev
@@ -162,6 +163,34 @@ jobs:
       - name: Skip pretrained_annotation packaging
         if: steps.pretrained-cache.outputs.cache-hit == 'true'
         run: echo "Cache hit — skipping pretrained_annotation Lambda packaging."
+      # biigle_anno_retrieval
+      - name: Cache biigle_anno_retrieval Lambda zip
+        id: biigle-cache
+        uses: actions/cache@v3
+        with:
+          path: infrastructure/2-seafloor-data/lambda_biigle_anno_retrieval.zip
+          key: biigle-${{ hashFiles('lambda/lambda_functions/biigle_anno_retrieval/lambda_function_biigle_anno_retrieval.py') }}
+      - name: Package biigle_anno_retrieval Lambda
+        if: steps.biigle-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./lambda/scripts/create_pkg.sh $PWD/lambda biigle_anno_retrieval python3
+      - name: Skip biigle_anno_retrieval packaging
+        if: steps.biigle-cache.outputs.cache-hit == 'true'
+        run: echo "Cache hit — skipping biigle_anno_retrieval Lambda packaging."
+      # taxonomy
+      - name: Cache taxonomy Lambda zip
+        id: taxonomy-cache
+        uses: actions/cache@v3
+        with:
+          path: infrastructure/2-seafloor-data/lambda_taxonomy.zip
+          key: taxonomy-${{ hashFiles('lambda/lambda_functions/taxonomy/lambda_function_taxonomy.py') }}
+      - name: Package taxonomy Lambda
+        if: steps.taxonomy-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./lambda/scripts/create_pkg.sh $PWD/lambda taxonomy python3
+      - name: Skip taxonomy packaging
+        if: steps.taxonomy-cache.outputs.cache-hit == 'true'
+        run: echo "Cache hit — skipping taxonomy Lambda packaging."
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
