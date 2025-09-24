@@ -1,11 +1,13 @@
 import logging
 import sys
+import argparse
 from datetime import datetime, timezone
-from urllib.parse import urlparse
 import numpy as np
 import requests
+from pymongo.mongo_client import MongoClient
 from botocore.exceptions import NoCredentialsError, ClientError
-
+# Add parent directory to path for imports when running from /opt/ml/processing/input/code/
+sys.path.insert(0, '/opt/ml/processing')
 from utils import (
     get_ssm_parameter,
     list_all_objects,
@@ -14,8 +16,7 @@ from utils import (
     sanitize_log_input,
 )
 
-from .mongodb import MongoDBOps
-from .biigle_api import Api
+from biigle_api import Api
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 _logger = logging.getLogger(__name__)
@@ -42,14 +43,16 @@ def main(
     """
     try:
         # Get configuration from SSM parameters
-        biigle_api_url = get_ssm_parameter("dtis/biigle/api-url", "https://biigle.de/api/v1")
-        email = get_ssm_parameter("dtis/biigle/api-email", "bryce.chen@niwa.co.nz")
-        token = get_ssm_parameter("dtis/biigle/api-token", "")
-        region = get_ssm_parameter("dtis/aws/region", "ap-southeast-2")
+        biigle_api_url = get_ssm_parameter("/dtis/biigle/api-url", "https://biigle.de/api/v1")
+        email = get_ssm_parameter("/dtis/biigle/api-email", "bryce.chen@niwa.co.nz")
+        token = get_ssm_parameter("/dtis/biigle/api-token", "")
+        region = get_ssm_parameter("/dtis/aws/region", "ap-southeast-2")
+        mongodb_db = get_ssm_parameter("/dtis/mongodb/mongo-db", "dtis-data")
+        mongodb_collection = get_ssm_parameter("/dtis/mongodb/biigle-anno-session-collection", "dtis_biigle_annotation_session")
         # bucket name corresponds to netloc (network location) and 
         # the key is the path (with the leading / stripped)
-        bucket_name, frames_prefix = urlparse(s3_input_uri).path.lstrip('/')
-        ssm_param_mongodb_uri = get_ssm_parameter("dtis/mongodb/mongo-uri", "")
+        bucket_name, frames_prefix = s3_input_uri.replace("s3://", "").split("/", 1)
+        ssm_param_mongodb_uri = get_ssm_parameter("/dtis/mongodb/mongo-uri", "")
         _logger.info(
             f"Using S3 bucket: {sanitize_log_input(bucket_name)} "
             f"with prefix: {sanitize_log_input(frames_prefix)}")
@@ -72,20 +75,33 @@ def main(
             validated_anno_prefix=validated_anno_prefix, 
             region=region
             )
-        mongodb = MongoDBOps(mongodb_uri=ssm_param_mongodb_uri)
-        # Update MongoDB project job status to "Retrieved"
-        query_filter = mongodb.gen_query_filter(
-            columns=["project_id", "project_name"],
-            values=[project_id, project_name]
-        )
-        update_data = {"job_status": "Retrieved"}
-        mongodb.write_to_mongodb(
-            db_name="dtis_projects",
-            collection_name="projects",
-            data=update_data,
-            query_filter=query_filter
-        )
-        _logger.info(f"Updated MongoDB project job status to 'Retrieved' for project: {sanitize_log_input(project_name)}")
+        # Retrieve existing document
+        client = MongoClient(ssm_param_mongodb_uri)
+        collection = client[mongodb_db][mongodb_collection]
+        existing_doc = collection.find_one({
+                "biigle_project_id": project_id,
+                "biigle_project_name": project_name
+            })
+        # Update job status to "Retrieved"
+        if existing_doc:
+            existing_doc["biigle_annotation_job_status"] = "Retrieved"
+            update_data = existing_doc
+            rsl = collection.update_one(
+                {
+                    "biigle_project_id": project_id,
+                    "biigle_project_name": project_name
+                }, 
+                {"$set": update_data}
+                )
+            _logger.info(f"Updated MongoDB project job status to 'Retrieved' for "
+                          f"project: {sanitize_log_input(project_name)}")
+        else:
+            _logger.warning(
+                f"No document found for project_id: {project_id}, "
+                f"project_name: {sanitize_log_input(project_name)}"
+                )
+        _logger.info(f"Updated MongoDB project job status to 'Retrieved' for "
+                     f"project: {sanitize_log_input(project_name)}")
     except NoCredentialsError:
         _logger.error("AWS credentials not found. Please configure your AWS credentials.")
         raise
@@ -100,7 +116,14 @@ def main(
         raise
 
 
-def process_annotations(api_client, bucket_name, frames_prefix, matched_anno_prefix, validated_anno_prefix, region):
+def process_annotations(
+        api_client, 
+        bucket_name, 
+        frames_prefix, 
+        matched_anno_prefix, 
+        validated_anno_prefix, 
+        region
+    ):
     """Process annotations from BIIGLE and save validated annotations to S3."""
     try:
         # Get project ID - should come from MongoDB in production
@@ -240,4 +263,16 @@ def process_single_annotation(api_client, json_file, bucket_name, frames_prefix,
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description="BIIGLE Annotation Retrieval Script")
+    parser.add_argument("--project_id", type=int, required=True, help="BIIGLE project ID")
+    parser.add_argument("--project_name", type=str, required=True, help="BIIGLE project name")
+    parser.add_argument("--s3_input_uri", type=str, required=True, help="S3 URI for input data")
+
+    args, _ = parser.parse_known_args()
+    _logger.info(f"Received arguments {args}")
+
+    main(
+        project_id=args.project_id,
+        project_name=args.project_name,
+        s3_input_uri=args.s3_input_uri
+    )

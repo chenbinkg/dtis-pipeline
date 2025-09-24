@@ -22,6 +22,8 @@ Alternatively, please run the following at the main repo directory:
 function_name="ingress" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
 function_name="media_convert" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
 function_name="pretrained_annotation" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
+function_name="biigle_anno_retrieval" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
+function_name="taxonomy" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
 ```
 
 ```

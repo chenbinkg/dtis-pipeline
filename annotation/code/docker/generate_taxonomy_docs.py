@@ -7,7 +7,7 @@ Reads CSV from S3, enriches with WoRMS data, and stores in MongoDB.
 import argparse
 import csv
 import io
-import json
+import logging
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -19,6 +19,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+_logger = logging.getLogger(__name__)
 
 def make_session(timeout: int = 15) -> requests.Session:
     """Create requests session with retry logic."""
@@ -232,25 +234,25 @@ def insert_to_mongodb(documents: List[Dict], mongo_uri: str, db_name: str, colle
 
 def main():
     parser = argparse.ArgumentParser(description="Process DTIS taxonomy data")
-    parser.add_argument("--s3-bucket", required=True, help="S3 bucket name")
-    parser.add_argument("--s3-key", required=True, help="S3 key for CSV file")
-    parser.add_argument("--mongo-uri", required=True, help="MongoDB connection URI")
-    parser.add_argument("--mongo-db", default="dtis-data", help="MongoDB database name")
-    parser.add_argument("--mongo-collection", default="dtis_taxonomy", help="MongoDB collection name")
+    parser.add_argument("--s3bucket", required=True, help="S3 bucket name")
+    parser.add_argument("--s3key", required=True, help="S3 key for CSV file")
+    parser.add_argument("--mongo_uri", required=True, help="MongoDB connection URI")
+    parser.add_argument("--mongo_db", default="dtis-data", help="MongoDB database name")
+    parser.add_argument("--mongo_collection", default="dtis_taxonomy", help="MongoDB collection name")
     parser.add_argument("--workers", type=int, default=5, help="Number of worker threads")
     
-    args = parser.parse_args()
-    
-    print(f"Reading CSV from s3://{args.s3_bucket}/{args.s3_key}")
-    rows = read_csv_from_s3(args.s3_bucket, args.s3_key)
-    print(f"Processing {len(rows)} rows")
-    
+    args, _ = parser.parse_known_args()
+
+    _logger.info(f"Reading CSV from s3://{args.s3bucket}/{args.s3key}")
+    rows = read_csv_from_s3(args.s3bucket, args.s3key)
+    _logger.info(f"Processing {len(rows)} rows")
+
     documents = process_rows(rows, args.workers)
-    print(f"Generated {len(documents)} documents")
-    
-    print(f"Inserting to MongoDB: {args.mongo_db}.{args.mongo_collection}")
+    _logger.info(f"Generated {len(documents)} documents")
+
+    _logger.info(f"Inserting to MongoDB: {args.mongo_db}.{args.mongo_collection}")
     insert_to_mongodb(documents, args.mongo_uri, args.mongo_db, args.mongo_collection)
-    print("Processing complete")
+    _logger.info("Processing complete")
 
 
 if __name__ == "__main__":
