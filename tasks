@@ -55,8 +55,8 @@ function ubuntu_pyenv_python_installation {
   export PATH="$HOME/.pyenv/bin:$PATH"
   eval "$(pyenv init --path)"
   eval "$(pyenv init -)"
-  pyenv install 3.9.20
-  pyenv global 3.9.20
+  pyenv install 3.12
+  pyenv global 3.12
   python -m venv venv
 }
 

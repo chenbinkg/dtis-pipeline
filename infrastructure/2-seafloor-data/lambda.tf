@@ -122,14 +122,6 @@ resource "aws_iam_role_policy_attachment" "lambda_systems_manager_role_policy" {
   policy_arn = aws_iam_policy.dtis_systems_manager_permissions.arn
 }
 
-## use this if we want Terraform to generate the zip file (instead of us
-## doing it in Bash):
-# data "archive_file" "lambda" {
-#   type        = "zip"
-#   source_file = "lambda_function.py"
-#   output_path = "lambda_function.zip"
-# }
-
 data "local_file" "lambda_ingress_zip" {
   filename = "lambda_ingress.zip"
 }
@@ -152,6 +144,7 @@ resource "aws_lambda_function" "dtis" {
   # source_code_hash = data.archive_file.lambda.output_base64sha256
 
   source_code_hash = data.local_file.lambda_ingress_zip.content_sha256
+  #source_code_hash = filebase64sha256("lambda_ingress.zip")
 
   runtime = "python3.12"
 
