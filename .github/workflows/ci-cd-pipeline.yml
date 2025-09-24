@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - CICD
+      - dev
 
 env:
   ENV_NAME: dev
