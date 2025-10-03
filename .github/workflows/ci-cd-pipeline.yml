@@ -229,6 +229,7 @@ jobs:
         run: |
           cd infrastructure/2-seafloor-data
           AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "AWS Account ID: ${AWS_ACCOUNT_ID}"
           terraform_state_bucket="data-platform-dtis-${ENV_NAME}-${AWS_ACCOUNT_ID}-terraform-state"
           terraform_key="niwa-dtis-ofop/${ENV_NAME}/${ENV_NAME}.tfstate"
           echo "Running terraform init with bucket: ${terraform_state_bucket}"
