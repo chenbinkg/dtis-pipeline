@@ -152,6 +152,7 @@ resource "aws_sqs_queue_policy" "sqs_policy" {
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
   bucket = aws_s3_bucket.raw_data.id
+  depends_on = [aws_sqs_queue_policy.sqs_policy]
 
   queue {
     queue_arn     = aws_sqs_queue.queue.arn
