@@ -7,7 +7,7 @@ on:
       - dev
 
 env:
-  ENV_NAME: dev
+  ENV_NAME: prod
 
 jobs:
   infra-checkov:
@@ -240,7 +240,7 @@ jobs:
         run: |
           cd infrastructure/2-seafloor-data
           terraform plan -out=plan.tfplan \
-            -var='mongo_uri=mongodb+srv://username:password@cluster.mongodb.net' 
+            -var="mongo_uri=${{ secrets.MONGO_URI}}"
       - name: Terraform Apply
         run: |
           cd infrastructure/2-seafloor-data

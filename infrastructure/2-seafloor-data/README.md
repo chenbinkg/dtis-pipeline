@@ -18,7 +18,7 @@ export ENVIRONMENT=dev
 cp lambda/lambda_functions/ingress/lambda_function.zip infrastructure/2-seafloor-data/
 
 Alternatively, please run the following at the main repo directory:
-```
+```bash
 function_name="ingress" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
 function_name="media_convert" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
 function_name="pretrained_annotation" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
@@ -26,7 +26,7 @@ function_name="biigle_anno_retrieval" path_cwd="$PWD/lambda" runtime="python3" b
 function_name="taxonomy" path_cwd="$PWD/lambda" runtime="python3" bash lambda/scripts/create_pkg.sh
 ```
 
-```
+
 if it doesn't work, create the lambda_funciton.zip manually:
 ```bash
 cd processing
@@ -76,6 +76,13 @@ aws secretsmanager create-secret \
     --secret-string '{"access_key_id":"XXXXXXXXXXXXXXX","secret_access_key":"XXXXXXXXXXXXXX"}'
 ```
 
+## Get Secrets from Secrets Manager
+```
+aws secretsmanager get-secret-value \
+    --secret-id "aws-credentials/biigle/create-user-disk" \
+    --region ap-southeast-2
+```
+
 ## Cleanup
 
 Similar to above, the Terraform commands are:
@@ -108,7 +115,7 @@ terraform apply plan.
 ```bash
 aws ssm get-parameters \
   --names "/dtis/mongodb/mongo-uri" \
-  --region ap-southeast-2
+  --region ap-southeast-2 \
   --with-decryption
 ```
 

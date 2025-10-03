@@ -16,7 +16,7 @@ tf_output*
 **.pytest_cache
 # **.vscode/
 **/auth_env_vars
-
+.infracost*
 error.txt
 success.txt
 sync_logs.txt
