@@ -6,7 +6,7 @@ on:
       - main
       - dev
       - prod
-
+ 
 env:
   ENV_NAME: prod
 
