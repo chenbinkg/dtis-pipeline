@@ -201,6 +201,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: lambda-package
     environment: ${{ github.ref_name == 'prod' && 'prod' || 'dev' }}
+    env:
+      TF_VAR_environment: ${{ github.ref_name == 'prod' && 'prod' || 'dev' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
