@@ -7,7 +7,7 @@ on:
       - dev
 
 env:
-  ENV_NAME: prod
+  ENV_NAME: dev
 
 jobs:
   infra-checkov:
