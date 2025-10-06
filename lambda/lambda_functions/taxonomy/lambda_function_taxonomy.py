@@ -43,7 +43,7 @@ def lambda_handler(event, context):
         logger.info(f"Processing S3 object: s3://{s3_bucket}/{s3_key}")
         
         # Get configuration from SSM
-        mongodb_uri = get_ssm_parameter("/dtis/mongodb/uri")
+        mongodb_uri = get_ssm_parameter("/dtis/mongodb/mongo-uri")
         mongodb_db = get_ssm_parameter("/dtis/mongodb/mongo-db")
         mongodb_collection = get_ssm_parameter("/dtis/mongodb/dtis-taxonomy-collection")
 

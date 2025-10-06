@@ -54,9 +54,9 @@ _logger = logging.getLogger()
 if __name__ == "__main__":
     # Configuration
     parser = argparse.ArgumentParser(description="SageMaker DTIS Taxonomy Pipeline Creation Script")
-    parser.add_argument("--environment", type=str, default="dev", 
+    parser.add_argument("--environment", type=str, default="prod", 
                         help="Environment for the pipeline (e.g., dev, prod)")
-    parser.add_argument("--s3bucket", type=str, default="data-platform-dtis-dev-443293291817-model-data",
+    parser.add_argument("--s3bucket", type=str, default="data-platform-dtis-prod-851725470721-model-data",
                         help="S3 bucket containing the CSV file")
     parser.add_argument("--s3key", type=str, default="pipeline_testdata/biigle_labels.csv",
                         help="S3 key for the CSV file")
@@ -89,7 +89,7 @@ if __name__ == "__main__":
         role = f"arn:aws:iam::{account_id}:role/{project_name}-{environment}-sagemaker-pipeline-role"
 
     # Get SSM parameters
-    mongodb_uri_ssm = get_ssm_parameter("/dtis/mongodb/uri", "")
+    mongodb_uri_ssm = get_ssm_parameter("/dtis/mongodb/mongo-uri", "")
     mongodb_db_ssm = get_ssm_parameter("/dtis/mongodb/mongo-db", "dtis-data")
     mongodb_collection_ssm = get_ssm_parameter("/dtis/mongodb/dtis-taxonomy-collection", "dtis_taxonomy")
 

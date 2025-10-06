@@ -24,20 +24,20 @@
 ## Test Docker with entrypoint.sh
 1. have awscli installed in your virtual environment
 2. run `aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin {aws_account_id}.dkr.ecr.ap-southeast-2.amazonaws.com`
-e.g `aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 443293291817.dkr.ecr.ap-southeast-2.amazonaws.com`
+e.g `aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 851725470721.dkr.ecr.ap-southeast-2.amazonaws.com`
 3. check ECR repo:
 ```bash
 aws ecr describe-repositories --region ap-southeast-2
 ```
 4. run `docker pull {aws_account_id}.dkr.ecr.ap-southeast-2.amazonaws.com/data-platform-dtis-{environment}-annotation:latest`
-e.g. `docker pull 443293291817.dkr.ecr.ap-southeast-2.amazonaws.com/data-platform-dtis-dev-annotation:latest`
+e.g. `docker pull 851725470721.dkr.ecr.ap-southeast-2.amazonaws.com/data-platform-dtis-prod-annotation:latest`
 5. run 
 ```bash
 docker run -it \
  -e AWS_ACCESS_KEY_ID="{your_access_key_id}" \
  -e AWS_SECRET_ACCESS_KEY="{your_secret_access_key}" \
  -e AWS_REGION="ap-southeast-2" \
- -e MODEL_S3_URI="s3://data-platform-dtis-dev-443293291817-model-data/models/RF-DETR/checkpoint_best_regular.pth" \
+ -e MODEL_S3_URI="s3://data-platform-dtis-prod-851725470721-model-data/models/RF-DETR/checkpoint_best_regular.pth" \
   {aws_account_id}.dkr.ecr.ap-southeast-2.amazonaws.com/data-platform-dtis-{environment}-annotation /bin/bash
 ```
 6. run `python`

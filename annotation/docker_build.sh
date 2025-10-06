@@ -1,6 +1,6 @@
 #!/bin/bash
 PROJECT_NAME=${1:-data-platform-dtis}
-ENVIRONMENT=${2:-dev}
+ENVIRONMENT=${2:-prod}
 AWS_REGION=${3:-ap-southeast-2}
 # Set variables
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)

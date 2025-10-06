@@ -25,14 +25,14 @@ _logger = logging.getLogger()
 if __name__ == "__main__":
     # Configuration
     parser = argparse.ArgumentParser(description="SageMaker Retrieval Pipeline Creation Script")
-    parser.add_argument("--environment", type=str, default="dev", 
+    parser.add_argument("--environment", type=str, default="prod", 
                         help="Environment for the pipeline (e.g., dev, prod)")
     parser.add_argument("--project_name", type=str, default="AnnotationProject_TAN0616_097_20250616T045329",
                         help="Name of the project")
     parser.add_argument("--project_id", type=int, default=3857,
                         help="ID of the project")
     parser.add_argument("--input_data_s3_uri", type=str, 
-                        default="s3://data-platform-dtis-dev-443293291817-model-data/TAN0616/097/video/TAN0616_097/frames/",
+                        default="s3://data-platform-dtis-prod-851725470721-model-data/TAN0616/097/video/TAN0616_097/frames/",
                         help="S3 URI for the input data")
 
     args, unknown = parser.parse_known_args()

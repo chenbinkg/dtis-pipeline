@@ -65,15 +65,15 @@ if __name__ == "__main__":
                         help="cruise name, e.g. TAN0616")
     parser.add_argument("--station", type=str, default="095",
                         help="station name, e.g. 095")
-    parser.add_argument("--environment", type=str, default="dev",
+    parser.add_argument("--environment", type=str, default="prod",
                         help="Environment for the pipeline (e.g., dev, prod)")
-    parser.add_argument("--model_s3_uri", type=str, default="s3://data-platform-dtis-dev-443293291817-model-data/models/RF-DETR/checkpoint_best_regular.pth",
+    parser.add_argument("--model_s3_uri", type=str, default="s3://data-platform-dtis-prod-851725470721-model-data/models/RF-DETR/checkpoint_best_regular.pth",
                         help="S3 URI for the model file")
-    parser.add_argument("--input_data_s3_uri", type=str, default="s3://data-platform-dtis-dev-443293291817-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/frames/",
+    parser.add_argument("--input_data_s3_uri", type=str, default="s3://data-platform-dtis-prod-851725470721-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/frames/",
                         help="S3 URI for the input data")
-    parser.add_argument("--output_data_s3_uri", type=str, default="s3://data-platform-dtis-dev-443293291817-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/annotations/",
+    parser.add_argument("--output_data_s3_uri", type=str, default="s3://data-platform-dtis-prod-851725470721-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/annotations/",
                         help="S3 URI for the output data")
-    parser.add_argument("--matched_anno_s3_uri", type=str, default="s3://data-platform-dtis-dev-443293291817-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/matched_annotations/",
+    parser.add_argument("--matched_anno_s3_uri", type=str, default="s3://data-platform-dtis-prod-851725470721-model-data/pipeline_testdata/TAN0616/095/video/TAN0616_095/matched_annotations/",
                         help="S3 URI for the matched annotations")
 
     args, unknown = parser.parse_known_args()
