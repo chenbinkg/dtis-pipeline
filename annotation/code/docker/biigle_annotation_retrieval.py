@@ -46,7 +46,7 @@ def main(
         biigle_api_url = get_ssm_parameter("/dtis/biigle/api-url", "https://biigle.de/api/v1")
         email = get_ssm_parameter("/dtis/biigle/api-email", "bryce.chen@niwa.co.nz")
         token = get_ssm_parameter("/dtis/biigle/api-token", "")
-        region = get_ssm_parameter("/dtis/aws/region", "ap-southeast-2")
+        region = get_ssm_parameter("/dtis/biigle/aws-region", "ap-southeast-2")
         mongodb_db = get_ssm_parameter("/dtis/mongodb/mongo-db", "dtis-data")
         mongodb_collection = get_ssm_parameter("/dtis/mongodb/biigle-anno-session-collection", "dtis_biigle_annotation_session")
         # bucket name corresponds to netloc (network location) and 
@@ -67,14 +67,16 @@ def main(
             base_url=biigle_api_url
             )
         
-        process_annotations(
+        processed_count, total_count = process_annotations(
             api_client=api_client, 
             bucket_name=bucket_name, 
             frames_prefix=frames_prefix, 
             matched_anno_prefix=matched_anno_prefix, 
             validated_anno_prefix=validated_anno_prefix, 
-            region=region
+            region=region,
+            project_id=project_id
             )
+        job_output = f"Successfully retrieved {processed_count} out of {total_count} annotation files and saved to S3"
         # Retrieve existing document
         client = MongoClient(ssm_param_mongodb_uri)
         collection = client[mongodb_db][mongodb_collection]
@@ -85,6 +87,15 @@ def main(
         # Update job status to "Retrieved"
         if existing_doc:
             existing_doc["biigle_annotation_job_status"] = "Retrieved"
+            existing_doc["biigle_annotation_job_end_time"] = str(datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+            job_start_time = existing_doc.get("biigle_annotation_job_start_time", "")
+            if job_start_time:
+                start_time = datetime.strptime(job_start_time, "%Y-%m-%dT%H:%M:%S")
+                end_time = datetime.now()
+                duration = end_time - start_time
+                duration_days = duration.total_seconds() / (24 * 3600)
+                existing_doc["biigle_annotation_job_duration"] = f"{duration_days:.2f} days"
+            existing_doc["biigle_annotation_job_output"] = job_output
             update_data = existing_doc
             rsl = collection.update_one(
                 {
@@ -122,24 +133,25 @@ def process_annotations(
         frames_prefix, 
         matched_anno_prefix, 
         validated_anno_prefix, 
-        region
+        region,
+        project_id
     ):
     """Process annotations from BIIGLE and save validated annotations to S3."""
     try:
-        # Get project ID - should come from MongoDB in production
-        new_project_id = 3856
+        # # Get project ID - should come from MongoDB in production
+        # new_project_id = 3856
         
         # Get volume ID
-        response = api_client.get(f"projects/{new_project_id}/volumes")
+        response = api_client.get(f"projects/{project_id}/volumes")
         response.raise_for_status()
         data = response.json()
         
         if not data:
-            _logger.warning(f"No volumes found for project {new_project_id}")
+            _logger.warning(f"No volumes found for project {project_id}")
             return
             
         volume_id = data[0]['id']
-        _logger.info(f"Found volume id {volume_id} for project: {new_project_id}")
+        _logger.info(f"Found volume id {volume_id} for project: {project_id}")
         
         # Get image names mapping
         image_names = api_client.fetch_image_data_from_api(volume_id=volume_id)
@@ -160,6 +172,7 @@ def process_annotations(
                 continue
                 
         _logger.info(f"Successfully processed {processed_count} annotation files")
+        return processed_count, len(json_files)
         
     except requests.exceptions.RequestException as e:
         _logger.error(f"API request failed: {sanitize_log_input(str(e))}")
