@@ -125,7 +125,7 @@ variable "biigle_label_tree_id" {
 variable "biigle_disk_id" {
   type        = number
   description = "ID of the storage disk in Biigle"
-  default     = 107
+  default     = 143
   
 }
 

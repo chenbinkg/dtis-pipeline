@@ -250,8 +250,15 @@ jobs:
       - name: Terraform Plan
         run: |
           cd infrastructure/2-seafloor-data
-          terraform plan -out=plan.tfplan \
-            -var="mongo_uri=${{secrets.MONGO_URI}}"
+          if aws ssm get-parameter --name /dtis/biigle/disk-id --region ap-southeast-2 >/dev/null 2>&1; then
+            BIIGLE_DISK_ID=$(aws ssm get-parameter --name /dtis/biigle/disk-id --region ap-southeast-2 --query Parameter.Value --output text)
+            terraform plan -out=plan.tfplan \
+              -var="mongo_uri=${{secrets.MONGO_URI}}" \
+              -var="biigle_disk_id=${BIIGLE_DISK_ID}"
+          else
+            terraform plan -out=plan.tfplan \
+              -var="mongo_uri=${{secrets.MONGO_URI}}"
+          fi
       - name: Terraform Apply
         run: |
           cd infrastructure/2-seafloor-data
