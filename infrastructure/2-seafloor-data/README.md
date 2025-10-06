@@ -94,23 +94,13 @@ export PROJECT_NAME=data-platform-dtis
 export ENVIRONMENT=dev
 export TF_VAR_environment=${ENVIRONMENT}
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export BIIGLE_DISK_ID=$(aws ssm get-parameter --names /dtis/biigle/disk-id --region ap-southeast-2 --query Parameter.Value --output text)
+export TF_VAR_biigle_disk_id=${BIIGLE_DISK_ID}
 
 terraform init -backend-config="bucket=${PROJECT_NAME}-${ENVIRONMENT}-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${ENVIRONMENT}/${ENVIRONMENT}.tfstate"
 
 terraform plan -destroy -out=plan.tfplan
 terraform apply plan.tfplan
-```
-
-## Cleanup Command Reserved for Old POC Infra in Current PROD Environment Account
-```bash
-export ENVIRONMENT=testing
-export TF_VAR_environment=${ENVIRONMENT}
-export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-
-terraform init -backend-config="bucket=niwa-dtis-ofop-data-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${ENVIRONMENT}/${ENVIRONMENT}.tfstate"
-
-terraform plan -destroy -out=plan.tfplan
-terraform apply plan.
 ```
 
 # Query MongoDB URI in SSM parameters
