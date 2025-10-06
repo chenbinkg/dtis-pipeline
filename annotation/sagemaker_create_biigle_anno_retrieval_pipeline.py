@@ -71,7 +71,7 @@ if __name__ == "__main__":
     api_url = get_ssm_parameter("/dtis/biigle/api-url", "https://biigle.de/api/v1")
     email = get_ssm_parameter("/dtis/biigle/api-email", "bryce.chen@niwa.co.nz")
     token = get_ssm_parameter("/dtis/biigle/api-token", "")
-    mongodb_uri_ssm = get_ssm_parameter("/dtis/mongodb/uri", "")
+    mongodb_uri_ssm = get_ssm_parameter("/dtis/mongodb/mongo-uri", "")
 
     # Use PipelineSession for defining the pipeline
     pipeline_session = PipelineSession()

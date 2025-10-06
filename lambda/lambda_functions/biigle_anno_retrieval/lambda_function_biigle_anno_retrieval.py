@@ -65,7 +65,7 @@ def lambda_handler(event, context):
                 {"Name": "ProcessingInstanceCount", "Value": "1"},
                 {"Name": "ProcessingInstanceType", "Value": "ml.m5.xlarge"},
                 {"Name": "S3InputURI", "Value": s3_input_uri},
-                {"Name": "ProjectId", "Value": project_id},
+                {"Name": "ProjectId", "Value": str(project_id)},
                 {"Name": "ProjectName", "Value": project_name},
                 {"Name": "BiigleApiUrl", "Value": get_ssm_parameter("/dtis/biigle/api-url")},
                 {"Name": "BiigleApiEmail", "Value": get_ssm_parameter("/dtis/biigle/api-email")},
