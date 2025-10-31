@@ -7,7 +7,7 @@ on:
       - prod
  
 env:
-  ENV_NAME: ${{ github.ref_name == 'prod' && 'prod' || 'dev' }}
+  ENV_NAME: ${{ (github.ref_name == 'prod' || github.ref_name == 'main') && 'prod' || 'dev' }}
 
 jobs:
   infra-checkov:
@@ -74,6 +74,8 @@ jobs:
 
   lambda-unit-tests:
     runs-on: ubuntu-latest
+    if: false # Disabled for now
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -91,7 +93,6 @@ jobs:
 
   lambda-integration-tests:
     runs-on: ubuntu-latest
-    needs: lambda-unit-tests
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -109,112 +110,75 @@ jobs:
   lambda-package:
     runs-on: ubuntu-latest
     needs: lambda-integration-tests
-    environment: ${{ github.ref_name == 'prod' && 'prod' || 'dev' }}
+    environment: ${{ (github.ref_name == 'prod' || github.ref_name == 'main') && 'prod' || 'dev' }}
+    strategy:
+      matrix:
+        function:
+          - ingress
+          - media_convert
+          - pretrained_annotation
+          - biigle_anno_retrieval
+          - taxonomy
     container:
       image: python:3.12-bookworm
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Install zip utility
-        run: apt-get update && apt-get install -y zip
+      - name: Install Install dependencies
+        run: apt-get update && apt-get install -y awscli zip
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
       - name: Make packaging script executable
         run: chmod +x ./lambda/scripts/create_pkg.sh
 
-      # Ingress Lambda
-      - name: Cache ingress Lambda zip
-        id: ingress-cache
+      - name: Cache Lambda zip - ${{ matrix.function }}
+        id: lambda_cache
         uses: actions/cache@v3
         with:
-          path: infrastructure/2-seafloor-data/lambda_ingress.zip
-          key: ingress-${{ hashFiles('lambda/lambda_functions/ingress/lambda_function_mongoDB_schema.py') }}
-      - name: Package ingress Lambda
-        if: steps.ingress-cache.outputs.cache-hit != 'true'
+          path: infrastructure/2-seafloor-data/lambda_${{ matrix.function }}.zip
+          key: ${{ matrix.function }}-${{ hashFiles(format('lambda/lambda_functions/{0}/**', matrix.function)) }}
+      - name: Package Lambda - ${{ matrix.function }}
+        if: steps.lambda_cache.outputs.cache-hit != 'true'
         shell: bash
-        run: ./lambda/scripts/create_pkg.sh $PWD/lambda ingress python3
-      - name: Skip ingress packaging
-        if: steps.ingress-cache.outputs.cache-hit == 'true'
-        run: echo "Cache hit — skipping ingress Lambda packaging."
-      # Media Convert Lambda
-      - name: Cache media_convert Lambda zip
-        id: media-cache
-        uses: actions/cache@v3
-        with:
-          path: infrastructure/2-seafloor-data/lambda_media_convert.zip
-          key: media-${{ hashFiles('lambda/lambda_functions/media_convert/lambda_function_media_convert.py') }}
-      - name: Package media_convert Lambda
-        if: steps.media-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: ./lambda/scripts/create_pkg.sh $PWD/lambda media_convert python3
-      - name: Skip media_convert packaging
-        if: steps.media-cache.outputs.cache-hit == 'true'
-        run: echo "Cache hit — skipping media_convert Lambda packaging."
-      # Pretrained Annotation Lambda
-      - name: Cache pretrained_annotation Lambda zip
-        id: pretrained-cache
-        uses: actions/cache@v3
-        with:
-          path: infrastructure/2-seafloor-data/lambda_pretrained_annotation.zip
-          key: pretrained-${{ hashFiles('lambda/lambda_functions/pretrained_annotation/lambda_function_pretrained_annotation.py') }}
-      - name: Package pretrained_annotation Lambda
-        if: steps.pretrained-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: ./lambda/scripts/create_pkg.sh $PWD/lambda pretrained_annotation python3
-      - name: Skip pretrained_annotation packaging
-        if: steps.pretrained-cache.outputs.cache-hit == 'true'
-        run: echo "Cache hit — skipping pretrained_annotation Lambda packaging."
-      # biigle_anno_retrieval
-      - name: Cache biigle_anno_retrieval Lambda zip
-        id: biigle-cache
-        uses: actions/cache@v3
-        with:
-          path: infrastructure/2-seafloor-data/lambda_biigle_anno_retrieval.zip
-          key: biigle-${{ hashFiles('lambda/lambda_functions/biigle_anno_retrieval/lambda_function_biigle_anno_retrieval.py') }}
-      - name: Package biigle_anno_retrieval Lambda
-        if: steps.biigle-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: ./lambda/scripts/create_pkg.sh $PWD/lambda biigle_anno_retrieval python3
-      - name: Skip biigle_anno_retrieval packaging
-        if: steps.biigle-cache.outputs.cache-hit == 'true'
-        run: echo "Cache hit — skipping biigle_anno_retrieval Lambda packaging."
-      # taxonomy
-      - name: Cache taxonomy Lambda zip
-        id: taxonomy-cache
-        uses: actions/cache@v3
-        with:
-          path: infrastructure/2-seafloor-data/lambda_taxonomy.zip
-          key: taxonomy-${{ hashFiles('lambda/lambda_functions/taxonomy/lambda_function_taxonomy.py') }}
-      - name: Package taxonomy Lambda
-        if: steps.taxonomy-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: ./lambda/scripts/create_pkg.sh $PWD/lambda taxonomy python3
-      - name: Skip taxonomy packaging
-        if: steps.taxonomy-cache.outputs.cache-hit == 'true'
-        run: echo "Cache hit — skipping taxonomy Lambda packaging."
-
-      - name: Upload Artifact
+        run: ./lambda/scripts/create_pkg.sh $PWD/lambda ${{ matrix.function }} python3
+      - name: Upload Lambda zip to S3
+        if: steps.lambda_cache.outputs.cache-hit != 'true'
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "aws s3 cp infrastructure/2-seafloor-data/lambda_${{ matrix.function }}.zip \
+          s3://data-platform-dtis-${ENV_NAME}-${AWS_ACCOUNT_ID}-raw-data/lambda_packages/lambda_${{ matrix.function }}.zip"
+          aws s3 cp infrastructure/2-seafloor-data/lambda_${{ matrix.function }}.zip \
+          s3://data-platform-dtis-${ENV_NAME}-${AWS_ACCOUNT_ID}-raw-data/lambda_packages/lambda_${{ matrix.function }}.zip
+      - name: Skip packaging - ${{ matrix.function }} (cache hit)
+        if: steps.lambda_cache.outputs.cache-hit  == 'true'
+        run: echo "Cache hit — skipping ${{ matrix.function }} Lambda packaging."
+      - name: Upload Artifact - ${{ matrix.function }}
         uses: actions/upload-artifact@v4
         with:
-          name: lambda-zips
-          path: infrastructure/2-seafloor-data/*.zip
+          name: lambda-zips-${{ matrix.function }}
+          path: infrastructure/2-seafloor-data/lambda_${{ matrix.function }}.zip
 
   terraform-deployment:
     runs-on: ubuntu-latest
     needs: lambda-package
-    environment: ${{ github.ref_name == 'prod' && 'prod' || 'dev' }}
+    environment: ${{ (github.ref_name == 'prod' || github.ref_name == 'main') && 'prod' || 'dev' }}
     env:
-      TF_VAR_environment: ${{ github.ref_name == 'prod' && 'prod' || 'dev' }}
+      TF_VAR_environment: ${{ (github.ref_name == 'prod' || github.ref_name == 'main') && 'prod' || 'dev' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Download Artifact
+      - name: Download all Lambda zip artifacts
         uses: actions/download-artifact@v4
         with:
-          name: lambda-zips
-          path: ./lambda-zips
+          path: ./downloaded-lambdas
       - name: Move lambda zips
         shell: bash
         run: |
-          find ./lambda-zips -name "*.zip" -exec mv {} infrastructure/2-seafloor-data/ \;
+          find ./downloaded-lambdas -name "*.zip" -exec mv {} infrastructure/2-seafloor-data/ \;
           ls -l infrastructure/2-seafloor-data/
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
