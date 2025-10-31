@@ -1,0 +1,11 @@
+cruises:
+  TAN2502:
+    date_format: "%m/%d/%Y"
+    time_format: "%H:%M:%S"
+    pc_time_format: "%d/%m/%Y %H:%M:%S"
+    header:
+      obser: "#Date	Time	SUB1_Lon	SUB1_Lat	ID_Number	ID_Name"
+      prot: "#Date	Time	PC_Time	SHIP_Lon	SHIP_Lat	SHIP_SOG	SHIP_COG	SHIP_Hdg	Water_Depth	SUB1_Lon	SUB1_Lat	SUB1_Depth	SUB1_Altitude	Elapsed video Time	Observations/Comments	Image-Video Path"
+  TAN2302:
+    obser: "Date	Time	SUB1_Lon	SUB1_Lat	ID_Number	ID_Name"
+    prot: "Date	Time	PC_Time	SHIP_Lon	SHIP_Lat	SHIP_SOG	SHIP_COG	SHIP_Hdg	Water_Depth	SUB1_Lon	SUB1_Lat	SUB1_Depth	SUB1_Altitude	Elapsed video Time	Observations/Comments	Image-Video Path"
