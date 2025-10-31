@@ -122,10 +122,6 @@ resource "aws_iam_role_policy_attachment" "lambda_systems_manager_role_policy" {
   policy_arn = aws_iam_policy.dtis_systems_manager_permissions.arn
 }
 
-data "local_file" "lambda_ingress_zip" {
-  filename = "lambda_ingress.zip"
-}
-
 resource "aws_lambda_function" "dtis" {
 	depends_on = [
 		aws_iam_role_policy_attachment.lambda_logs,
@@ -134,22 +130,21 @@ resource "aws_lambda_function" "dtis" {
 
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
-  filename      = "lambda_ingress.zip"
+
+  s3_bucket     = aws_s3_bucket.raw_data.bucket
+  s3_key        = "lambda_packages/lambda_ingress.zip"
   function_name = "dtis-ofop-ingress-${var.environment}"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "lambda_function_mongoDB_schema.lambda_handler"
 
   ## use this if we want Terraform to generate the zip file (instead of us
   ## doing it in Bash):
-  # source_code_hash = data.archive_file.lambda.output_base64sha256
-
-  source_code_hash = data.local_file.lambda_ingress_zip.content_sha256
-  #source_code_hash = filebase64sha256("lambda_ingress.zip")
+  source_code_hash = filebase64sha256("${path.module}/lambda_ingress.zip")
 
   runtime = "python3.12"
 
   # TODO bump it for batching
-  reserved_concurrent_executions = 1
+  reserved_concurrent_executions = 10 # Allow up to 10 concurrent executions
   # defaults to 3 (seconds)
   timeout = 900
   # defaults to 128 (MB)
@@ -294,10 +289,6 @@ resource "aws_cloudwatch_log_group" "dtis_mediaconvert_lambda_loggroup" {
   tags          = local.tags
 }
 
-data "local_file" "lambda_mediaconvert_zip" {
-  filename = "lambda_media_convert.zip"
-}
-
 resource "aws_lambda_function" "dtis_mediaconvert" {
 	depends_on = [
 		aws_iam_role_policy_attachment.lambda_logs,
@@ -306,16 +297,15 @@ resource "aws_lambda_function" "dtis_mediaconvert" {
 
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
-  filename      = "lambda_media_convert.zip"
+  s3_bucket     = aws_s3_bucket.raw_data.bucket
+  s3_key        = "lambda_packages/lambda_media_convert.zip"
   function_name = "dtis-ofop-mediaconvert-${var.environment}"
   role          = aws_iam_role.iam_for_lambda_mediaconvert.arn
   handler       = "lambda_function_media_convert.lambda_handler"
 
   ## use this if we want Terraform to generate the zip file (instead of us
   ## doing it in Bash):
-  # source_code_hash = data.archive_file.lambda.output_base64sha256
-
-  source_code_hash = data.local_file.lambda_mediaconvert_zip.content_sha256
+  source_code_hash = filebase64sha256("${path.module}/lambda_media_convert.zip")
 
   runtime = "python3.12"
 
@@ -421,11 +411,6 @@ resource "aws_cloudwatch_log_group" "pretrained_annotation_lambda_loggroup" {
   tags          = local.tags
 }
 
-# lambda function to trigger sagemaker pipeline upon mediaconvert job completion
-data "local_file" "lambda_pretrained_annotation_zip" {
-  filename = "lambda_pretrained_annotation.zip"
-}
-
 resource "aws_lambda_function" "pretrained_annotation" {
 	depends_on = [
 		aws_iam_role_policy_attachment.lambda_logs,
@@ -434,16 +419,15 @@ resource "aws_lambda_function" "pretrained_annotation" {
 
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
-  filename      = "lambda_pretrained_annotation.zip"
+  s3_bucket     = aws_s3_bucket.raw_data.bucket
+  s3_key        = "lambda_packages/lambda_pretrained_annotation.zip"
   function_name = "dtis-pretrained-annotation-${var.environment}"
   role          = aws_iam_role.iam_for_lambda_pretrained_annotation.arn
   handler       = "lambda_function_pretrained_annotation.lambda_handler"
 
   ## use this if we want Terraform to generate the zip file (instead of us
   ## doing it in Bash):
-  # source_code_hash = data.archive_file.lambda.output_base64sha256
-
-  source_code_hash = data.local_file.lambda_pretrained_annotation_zip.content_sha256
+  source_code_hash = filebase64sha256("${path.module}/lambda_pretrained_annotation.zip")
 
   runtime = "python3.12"
 
@@ -522,9 +506,6 @@ resource "aws_cloudwatch_log_group" "biigle_anno_retrieval_lambda_loggroup" {
 }
 
 # lambda function to trigger sagemaker retrieval pipeline
-data "local_file" "lambda_biigle_anno_retrieval_zip" {
-  filename = "lambda_biigle_anno_retrieval.zip"
-}
 
 resource "aws_lambda_function" "biigle_anno_retrieval" {
 	depends_on = [
@@ -532,12 +513,13 @@ resource "aws_lambda_function" "biigle_anno_retrieval" {
 		aws_cloudwatch_log_group.biigle_anno_retrieval_lambda_loggroup,
 	]
 
-  filename      = "lambda_biigle_anno_retrieval.zip"
+  s3_bucket     = aws_s3_bucket.raw_data.bucket
+  s3_key        = "lambda_packages/lambda_biigle_anno_retrieval.zip"
   function_name = "dtis-biigle-anno-retrieval-${var.environment}"
   role          = aws_iam_role.iam_for_lambda_biigle_anno_retrieval.arn
   handler       = "lambda_function_biigle_anno_retrieval.lambda_handler"
 
-  source_code_hash = data.local_file.lambda_biigle_anno_retrieval_zip.content_sha256
+  source_code_hash = filebase64sha256("${path.module}/lambda_biigle_anno_retrieval.zip")
 
   runtime = "python3.12"
 
@@ -610,9 +592,6 @@ resource "aws_cloudwatch_log_group" "taxonomy_lambda_loggroup" {
 }
 
 # lambda function to trigger sagemaker taxonomy pipeline
-data "local_file" "lambda_taxonomy_zip" {
-  filename = "lambda_taxonomy.zip"
-}
 
 resource "aws_lambda_function" "taxonomy" {
 	depends_on = [
@@ -620,12 +599,13 @@ resource "aws_lambda_function" "taxonomy" {
 		aws_cloudwatch_log_group.taxonomy_lambda_loggroup,
 	]
 
-  filename      = "lambda_taxonomy.zip"
+  s3_bucket     = aws_s3_bucket.raw_data.bucket
+  s3_key        = "lambda_packages/lambda_taxonomy.zip"
   function_name = "dtis-taxonomy-${var.environment}"
   role          = aws_iam_role.iam_for_lambda_taxonomy.arn
   handler       = "lambda_function_taxonomy.lambda_handler"
 
-  source_code_hash = data.local_file.lambda_taxonomy_zip.content_sha256
+  source_code_hash = filebase64sha256("${path.module}/lambda_taxonomy.zip")
 
   runtime = "python3.12"
 
