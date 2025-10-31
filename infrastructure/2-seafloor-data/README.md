@@ -100,7 +100,7 @@ export TF_VAR_biigle_disk_id=${BIIGLE_DISK_ID}
 terraform init -backend-config="bucket=${PROJECT_NAME}-${ENVIRONMENT}-${AWS_ACCOUNT_ID}-terraform-state" -backend-config="key=niwa-dtis-ofop/${ENVIRONMENT}/${ENVIRONMENT}.tfstate"
 
 terraform plan -destroy -out=plan.tfplan
-terraform apply plan.tfplan
+terraform apply plan.
 ```
 
 # Query MongoDB URI in SSM parameters
