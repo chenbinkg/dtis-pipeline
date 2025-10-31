@@ -1,0 +1,64 @@
+# Lowercase file extensions for different file types
+file_suffix: 
+  images: ['.jpg', '.jpeg']
+  videos: ['.m2ts', '.m2t', '.avi', '.mts', '.mpg', '.mp4']
+  ofop: ['.txt']
+  ofop_rerun: ['.txt']
+
+MongoDB_config:
+  date_format: "%Y-%m-%d"
+  time_format: "%H:%M:%S"
+
+patterns_filename: 
+  images: 
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3,}_DTIS__[0-9]{3}\\.JPE?G$"  # e.g. TAN1802_160_DTIS__004.jpeg/jpg
+    - "[A-Z]{3}[0-9]{4}_(?:STN_)?[0-9]{3,}(?:_[^/\\\\]+)?\\.JPE?G$" # e.g. TAN1802_160*.jpeg/jpg
+
+  videos:
+  ofop: 
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?(?:EDIT_)?POSI\\.TXT$"  # e.g. TAN1802_001_posi.txt，TAN2302_088_prot_posi.txt,TAN2302_202._prot_posi.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?(?:EDIT_)?PROT\\.TXT$"  # e.g. TAN1802_001_prot.txt，TAN2302_088_prot_prot.txt,TAN2302_202._prot_prot.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?(?:EDIT_)?OBSER\\.TXT$"  # e.g. TAN1802_001_obser.txt，TAN2302_088_prot_obser.txt,TAN2302_202._prot_obser.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}(?:.)?_(?:PROT_)?(?:EDIT_)?FINAL\\.TXT$"  # TAN2302_147_prot_final.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{2}(?:.)?_(?:PROT_)?(?:EDIT_)?POSI\\.TXT$"  # e.g. TAN1802_01_posi.txt，TAN2302_88_prot_posi.txt,TAN2302_02._prot_posi.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{2}(?:.)?_(?:PROT_)?(?:EDIT_)?PROT\\.TXT$"  # e.g. TAN1802_01_prot.txt，TAN2302_88_prot_prot.txt,TAN2302_02._prot_prot.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{2}(?:.)?_(?:PROT_)?(?:EDIT_)?OBSER\\.TXT$"  # e.g. TAN1802_01_obser.txt，TAN2302_88_prot_obser.txt,TAN2302_02._prot_obser.txt
+
+  ofop_rerun:
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}.*_OBSER.*\\.TXT$"  # e.g. TAN1802_001.sth_obser.txt
+    - "[A-Z]{3}[0-9]{4}_[0-9]{3}.*_PROT.*\\.TXT$"  # e.g. TAN1802_001.sth_prot.txt
+
+patterns_station_id: 
+  images:
+    # e.g. TAN1802_160_DTIS__004.jpeg
+    # e.g. TAN1802_160_DTIS__004.jpg
+    # e.g. TAN1802_Stn_160_004.jpeg
+    # e.g. TAN1802_Stn_160_004.jpg
+    # e.g. TAN1802_160_004.jpeg
+    # e.g. TAN1802_160_004.jpg
+    # this gives, e.g. '160'
+    - "[A-Z]{3}[0-9]{4}_(?:Stn_)?(?P<station_id>[0-9]{3,})_"
+    - "tan[0-9]{4}_(?P<station_id>[0-9]{3,})"
+  videos:
+    # e.g. Video/TAN0616/TAN0616_003/TAN0616_045.m2ts, this gives 003
+    # e.g. TAN2203/Stn003/1234.m2t, this gives 003
+    # e.g. /Stn002/11-04-2022/20220411191258.m2ts, this gives 002
+    # e.g. /STN_002/1234.m2t, this gives 002
+    - "STN(?:_)?(?P<station_id>[0-9]{3,})"
+    # e.g. STN_12.MP4, this gives 12
+    - "STN(?:_)?(?P<station_id>[0-9]{2,}).MP4"
+    # e.g. tan0906_059\tan0906_059 - Clip 001.avi, this gives 059
+    - "tan[0-9]{4}_(?P<station_id>[0-9]{3,})"
+  ofop:
+    # e.g. TAN1802_001_posi.txt
+    # e.g. TAN1802_001_prot.txt
+    # e.g. TAN1802_001_obser.txt
+    # this gives, e.g. '001'
+    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})_"
+    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})."
+    # e.g. TAN1901_98_posi.txt
+    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{2,})"
+  ofop_rerun:
+    # e.g. TAN1802_001.sth_obser.txt
+    # e.g. TAN1802_001.sth_prot.txt
+    - "[A-Z]{3}[0-9]{4}_(?P<station_id>[0-9]{3,})"
