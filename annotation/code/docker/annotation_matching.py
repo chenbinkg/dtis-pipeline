@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import argparse
+from .mongodb import MongoDBOps
 
 # Add parent directory to path for imports when running from /opt/ml/processing/input/code/
 sys.path.insert(0, '/opt/ml/processing')
